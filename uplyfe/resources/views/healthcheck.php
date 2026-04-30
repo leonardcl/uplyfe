@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Screen</title>
+    <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -140,7 +140,8 @@
                             class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive border border-card"></span>
                     </button>
                     <button
-                        class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+                        class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center gap-2"
+                        onclick="openNewReportModal()">
                         <iconify-icon icon="lucide:upload-cloud" class="text-base"></iconify-icon>
                         New Report
                     </button>
@@ -167,7 +168,9 @@
                                 </p>
 
                                 <div
-                                    class="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group/drop">
+                                    class="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group/drop"
+                                    id="drop-zone">
+                                    <input type="file" id="file-input" accept=".pdf,.jpg,.png" class="hidden">
                                     <div
                                         class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover/drop:scale-110 transition-transform duration-300">
                                         <iconify-icon icon="lucide:file-up" class="text-3xl"></iconify-icon>
@@ -175,7 +178,8 @@
                                     <p class="font-medium text-sm mb-1">Drag & drop your file here</p>
                                     <p class="text-xs text-muted-foreground mb-4">PDF, JPG, PNG up to 10MB</p>
                                     <button
-                                        class="bg-card border border-border px-5 py-2 rounded-full text-sm font-semibold shadow-sm hover:bg-muted transition-colors">
+                                        class="bg-card border border-border px-5 py-2 rounded-full text-sm font-semibold shadow-sm hover:bg-muted transition-colors"
+                                        id="browse-btn">
                                         Browse Files
                                     </button>
                                 </div>
@@ -215,7 +219,7 @@
 
                                 <button
                                     class="w-full py-2 bg-primary/10 text-primary-foreground bg-primary rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
-                                    View Full Analysis
+                                    <a href="/full-analysis" class="block w-full h-full flex items-center justify-center">View Full Analysis</a>
                                 </button>
                             </div>
                         </div>
@@ -318,7 +322,8 @@
                             </p>
                         </div>
                         <button
-                            class="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all whitespace-nowrap flex items-center gap-2">
+                            class="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all whitespace-nowrap flex items-center gap-2"
+                            onclick="openNewPlanModal()">
                             <iconify-icon icon="lucide:refresh-cw" class="text-lg"></iconify-icon>
                             Generate New Plan
                         </button>
@@ -327,7 +332,224 @@
                 </div>
             </div>
         </main>
+
+        <!-- New Report Modal -->
+        <div id="new-report-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeNewReportModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Create New Report</h3>
+                        <button onclick="closeNewReportModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Report Type</label>
+                            <select class="w-full bg-background border border-border text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                                <option>Blood Work Analysis</option>
+                                <option>General Health Check</option>
+                                <option>Cardiac Assessment</option>
+                                <option>Metabolic Panel</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Upload Files</label>
+                            <div class="border-2 border-dashed border-border rounded-xl p-6 text-center bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                                 onclick="document.getElementById('modal-file-input').click()">
+                                <iconify-icon icon="lucide:file-up" class="text-2xl text-primary mb-2"></iconify-icon>
+                                <p class="text-sm font-medium">Click to upload files</p>
+                                <p class="text-xs text-muted-foreground">PDF, JPG, PNG up to 10MB</p>
+                            </div>
+                            <input type="file" id="modal-file-input" multiple accept=".pdf,.jpg,.png" class="hidden">
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="closeNewReportModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="submitNewReport()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Create Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate New Plan Modal -->
+        <div id="new-plan-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeNewPlanModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Generate New Health Plan</h3>
+                        <button onclick="closeNewPlanModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-primary/10 rounded-2xl p-4 border border-primary/20">
+                            <div class="flex items-center gap-3 mb-2">
+                                <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
+                                <span class="font-semibold text-sm">AI Analysis Complete</span>
+                            </div>
+                            <p class="text-sm text-muted-foreground">
+                                Based on your latest blood work, we'll create personalized nutrition and exercise recommendations.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-card border border-border rounded-xl p-4 text-center">
+                                <iconify-icon icon="lucide:apple" class="text-2xl text-tertiary mb-2"></iconify-icon>
+                                <h4 class="font-semibold text-sm mb-1">Nutrition Plan</h4>
+                                <p class="text-xs text-muted-foreground">7-day meal plan</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 text-center">
+                                <iconify-icon icon="lucide:dumbbell" class="text-2xl text-blue-500 mb-2"></iconify-icon>
+                                <h4 class="font-semibold text-sm mb-1">Exercise Routine</h4>
+                                <p class="text-xs text-muted-foreground">Custom workout plan</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Plan Preferences</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3">
+                                    <input type="checkbox" checked class="rounded border-border">
+                                    <span class="text-sm">Include dietary restrictions</span>
+                                </label>
+                                <label class="flex items-center gap-3">
+                                    <input type="checkbox" checked class="rounded border-border">
+                                    <span class="text-sm">Consider current fitness level</span>
+                                </label>
+                                <label class="flex items-center gap-3">
+                                    <input type="checkbox" class="rounded border-border">
+                                    <span class="text-sm">Focus on weight management</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="closeNewPlanModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="generateNewPlan()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+                                <iconify-icon icon="lucide:refresh-cw" class="text-base"></iconify-icon>
+                                Generate Plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // File upload functionality
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const browseBtn = document.getElementById('browse-btn');
+
+        // Browse button click
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        // Drop zone click
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-primary');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            // Validate file type
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please select a PDF, JPG, or PNG file.');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB.');
+                return;
+            }
+
+            // Here you would typically upload the file to the server
+            console.log('File selected:', file.name);
+            alert(`File "${file.name}" selected successfully! Upload functionality would be implemented here.`);
+        }
+
+        // Modal functions
+        function openNewReportModal() {
+            document.getElementById('new-report-modal').classList.remove('hidden');
+        }
+
+        function closeNewReportModal() {
+            document.getElementById('new-report-modal').classList.add('hidden');
+        }
+
+        function submitNewReport() {
+            // Here you would submit the form data
+            alert('New report creation functionality would be implemented here.');
+            closeNewReportModal();
+        }
+
+        function openNewPlanModal() {
+            document.getElementById('new-plan-modal').classList.remove('hidden');
+        }
+
+        function closeNewPlanModal() {
+            document.getElementById('new-plan-modal').classList.add('hidden');
+        }
+
+        function generateNewPlan() {
+            // Here you would generate the new plan
+            alert('New plan generation functionality would be implemented here.');
+            closeNewPlanModal();
+        }
+    </script>
 </body>
 
 </html>

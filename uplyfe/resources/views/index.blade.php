@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Screen</title>
+    <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -65,7 +65,7 @@
 
         <!-- Navigation -->
         <header
-            class="w-full bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50 transition-all duration-300">
+            class="fixed inset-x-0 top-0 z-50 w-full bg-card/80 backdrop-blur-md border-b border-border transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
 
@@ -95,7 +95,7 @@
                     <a href="/login"
                         class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                         In</a>
-                    <a href="/"
+                    <a href="/health-check"
                         class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
                         Get Started
                         <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
@@ -141,10 +141,10 @@
             </aside>
         </div>
 
-        <div class="flex flex-1">
+        <div class="flex flex-1 mt-16">
             <aside id="dashboard-sidebar"
-                class="hidden md:flex w-72 flex-shrink-0 flex-col bg-card border-r border-border">
-                <div class="flex-1 overflow-y-auto p-6 space-y-3">
+                class="hidden md:flex fixed top-16 left-0 bottom-0 w-72 flex-col bg-card border-r border-border overflow-y-auto">
+                <div class="flex-1 p-6 space-y-3">
 
                     <a href="/health-check"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
@@ -167,20 +167,10 @@
                         AI Assistant
                     </a>
                 </div>
-                <div class="p-6 border-t border-border">
-                    <div class="flex items-center gap-3">
-                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
-                            class="w-12 h-12 rounded-full border border-border">
-                        <div>
-                            <p class="font-bold">Sarah Jenkins</p>
-                            <p class="text-xs text-muted-foreground">Free Plan</p>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             <!-- Hero Section -->
-            <main class="flex-1 flex flex-col">
+            <main id="dashboard-main" class="flex-1 flex flex-col md:ml-72">
                 <section class="relative w-full py-12 lg:py-24 overflow-hidden">
                     <!-- Decorative background blur -->
                     <div
@@ -213,13 +203,17 @@
                             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4">
                                 <button
                                     class="bg-primary text-primary-foreground px-8 py-4 rounded-full text-base font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
-                                    Start Your Journey
-                                    <iconify-icon icon="lucide:sparkles" class="text-lg"></iconify-icon>
+                                    <a href="/health-check" class="flex items-center gap-2">
+                                        Start Your Journey
+                                        <iconify-icon icon="lucide:sparkles" class="text-lg"></iconify-icon>
+                                    </a>
                                 </button>
                                 <button
                                     class="bg-card text-foreground border border-border px-8 py-4 rounded-full text-base font-semibold shadow-sm hover:bg-muted transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
-                                    <iconify-icon icon="lucide:play-circle" class="text-lg"></iconify-icon>
-                                    See How It Works
+                                    <a href="https://youtube.com" target="_blank" class="flex items-center gap-2">
+                                        <iconify-icon icon="lucide:play-circle" class="text-lg"></iconify-icon>
+                                        See How It Works
+                                    </a>
                                 </button>
                             </div>
 
@@ -340,6 +334,7 @@
     <script>
         function toggleDashboardMenu() {
             const sidebar = document.getElementById('dashboard-sidebar');
+            const main = document.getElementById('dashboard-main');
             const mobileMenu = document.getElementById('mobile-dashboard-menu');
             const isDesktop = window.matchMedia('(min-width: 768px)').matches;
 
@@ -350,8 +345,10 @@
 
                     if (isHidden) {
                         sidebar.classList.add('md:flex');
+                        if (main) main.classList.add('md:ml-72');
                     } else {
                         sidebar.classList.remove('md:flex');
+                        if (main) main.classList.remove('md:ml-72');
                     }
                 }
 

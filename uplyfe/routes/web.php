@@ -21,6 +21,10 @@ Route::get('/login', function () {
     return view('login');
 });
 
+Route::get('/signup', function () {
+    return view('signup');
+});
+
 Route::get('/chat', function () {
     return view('chat');
 });
@@ -31,6 +35,10 @@ Route::get('/exercise', function () {
 
 Route::get('/health-check', function () {
     return view('healthcheck');
+});
+
+Route::get('/full-analysis', function () {
+    return view('fullanalysis');
 });
 
 Route::get('/recipe', function () {

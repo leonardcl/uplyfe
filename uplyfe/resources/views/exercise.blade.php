@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Screen</title>
+    <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -121,7 +121,7 @@
                     <h1 class="text-xl font-heading font-bold">Exercise Routine</h1>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button
+                    <button id="weekly-view-btn" onclick="toggleWeeklyView()"
                         class="bg-card border border-border px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-muted transition-colors flex items-center gap-2">
                         <iconify-icon icon="lucide:calendar"></iconify-icon>
                         Weekly View
@@ -132,6 +132,53 @@
             <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                 <div class="max-w-5xl mx-auto space-y-8">
+                    <div id="weekly-view-panel" class="hidden space-y-6">
+                        <div class="bg-card rounded-3xl border border-border p-8 shadow-sm">
+                            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <h2 class="text-2xl font-heading font-bold">Weekly Workout Overview</h2>
+                                    <p class="text-sm text-muted-foreground">
+                                        Switch to weekly mode to review your planned sessions across the entire week.
+                                    </p>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">Weekly summary</span>
+                            </div>
+
+                            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Monday</p>
+                                    <h3 class="font-bold mb-2">Cardio Blast</h3>
+                                    <p class="text-sm text-muted-foreground">30 mins interval training</p>
+                                </article>
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Tuesday</p>
+                                    <h3 class="font-bold mb-2">Strength Focus</h3>
+                                    <p class="text-sm text-muted-foreground">Lower body resistance training</p>
+                                </article>
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Wednesday</p>
+                                    <h3 class="font-bold mb-2">Rest & Recovery</h3>
+                                    <p class="text-sm text-muted-foreground">Mobility and stretching routine</p>
+                                </article>
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Thursday</p>
+                                    <h3 class="font-bold mb-2">Full Body Flow</h3>
+                                    <p class="text-sm text-muted-foreground">Balanced cardio and strength</p>
+                                </article>
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Friday</p>
+                                    <h3 class="font-bold mb-2">Core & Stability</h3>
+                                    <p class="text-sm text-muted-foreground">Core sequences and balance work</p>
+                                </article>
+                                <article class="bg-background rounded-3xl border border-border p-5">
+                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Saturday</p>
+                                    <h3 class="font-bold mb-2">Active Recovery</h3>
+                                    <p class="text-sm text-muted-foreground">Light walk or yoga session</p>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="daily-view-content" class="space-y-8">
 
                     <!-- Preferences & Status -->
                     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -142,7 +189,7 @@
                                     <iconify-icon icon="lucide:activity" class="text-primary"></iconify-icon>
                                     Activity Profile
                                 </h2>
-                                <button
+                                <button onclick="openEditActivityModal()"
                                     class="text-sm font-medium text-primary hover:text-tertiary transition-colors flex items-center gap-1">
                                     <iconify-icon icon="lucide:pencil" class="text-xs"></iconify-icon> Edit
                                 </button>
@@ -305,7 +352,99 @@
                 </div>
             </div>
         </main>
+
+        <div id="edit-activity-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditActivityModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-xl font-heading font-bold">Edit Activity</h3>
+                            <p class="text-sm text-muted-foreground">Update the selected exercise details for your routine.</p>
+                        </div>
+                        <button onclick="closeEditActivityModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Activity Name</label>
+                            <input id="activity-name" type="text" value="Cardio & Mobility Flow"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Duration</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input id="activity-duration" type="text" value="45 mins"
+                                    class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                <select id="activity-intensity"
+                                    class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                                    <option>Low Impact</option>
+                                    <option selected>Moderate</option>
+                                    <option>High Intensity</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Notes</label>
+                            <textarea id="activity-notes" rows="4"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">A balanced routine designed to elevate heart rate safely while improving joint mobility.</textarea>
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="closeEditActivityModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="saveActivityEdits()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function toggleWeeklyView() {
+            const weeklyPanel = document.getElementById('weekly-view-panel');
+            const dailyContent = document.getElementById('daily-view-content');
+            const button = document.getElementById('weekly-view-btn');
+            const isWeekly = weeklyPanel.classList.contains('hidden');
+
+            if (isWeekly) {
+                weeklyPanel.classList.remove('hidden');
+                dailyContent.classList.add('hidden');
+                button.innerHTML = `<iconify-icon icon="lucide:calendar" class=""></iconify-icon> Daily View`;
+            } else {
+                weeklyPanel.classList.add('hidden');
+                dailyContent.classList.remove('hidden');
+                button.innerHTML = `<iconify-icon icon="lucide:calendar" class=""></iconify-icon> Weekly View`;
+            }
+        }
+
+        function openEditActivityModal() {
+            document.getElementById('edit-activity-modal').classList.remove('hidden');
+        }
+
+        function closeEditActivityModal() {
+            document.getElementById('edit-activity-modal').classList.add('hidden');
+        }
+
+        function saveActivityEdits() {
+            const name = document.getElementById('activity-name').value;
+            const duration = document.getElementById('activity-duration').value;
+            const intensity = document.getElementById('activity-intensity').value;
+            const notes = document.getElementById('activity-notes').value;
+
+            console.log('Activity saved', { name, duration, intensity, notes });
+            alert('Activity updates saved.');
+            closeEditActivityModal();
+        }
+    </script>
 </body>
 
 </html>

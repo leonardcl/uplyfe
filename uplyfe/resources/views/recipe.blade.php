@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recipe</title>
+    <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -161,6 +161,32 @@
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Vegan</button>
                                             <button
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Paleo</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Low-Carb</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">High-Protein</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">DASH Diet</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-sm font-bold mb-3 block">Meal Preferences</label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Quick & Easy</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Meal Prep</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">One-Pot Meals</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Grilled</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Baked</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Stir-Fry</button>
                                         </div>
                                     </div>
 
@@ -170,22 +196,54 @@
                                             <div
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
                                                 Gluten-free
-                                                <button
+                                                <button onclick="removeExclusion(this, 'Gluten-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
                                             <div
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
                                                 Dairy-free
-                                                <button
+                                                <button onclick="removeExclusion(this, 'Dairy-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
-                                            <button
+                                            <div
+                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
+                                                Nut-free
+                                                <button onclick="removeExclusion(this, 'Nut-free')"
+                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
+                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
+                                            </div>
+                                            <div
+                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
+                                                Soy-free
+                                                <button onclick="removeExclusion(this, 'Soy-free')"
+                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
+                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
+                                            </div>
+                                            <button id="add-exclusion-btn"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
                                                 <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
                                                 Add Exclusion
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-sm font-bold mb-3 block">Cuisine Preferences</label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Italian</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mexican</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Asian</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Middle Eastern</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">American</button>
+                                            <button
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
                                         </div>
                                     </div>
                                 </div>
@@ -231,8 +289,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                             <!-- Recipe Card 1: Breakfast -->
-                            <div
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
+                            <div onclick="openRecipeModal('breakfast')"
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <!-- Placeholder for image -->
                                     <div
@@ -277,8 +335,8 @@
                             </div>
 
                             <!-- Recipe Card 2: Lunch -->
-                            <div
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
+                            <div onclick="openRecipeModal('lunch')"
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <div
                                         class="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -324,8 +382,8 @@
                             </div>
 
                             <!-- Recipe Card 3: Dinner -->
-                            <div
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
+                            <div onclick="openRecipeModal('dinner')"
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <div
                                         class="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -375,7 +433,381 @@
                 </div>
             </div>
         </main>
+
+        <!-- Recipe Detail Modal -->
+        <div id="recipe-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl mx-4 h-[90vh] flex flex-col">
+                <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
+                        <div>
+                            <h3 id="modal-recipe-title" class="text-2xl font-heading font-bold">Recipe Title</h3>
+                            <p id="modal-recipe-subtitle" class="text-sm text-muted-foreground">Recipe subtitle</p>
+                        </div>
+                        <button onclick="closeRecipeModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <!-- Modal Content - Scrollable -->
+                    <div class="flex-1 overflow-y-auto">
+                        <!-- Recipe Image -->
+                        <div class="h-64 bg-muted relative flex-shrink-0">
+                            <div id="modal-recipe-image" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                <iconify-icon icon="lucide:image" class="text-6xl opacity-20"></iconify-icon>
+                            </div>
+                            <div class="absolute top-4 left-4">
+                                <span id="modal-recipe-badge" class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">Badge</span>
+                            </div>
+                            <div class="absolute top-4 right-4 flex gap-2">
+                                <button class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
+                                    <iconify-icon icon="lucide:heart"></iconify-icon>
+                                </button>
+                                <button class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm">
+                                    <iconify-icon icon="lucide:share-2"></iconify-icon>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recipe Details -->
+                        <div class="p-6 space-y-6">
+                            <!-- Nutrition & Time -->
+                            <div class="grid grid-cols-4 gap-4 p-4 bg-background rounded-2xl border border-border">
+                                <div class="text-center">
+                                    <p class="text-xs text-muted-foreground">Calories</p>
+                                    <p id="modal-calories" class="text-lg font-bold">420</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xs text-muted-foreground">Protein</p>
+                                    <p id="modal-protein" class="text-lg font-bold">22g</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xs text-muted-foreground">Carbs</p>
+                                    <p id="modal-carbs" class="text-lg font-bold">35g</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xs text-muted-foreground">Time</p>
+                                    <p id="modal-time" class="text-lg font-bold">10m</p>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">Description</h4>
+                                <p id="modal-description" class="text-muted-foreground leading-relaxed">
+                                    Recipe description goes here.
+                                </p>
+                            </div>
+
+                            <!-- Health Benefits -->
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">Health Benefits</h4>
+                                <div id="modal-benefits" class="flex flex-wrap gap-2">
+                                    <!-- Benefits will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Ingredients -->
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">Ingredients</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <ul id="modal-ingredients" class="space-y-2">
+                                        <!-- Ingredients will be populated by JavaScript -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Instructions -->
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">How to Cook</h4>
+                                <div id="modal-instructions" class="space-y-4">
+                                    <!-- Instructions will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Tips -->
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">Chef's Tips</h4>
+                                <div id="modal-tips" class="bg-primary/5 rounded-2xl p-4 border border-primary/20">
+                                    <!-- Tips will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer - Fixed at bottom -->
+                    <div class="flex gap-3 p-6 border-t border-border bg-background flex-shrink-0">
+                        <button onclick="closeRecipeModal()"
+                            class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                            Close
+                        </button>
+                        <button onclick="startCooking()"
+                            class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+                            <iconify-icon icon="lucide:play" class="text-base"></iconify-icon>
+                            Start Cooking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Exclusion Modal -->
+        <div id="add-exclusion-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeAddExclusionModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Add Exclusion</h3>
+                        <button onclick="closeAddExclusionModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Exclusion Type</label>
+                            <select id="exclusion-type" class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">Select type...</option>
+                                <option value="allergy">Allergy</option>
+                                <option value="intolerance">Intolerance</option>
+                                <option value="preference">Preference</option>
+                                <option value="religious">Religious</option>
+                                <option value="medical">Medical</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Ingredient/Food</label>
+                            <input id="exclusion-item" type="text" placeholder="e.g., peanuts, shellfish, pork..."
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="closeAddExclusionModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="addExclusion()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Add Exclusion
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Recipe data
+        const recipes = {
+            breakfast: {
+                title: "Smoked Salmon & Avocado Toast",
+                subtitle: "High Vitamin D Breakfast",
+                badge: "High Vitamin D",
+                calories: "420",
+                protein: "22g",
+                carbs: "35g",
+                time: "10m",
+                description: "Rich in omega-3s and Vitamin D to support your recent checkup goals. This nutrient-dense breakfast provides sustained energy while helping maintain healthy cholesterol levels. The combination of healthy fats from avocado and salmon, plus complex carbs from gluten-free bread, makes this an ideal morning meal.",
+                benefits: ["High in Vitamin D", "Omega-3 Rich", "Heart Healthy", "Gluten-Free"],
+                ingredients: [
+                    "2 slices gluten-free bread, toasted",
+                    "4 oz smoked salmon",
+                    "1/2 avocado, mashed",
+                    "1 tbsp lemon juice",
+                    "1 tsp olive oil",
+                    "Fresh dill, chopped",
+                    "Black pepper to taste"
+                ],
+                instructions: [
+                    "Toast the gluten-free bread until golden brown.",
+                    "In a small bowl, mash the avocado with lemon juice and a pinch of salt.",
+                    "Spread the avocado mixture evenly on both slices of toast.",
+                    "Top with smoked salmon slices.",
+                    "Drizzle with olive oil and sprinkle with fresh dill.",
+                    "Season with black pepper and serve immediately."
+                ],
+                tips: "For maximum Vitamin D absorption, enjoy this meal with morning sunlight exposure. The healthy fats in avocado help your body absorb the Vitamin D from the salmon more effectively."
+            },
+            lunch: {
+                title: "Mediterranean Quinoa Bowl",
+                subtitle: "Heart Healthy Lunch",
+                badge: "Heart Healthy",
+                calories: "550",
+                protein: "18g",
+                carbs: "65g",
+                time: "15m",
+                description: "This fiber-rich Mediterranean bowl supports cardiovascular health with its combination of whole grains, healthy fats, and lean protein. The olives and olive oil provide monounsaturated fats that help maintain healthy cholesterol levels.",
+                benefits: ["Heart Healthy", "High Fiber", "Anti-Inflammatory", "Plant-Based"],
+                ingredients: [
+                    "1 cup cooked quinoa",
+                    "1/2 cucumber, diced",
+                    "1/2 cup cherry tomatoes, halved",
+                    "1/4 cup kalamata olives, pitted",
+                    "1/4 cup feta cheese, crumbled",
+                    "2 tbsp olive oil",
+                    "1 tbsp lemon juice",
+                    "Fresh herbs (parsley, mint)",
+                    "Salt and pepper to taste"
+                ],
+                instructions: [
+                    "Cook quinoa according to package directions and let cool.",
+                    "In a large bowl, combine cucumber, tomatoes, olives, and feta.",
+                    "Add the cooled quinoa to the bowl.",
+                    "In a small bowl, whisk together olive oil and lemon juice.",
+                    "Drizzle the dressing over the salad and toss gently.",
+                    "Season with salt, pepper, and fresh herbs.",
+                    "Let sit for 5 minutes to allow flavors to meld."
+                ],
+                tips: "Prepare quinoa in advance and store in the refrigerator for quick assembly. The flavors develop even more if you let the dressed bowl sit for 10-15 minutes before eating."
+            },
+            dinner: {
+                title: "Lemon Herb Grilled Chicken",
+                subtitle: "Low Glycemic Dinner",
+                badge: "Low Glycemic",
+                calories: "480",
+                protein: "42g",
+                carbs: "12g",
+                time: "25m",
+                description: "This lean protein dinner with roasted vegetables provides stable blood sugar levels throughout the night. The combination of high-quality protein and low-glycemic vegetables makes this an excellent choice for maintaining fasting blood sugar.",
+                benefits: ["Low Glycemic", "High Protein", "Blood Sugar Stable", "Lean Protein"],
+                ingredients: [
+                    "6 oz chicken breast, boneless",
+                    "1 bunch asparagus, trimmed",
+                    "1 lemon, juiced and zested",
+                    "2 tbsp olive oil",
+                    "2 cloves garlic, minced",
+                    "1 tsp dried oregano",
+                    "1 tsp dried thyme",
+                    "Salt and pepper to taste",
+                    "Fresh parsley for garnish"
+                ],
+                instructions: [
+                    "Preheat grill or grill pan to medium-high heat.",
+                    "In a small bowl, combine lemon juice, olive oil, garlic, oregano, thyme, salt, and pepper.",
+                    "Place chicken in a shallow dish and pour half the marinade over it. Let marinate for 10 minutes.",
+                    "Toss asparagus with remaining marinade.",
+                    "Grill chicken for 6-7 minutes per side until internal temperature reaches 165°F.",
+                    "During last 5 minutes, add asparagus to grill and cook until tender-crisp.",
+                    "Let chicken rest for 3 minutes, then slice.",
+                    "Serve with asparagus and garnish with fresh parsley."
+                ],
+                tips: "Use a meat thermometer to ensure chicken is cooked to a safe internal temperature. The lemon zest adds bright flavor without significantly impacting blood sugar levels."
+            }
+        };
+
+        // Modal functions
+        function openRecipeModal(recipeType) {
+            const recipe = recipes[recipeType];
+            if (!recipe) return;
+
+            // Update modal content
+            document.getElementById('modal-recipe-title').textContent = recipe.title;
+            document.getElementById('modal-recipe-subtitle').textContent = recipe.subtitle;
+            document.getElementById('modal-recipe-badge').textContent = recipe.badge;
+            document.getElementById('modal-calories').textContent = recipe.calories;
+            document.getElementById('modal-protein').textContent = recipe.protein;
+            document.getElementById('modal-carbs').textContent = recipe.carbs;
+            document.getElementById('modal-time').textContent = recipe.time;
+            document.getElementById('modal-description').textContent = recipe.description;
+
+            // Benefits
+            const benefitsContainer = document.getElementById('modal-benefits');
+            benefitsContainer.innerHTML = '';
+            recipe.benefits.forEach(benefit => {
+                const badge = document.createElement('span');
+                badge.className = 'px-2 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold';
+                badge.textContent = benefit;
+                benefitsContainer.appendChild(badge);
+            });
+
+            // Ingredients
+            const ingredientsContainer = document.getElementById('modal-ingredients');
+            ingredientsContainer.innerHTML = '';
+            recipe.ingredients.forEach(ingredient => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center gap-2';
+                li.innerHTML = `
+                    <iconify-icon icon="lucide:circle" class="text-primary text-xs"></iconify-icon>
+                    <span class="text-sm">${ingredient}</span>
+                `;
+                ingredientsContainer.appendChild(li);
+            });
+
+            // Instructions
+            const instructionsContainer = document.getElementById('modal-instructions');
+            instructionsContainer.innerHTML = '';
+            recipe.instructions.forEach((instruction, index) => {
+                const step = document.createElement('div');
+                step.className = 'flex gap-4';
+                step.innerHTML = `
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                        ${index + 1}
+                    </div>
+                    <p class="text-sm text-muted-foreground leading-relaxed pt-1">${instruction}</p>
+                `;
+                instructionsContainer.appendChild(step);
+            });
+
+            // Tips
+            document.getElementById('modal-tips').textContent = recipe.tips;
+
+            // Show modal
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipe-modal').classList.add('hidden');
+        }
+
+        function startCooking() {
+            alert('Cooking mode activated! Follow the step-by-step instructions.');
+        }
+
+        // Exclusion functions
+        document.getElementById('add-exclusion-btn').addEventListener('click', openAddExclusionModal);
+
+        function openAddExclusionModal() {
+            document.getElementById('add-exclusion-modal').classList.remove('hidden');
+        }
+
+        function closeAddExclusionModal() {
+            document.getElementById('add-exclusion-modal').classList.add('hidden');
+        }
+
+        function addExclusion() {
+            const type = document.getElementById('exclusion-type').value;
+            const item = document.getElementById('exclusion-item').value.trim();
+
+            if (!type || !item) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // Here you would typically save the exclusion to the backend
+            console.log('Adding exclusion:', { type, item });
+            alert(`Added ${item} as a ${type} exclusion.`);
+
+            closeAddExclusionModal();
+
+            // Reset form
+            document.getElementById('exclusion-type').value = '';
+            document.getElementById('exclusion-item').value = '';
+        }
+
+        function removeExclusion(button, exclusionName) {
+            // Remove the exclusion element from the DOM
+            button.parentElement.remove();
+
+            // Here you would typically remove the exclusion from the backend
+            console.log('Removing exclusion:', exclusionName);
+            alert(`Removed ${exclusionName} from exclusions.`);
+        }
+    </script>
 </body>
 
 </html>
