@@ -187,7 +187,7 @@
                                         class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
                                 </span>
-                                Powered by AI
+                                Powered by Gemma 4
                             </div>
                             <h1
                                 class="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold leading-tight text-foreground tracking-tight">

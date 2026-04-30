@@ -182,9 +182,6 @@
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Low-Carb</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">High-Protein</button>
-                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">DASH
-                                                Diet</button>
                                         </div>
                                     </div>
 
@@ -561,19 +558,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Modal Footer - Fixed at bottom -->
-                    <div class="flex gap-3 p-6 border-t border-border bg-background flex-shrink-0">
-                        <button onclick="closeRecipeModal()"
-                            class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
-                            Close
-                        </button>
-                        <button onclick="startCooking()"
-                            class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
-                            <iconify-icon icon="lucide:play" class="text-base"></iconify-icon>
-                            Start Cooking
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -788,10 +772,6 @@
 
         function closeRecipeModal() {
             document.getElementById('recipe-modal').classList.add('hidden');
-        }
-
-        function startCooking() {
-            alert('Cooking mode activated! Follow the step-by-step instructions.');
         }
 
         // Exclusion functions

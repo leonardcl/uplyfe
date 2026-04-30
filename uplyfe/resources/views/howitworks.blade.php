@@ -83,7 +83,7 @@
                         <a href="/features"
                             class="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Features</a>
                         <a href="/how-it-works"
-                            class="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">How
+                            class="text-sm font-medium text-primary font-semibold border-b-2 border-primary pb-0.5 transition-colors">How
                             it
                             Works</a>
                         <a href="/testimonials"
@@ -94,7 +94,7 @@
                         <a href="/login"
                             class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                             In</a>
-                        <a href="/"
+                        <a href="/health-check"
                             class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
                             Get Started
                             <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
@@ -272,7 +272,7 @@
                             Join thousands of users who are already improving their health with Uplyfe.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a href="/healthcheck"
+                            <a href="/health-check"
                                 class="bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
                                 Upload Your First Report
                             </a>
