@@ -45,6 +45,10 @@ Route::get('/recipe', function () {
     return view('recipe');
 });
 
+Route::get('/profile', function () {
+    return view('profile');
+});
+
 Route::get('/features', function () {
     return view('features');
 });

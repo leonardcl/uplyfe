@@ -118,10 +118,10 @@
                         <p class="text-sm font-bold truncate">Sarah Jenkins</p>
                         <p class="text-xs text-muted-foreground truncate">Free Plan</p>
                     </div>
-                    <button
-                        class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors">
+                    <a href="/profile"
+                        class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
                         <iconify-icon icon="lucide:settings" class="text-lg"></iconify-icon>
-                    </button>
+                    </a>
                 </div>
             </div>
         </aside>
@@ -167,8 +167,7 @@
                                     translate complex terms, and update your health profile.
                                 </p>
 
-                                <div
-                                    class="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group/drop"
+                                <div class="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group/drop"
                                     id="drop-zone">
                                     <input type="file" id="file-input" accept=".pdf,.jpg,.png" class="hidden">
                                     <div
@@ -219,7 +218,9 @@
 
                                 <button
                                     class="w-full py-2 bg-primary/10 text-primary-foreground bg-primary rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
-                                    <a href="/full-analysis" class="block w-full h-full flex items-center justify-center">View Full Analysis</a>
+                                    <a href="/full-analysis"
+                                        class="block w-full h-full flex items-center justify-center">View Full
+                                        Analysis</a>
                                 </button>
                             </div>
                         </div>
@@ -349,7 +350,8 @@
                     <div class="space-y-6">
                         <div>
                             <label class="block text-sm font-medium mb-2">Report Type</label>
-                            <select class="w-full bg-background border border-border text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                            <select
+                                class="w-full bg-background border border-border text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
                                 <option>Blood Work Analysis</option>
                                 <option>General Health Check</option>
                                 <option>Cardiac Assessment</option>
@@ -360,7 +362,7 @@
                         <div>
                             <label class="block text-sm font-medium mb-2">Upload Files</label>
                             <div class="border-2 border-dashed border-border rounded-xl p-6 text-center bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer"
-                                 onclick="document.getElementById('modal-file-input').click()">
+                                onclick="document.getElementById('modal-file-input').click()">
                                 <iconify-icon icon="lucide:file-up" class="text-2xl text-primary mb-2"></iconify-icon>
                                 <p class="text-sm font-medium">Click to upload files</p>
                                 <p class="text-xs text-muted-foreground">PDF, JPG, PNG up to 10MB</p>
@@ -403,7 +405,8 @@
                                 <span class="font-semibold text-sm">AI Analysis Complete</span>
                             </div>
                             <p class="text-sm text-muted-foreground">
-                                Based on your latest blood work, we'll create personalized nutrition and exercise recommendations.
+                                Based on your latest blood work, we'll create personalized nutrition and exercise
+                                recommendations.
                             </p>
                         </div>
 

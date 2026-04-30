@@ -90,7 +90,7 @@
                     Health Checkup
                 </a>
 
-                <a href="#"
+                <a href="/recipe"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-sm transition-all">
                     <iconify-icon icon="lucide:apple" class="text-lg"></iconify-icon>
                     Nutrition & Recipes
@@ -107,6 +107,21 @@
                     <iconify-icon icon="lucide:bot" class="text-lg"></iconify-icon>
                     AI Assistant
                 </a>
+            </div>
+
+            <div class="p-4 border-t border-border">
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                        class="w-10 h-10 rounded-full border border-border">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
+                    </div>
+                    <a href="/profile"
+                        class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
+                        <iconify-icon icon="lucide:settings" class="text-lg"></iconify-icon>
+                    </a>
+                </div>
             </div>
         </aside>
 
@@ -152,76 +167,80 @@
                                 <div class="space-y-6">
                                     <div>
                                         <label class="text-sm font-bold mb-3 block">Diet Type</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button
+                                        <div id="diet-type-chips" class="flex flex-wrap gap-2">
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-primary bg-primary/10 text-primary-foreground text-sm font-semibold transition-colors">Balanced</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Keto</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Vegan</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Paleo</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Low-Carb</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">High-Protein</button>
-                                            <button
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">DASH Diet</button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="diet"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">DASH
+                                                Diet</button>
                                         </div>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-bold mb-3 block">Meal Preferences</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Quick & Easy</button>
-                                            <button
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Meal Prep</button>
-                                            <button
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">One-Pot Meals</button>
-                                            <button
+                                        <div id="meal-preference-chips" class="flex flex-wrap gap-2">
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Quick
+                                                & Easy</button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Meal
+                                                Prep</button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">One-Pot
+                                                Meals</button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Grilled</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Baked</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="meal"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Stir-Fry</button>
                                         </div>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-bold mb-3 block">Allergies & Exclusions</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <div
+                                        <div id="exclusion-chip-group" class="flex flex-wrap gap-2">
+                                            <div data-exclusion-name="Gluten-free"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                Gluten-free
-                                                <button onclick="removeExclusion(this, 'Gluten-free')"
+                                                <span>Gluten-free</span>
+                                                <button type="button" onclick="removeExclusion(this, 'Gluten-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
-                                            <div
+                                            <div data-exclusion-name="Dairy-free"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                Dairy-free
-                                                <button onclick="removeExclusion(this, 'Dairy-free')"
+                                                <span>Dairy-free</span>
+                                                <button type="button" onclick="removeExclusion(this, 'Dairy-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
-                                            <div
+                                            <div data-exclusion-name="Nut-free"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                Nut-free
-                                                <button onclick="removeExclusion(this, 'Nut-free')"
+                                                <span>Nut-free</span>
+                                                <button type="button" onclick="removeExclusion(this, 'Nut-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
-                                            <div
+                                            <div data-exclusion-name="Soy-free"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                Soy-free
-                                                <button onclick="removeExclusion(this, 'Soy-free')"
+                                                <span>Soy-free</span>
+                                                <button type="button" onclick="removeExclusion(this, 'Soy-free')"
                                                     class="text-muted-foreground hover:text-destructive"><iconify-icon
                                                         icon="lucide:x" class="text-sm"></iconify-icon></button>
                                             </div>
-                                            <button id="add-exclusion-btn"
+                                            <button id="add-exclusion-btn" type="button"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
                                                 <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
                                                 Add Exclusion
@@ -231,18 +250,19 @@
 
                                     <div>
                                         <label class="text-sm font-bold mb-3 block">Cuisine Preferences</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button
+                                        <div id="cuisine-preference-chips" class="flex flex-wrap gap-2">
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Italian</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mexican</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Asian</button>
-                                            <button
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Middle Eastern</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Middle
+                                                Eastern</button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">American</button>
-                                            <button
+                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
                                         </div>
                                     </div>
@@ -437,7 +457,8 @@
         <!-- Recipe Detail Modal -->
         <div id="recipe-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl mx-4 h-[90vh] flex flex-col">
+            <div
+                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl mx-4 h-[90vh] flex flex-col">
                 <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
@@ -455,17 +476,21 @@
                     <div class="flex-1 overflow-y-auto">
                         <!-- Recipe Image -->
                         <div class="h-64 bg-muted relative flex-shrink-0">
-                            <div id="modal-recipe-image" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                            <div id="modal-recipe-image"
+                                class="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                 <iconify-icon icon="lucide:image" class="text-6xl opacity-20"></iconify-icon>
                             </div>
                             <div class="absolute top-4 left-4">
-                                <span id="modal-recipe-badge" class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">Badge</span>
+                                <span id="modal-recipe-badge"
+                                    class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">Badge</span>
                             </div>
                             <div class="absolute top-4 right-4 flex gap-2">
-                                <button class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
+                                <button
+                                    class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
                                     <iconify-icon icon="lucide:heart"></iconify-icon>
                                 </button>
-                                <button class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm">
+                                <button
+                                    class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm">
                                     <iconify-icon icon="lucide:share-2"></iconify-icon>
                                 </button>
                             </div>
@@ -569,7 +594,8 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Exclusion Type</label>
-                            <select id="exclusion-type" class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                            <select id="exclusion-type"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
                                 <option value="">Select type...</option>
                                 <option value="allergy">Allergy</option>
                                 <option value="intolerance">Intolerance</option>
@@ -788,9 +814,12 @@
                 return;
             }
 
-            // Here you would typically save the exclusion to the backend
-            console.log('Adding exclusion:', { type, item });
-            alert(`Added ${item} as a ${type} exclusion.`);
+            const label = `${type.charAt(0).toUpperCase() + type.slice(1)}: ${item}`;
+            const exclusionGroup = document.getElementById('exclusion-chip-group');
+
+            if (exclusionGroup) {
+                exclusionGroup.insertBefore(createExclusionChip(label), document.getElementById('add-exclusion-btn'));
+            }
 
             closeAddExclusionModal();
 
@@ -799,14 +828,33 @@
             document.getElementById('exclusion-item').value = '';
         }
 
-        function removeExclusion(button, exclusionName) {
-            // Remove the exclusion element from the DOM
-            button.parentElement.remove();
+        function createExclusionChip(name) {
+            const chip = document.createElement('div');
+            chip.dataset.exclusionName = name;
+            chip.className = 'flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium';
+            chip.innerHTML = `
+                <span>${name}</span>
+                <button type="button" onclick="removeExclusion(this, '${name}')" class="text-muted-foreground hover:text-destructive"><iconify-icon icon="lucide:x" class="text-sm"></iconify-icon></button>
+            `;
+            return chip;
+        }
 
-            // Here you would typically remove the exclusion from the backend
+        function removeExclusion(button, exclusionName) {
+            button.parentElement.remove();
             console.log('Removing exclusion:', exclusionName);
             alert(`Removed ${exclusionName} from exclusions.`);
         }
+
+        document.addEventListener('click', function (event) {
+            const chip = event.target.closest('[data-chip-toggle="true"]');
+            if (!chip) return;
+
+            const active = chip.classList.toggle('bg-primary/10');
+            chip.classList.toggle('border-primary', active);
+            chip.classList.toggle('text-primary-foreground', active);
+            chip.classList.toggle('border-border', !active);
+            chip.classList.toggle('text-muted-foreground', !active);
+        });
     </script>
 </body>
 

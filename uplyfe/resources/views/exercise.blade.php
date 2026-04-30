@@ -96,7 +96,7 @@
                     Nutrition & Recipes
                 </a>
 
-                <a href="#"
+                <a href="/exercise"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-sm transition-all">
                     <iconify-icon icon="lucide:dumbbell" class="text-lg"></iconify-icon>
                     Exercise Routine
@@ -107,6 +107,21 @@
                     <iconify-icon icon="lucide:bot" class="text-lg"></iconify-icon>
                     AI Assistant
                 </a>
+            </div>
+
+            <div class="p-4 border-t border-border">
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                        class="w-10 h-10 rounded-full border border-border">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
+                    </div>
+                    <a href="/profile"
+                        class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
+                        <iconify-icon icon="lucide:settings" class="text-lg"></iconify-icon>
+                    </a>
+                </div>
             </div>
         </aside>
 
