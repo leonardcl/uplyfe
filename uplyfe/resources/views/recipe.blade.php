@@ -63,8 +63,8 @@
 <body>
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation (Same as Dashboard) -->
-        <aside
-            class="hidden md:flex w-64 lg:w-72 bg-card border-r border-border flex-shrink-0 flex-col transition-all duration-300">
+        <aside id="mobile-sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <div
@@ -124,6 +124,8 @@
                 </div>
             </div>
         </aside>
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
+            onclick="toggleSidebar(false)"></div>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
@@ -131,7 +133,7 @@
             <!-- Topbar -->
             <header class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
                 <div class="flex items-center gap-4">
-                    <button class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
+                    <button id="mobile-menu-button" class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
                         <iconify-icon icon="lucide:menu" class="text-2xl"></iconify-icon>
                     </button>
                     <h1 class="text-xl font-heading font-bold">Nutrition & Recipes</h1>
@@ -292,22 +294,22 @@
                     <!-- Recipe Grid -->
                     <section>
                         <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-heading font-bold">Today's AI Meal Plan</h2>
+                            <h2 class="text-2xl font-heading font-bold" id="meal-plan-title">Today's AI Meal Plan</h2>
                             <div class="flex gap-2">
-                                <button
-                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"><iconify-icon
+                                <button id="prev-day-btn"
+                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><iconify-icon
                                         icon="lucide:chevron-left"></iconify-icon></button>
-                                <button
+                                <button id="next-day-btn"
                                     class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"><iconify-icon
                                         icon="lucide:chevron-right"></iconify-icon></button>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-grid">
 
                             <!-- Recipe Card 1: Breakfast -->
                             <div onclick="openRecipeModal('breakfast')"
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-breakfast">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <!-- Placeholder for image -->
                                     <div
@@ -315,37 +317,36 @@
                                         <iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>
                                     </div>
                                     <div
-                                        class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
+                                        class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm" id="breakfast-badge">
                                         Breakfast</div>
                                     <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
+                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="breakfast-heart">
                                         <iconify-icon icon="lucide:heart"></iconify-icon>
                                     </button>
                                 </div>
                                 <div class="p-5 flex flex-col flex-1">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="flex items-center gap-2 mb-2" id="breakfast-tags">
                                         <span
                                             class="text-xs font-semibold text-tertiary bg-tertiary/10 px-2 py-0.5 rounded-full">High
                                             Vitamin D</span>
                                     </div>
-                                    <h3
-                                        class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors">
+                                    <h3 class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors" id="breakfast-title">
                                         Smoked Salmon & Avocado Toast</h3>
-                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2">Rich in omega-3s and
+                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2" id="breakfast-description">Rich in omega-3s and
                                         Vitamin D to support your recent checkup goals. Served on gluten-free bread.</p>
 
                                     <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
-                                            <p class="text-sm font-bold">420</p>
+                                            <p class="text-sm font-bold" id="breakfast-calories">420</p>
                                         </div>
                                         <div class="text-center border-x border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
-                                            <p class="text-sm font-bold">22g</p>
+                                            <p class="text-sm font-bold" id="breakfast-protein">22g</p>
                                         </div>
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold">10m</p>
+                                            <p class="text-sm font-bold" id="breakfast-time">10m</p>
                                         </div>
                                     </div>
                                 </div>
@@ -353,7 +354,7 @@
 
                             <!-- Recipe Card 2: Lunch -->
                             <div onclick="openRecipeModal('lunch')"
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-lunch">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <div
                                         class="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -363,36 +364,36 @@
                                         class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
                                         Lunch</div>
                                     <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-red-500 transition-colors shadow-sm">
+                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-red-500 transition-colors shadow-sm" id="lunch-heart">
                                         <iconify-icon icon="lucide:heart" class="text-red-500" data-icon="lucide:heart"
                                             style="fill: currentColor;"></iconify-icon>
                                     </button>
                                 </div>
                                 <div class="p-5 flex flex-col flex-1">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="flex items-center gap-2 mb-2" id="lunch-tags">
                                         <span
                                             class="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Heart
                                             Healthy</span>
                                     </div>
                                     <h3
-                                        class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors">
+                                        class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors" id="lunch-title">
                                         Mediterranean Quinoa Bowl</h3>
-                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2">Packed with fiber to help
+                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2" id="lunch-description">Packed with fiber to help
                                         maintain your excellent cholesterol levels. Features olives, cucumber, and feta.
                                     </p>
 
                                     <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
-                                            <p class="text-sm font-bold">550</p>
+                                            <p class="text-sm font-bold" id="lunch-calories">550</p>
                                         </div>
                                         <div class="text-center border-x border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
-                                            <p class="text-sm font-bold">18g</p>
+                                            <p class="text-sm font-bold" id="lunch-protein">18g</p>
                                         </div>
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold">15m</p>
+                                            <p class="text-sm font-bold" id="lunch-time">15m</p>
                                         </div>
                                     </div>
                                 </div>
@@ -400,7 +401,7 @@
 
                             <!-- Recipe Card 3: Dinner -->
                             <div onclick="openRecipeModal('dinner')"
-                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer">
+                                class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-dinner">
                                 <div class="h-48 relative overflow-hidden bg-muted">
                                     <div
                                         class="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -410,43 +411,41 @@
                                         class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
                                         Dinner</div>
                                     <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
+                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="dinner-heart">
                                         <iconify-icon icon="lucide:heart"></iconify-icon>
                                     </button>
                                 </div>
                                 <div class="p-5 flex flex-col flex-1">
-                                    <div class="flex items-center gap-2 mb-2">
+                                    <div class="flex items-center gap-2 mb-2" id="dinner-tags">
                                         <span
                                             class="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">Low
                                             Glycemic</span>
                                     </div>
                                     <h3
-                                        class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors">
+                                        class="font-bold text-lg mb-1 leading-tight group-hover:text-primary transition-colors" id="dinner-title">
                                         Lemon Herb Grilled Chicken</h3>
-                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2">A lean protein dinner
+                                    <p class="text-xs text-muted-foreground mb-4 line-clamp-2" id="dinner-description">A lean protein dinner
                                         paired with roasted asparagus to keep your fasting blood sugar stable overnight.
                                     </p>
 
                                     <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
-                                            <p class="text-sm font-bold">480</p>
+                                            <p class="text-sm font-bold" id="dinner-calories">480</p>
                                         </div>
                                         <div class="text-center border-x border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
-                                            <p class="text-sm font-bold">42g</p>
+                                            <p class="text-sm font-bold" id="dinner-protein">42g</p>
                                         </div>
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold">25m</p>
+                                            <p class="text-sm font-bold" id="dinner-time">25m</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </section>
-
                 </div>
             </div>
         </main>
@@ -455,7 +454,7 @@
         <div id="recipe-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
             <div
-                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl mx-4 h-[90vh] flex flex-col">
+                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
                 <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
@@ -612,107 +611,388 @@
     </div>
 
     <script>
-        // Recipe data
-        const recipes = {
-            breakfast: {
-                title: "Smoked Salmon & Avocado Toast",
-                subtitle: "High Vitamin D Breakfast",
-                badge: "High Vitamin D",
-                calories: "420",
-                protein: "22g",
-                carbs: "35g",
-                time: "10m",
-                description: "Rich in omega-3s and Vitamin D to support your recent checkup goals. This nutrient-dense breakfast provides sustained energy while helping maintain healthy cholesterol levels. The combination of healthy fats from avocado and salmon, plus complex carbs from gluten-free bread, makes this an ideal morning meal.",
-                benefits: ["High in Vitamin D", "Omega-3 Rich", "Heart Healthy", "Gluten-Free"],
-                ingredients: [
-                    "2 slices gluten-free bread, toasted",
-                    "4 oz smoked salmon",
-                    "1/2 avocado, mashed",
-                    "1 tbsp lemon juice",
-                    "1 tsp olive oil",
-                    "Fresh dill, chopped",
-                    "Black pepper to taste"
-                ],
-                instructions: [
-                    "Toast the gluten-free bread until golden brown.",
-                    "In a small bowl, mash the avocado with lemon juice and a pinch of salt.",
-                    "Spread the avocado mixture evenly on both slices of toast.",
-                    "Top with smoked salmon slices.",
-                    "Drizzle with olive oil and sprinkle with fresh dill.",
-                    "Season with black pepper and serve immediately."
-                ],
-                tips: "For maximum Vitamin D absorption, enjoy this meal with morning sunlight exposure. The healthy fats in avocado help your body absorb the Vitamin D from the salmon more effectively."
+        // Recipe data for different days
+        const mealPlans = {
+            today: {
+                title: "Today's AI Meal Plan",
+                breakfast: {
+                    title: "Smoked Salmon & Avocado Toast",
+                    subtitle: "High Vitamin D Breakfast",
+                    badge: "High Vitamin D",
+                    calories: "420",
+                    protein: "22g",
+                    carbs: "35g",
+                    time: "10m",
+                    description: "Rich in omega-3s and Vitamin D to support your recent checkup goals. This nutrient-dense breakfast provides sustained energy while helping maintain healthy cholesterol levels. The combination of healthy fats from avocado and salmon, plus complex carbs from gluten-free bread, makes this an ideal morning meal.",
+                    benefits: ["High in Vitamin D", "Omega-3 Rich", "Heart Healthy", "Gluten-Free"],
+                    tags: [{ text: "High Vitamin D", color: "tertiary" }],
+                    ingredients: [
+                        "2 slices gluten-free bread, toasted",
+                        "4 oz smoked salmon",
+                        "1/2 avocado, mashed",
+                        "1 tbsp lemon juice",
+                        "1 tsp olive oil",
+                        "Fresh dill, chopped",
+                        "Black pepper to taste"
+                    ],
+                    instructions: [
+                        "Toast the gluten-free bread until golden brown.",
+                        "In a small bowl, mash the avocado with lemon juice and a pinch of salt.",
+                        "Spread the avocado mixture evenly on both slices of toast.",
+                        "Top with smoked salmon slices.",
+                        "Drizzle with olive oil and sprinkle with fresh dill.",
+                        "Season with black pepper and serve immediately."
+                    ],
+                    tips: "For maximum Vitamin D absorption, enjoy this meal with morning sunlight exposure. The healthy fats in avocado help your body absorb the Vitamin D from the salmon more effectively."
+                },
+                lunch: {
+                    title: "Mediterranean Quinoa Bowl",
+                    subtitle: "Heart Healthy Lunch",
+                    badge: "Heart Healthy",
+                    calories: "550",
+                    protein: "18g",
+                    carbs: "65g",
+                    time: "15m",
+                    description: "This fiber-rich Mediterranean bowl supports cardiovascular health with its combination of whole grains, healthy fats, and lean protein. The olives and olive oil provide monounsaturated fats that help maintain healthy cholesterol levels.",
+                    benefits: ["Heart Healthy", "High Fiber", "Anti-Inflammatory", "Plant-Based"],
+                    tags: [{ text: "Heart Healthy", color: "blue-600", bgColor: "blue-100" }],
+                    ingredients: [
+                        "1 cup cooked quinoa",
+                        "1/2 cucumber, diced",
+                        "1/2 cup cherry tomatoes, halved",
+                        "1/4 cup kalamata olives, pitted",
+                        "1/4 cup feta cheese, crumbled",
+                        "2 tbsp olive oil",
+                        "1 tbsp lemon juice",
+                        "Fresh herbs (parsley, mint)",
+                        "Salt and pepper to taste"
+                    ],
+                    instructions: [
+                        "Cook quinoa according to package directions and let cool.",
+                        "In a large bowl, combine cucumber, tomatoes, olives, and feta.",
+                        "Add the cooled quinoa to the bowl.",
+                        "In a small bowl, whisk together olive oil and lemon juice.",
+                        "Drizzle the dressing over the salad and toss gently.",
+                        "Season with salt, pepper, and fresh herbs.",
+                        "Let sit for 5 minutes to allow flavors to meld."
+                    ],
+                    tips: "Prepare quinoa in advance and store in the refrigerator for quick assembly. The flavors develop even more if you let the dressed bowl sit for 10-15 minutes before eating."
+                },
+                dinner: {
+                    title: "Lemon Herb Grilled Chicken",
+                    subtitle: "Low Glycemic Dinner",
+                    badge: "Low Glycemic",
+                    calories: "480",
+                    protein: "42g",
+                    carbs: "12g",
+                    time: "25m",
+                    description: "This lean protein dinner with roasted vegetables provides stable blood sugar levels throughout the night. The combination of high-quality protein and low-glycemic vegetables makes this an excellent choice for maintaining fasting blood sugar.",
+                    benefits: ["Low Glycemic", "High Protein", "Blood Sugar Stable", "Lean Protein"],
+                    tags: [{ text: "Low Glycemic", color: "purple-600", bgColor: "purple-100" }],
+                    ingredients: [
+                        "6 oz chicken breast, boneless",
+                        "1 bunch asparagus, trimmed",
+                        "1 lemon, juiced and zested",
+                        "2 tbsp olive oil",
+                        "2 cloves garlic, minced",
+                        "1 tsp dried oregano",
+                        "1 tsp dried thyme",
+                        "Salt and pepper to taste",
+                        "Fresh parsley for garnish"
+                    ],
+                    instructions: [
+                        "Preheat grill or grill pan to medium-high heat.",
+                        "In a small bowl, combine lemon juice, olive oil, garlic, oregano, thyme, salt, and pepper.",
+                        "Place chicken in a shallow dish and pour half the marinade over it. Let marinate for 10 minutes.",
+                        "Toss asparagus with remaining marinade.",
+                        "Grill chicken for 6-7 minutes per side until internal temperature reaches 165°F.",
+                        "During last 5 minutes, add asparagus to grill and cook until tender-crisp.",
+                        "Let chicken rest for 3 minutes, then slice.",
+                        "Serve with asparagus and garnish with fresh parsley."
+                    ],
+                    tips: "Use a meat thermometer to ensure chicken is cooked to a safe internal temperature. The lemon zest adds bright flavor without significantly impacting blood sugar levels."
+                }
             },
-            lunch: {
-                title: "Mediterranean Quinoa Bowl",
-                subtitle: "Heart Healthy Lunch",
-                badge: "Heart Healthy",
-                calories: "550",
-                protein: "18g",
-                carbs: "65g",
-                time: "15m",
-                description: "This fiber-rich Mediterranean bowl supports cardiovascular health with its combination of whole grains, healthy fats, and lean protein. The olives and olive oil provide monounsaturated fats that help maintain healthy cholesterol levels.",
-                benefits: ["Heart Healthy", "High Fiber", "Anti-Inflammatory", "Plant-Based"],
-                ingredients: [
-                    "1 cup cooked quinoa",
-                    "1/2 cucumber, diced",
-                    "1/2 cup cherry tomatoes, halved",
-                    "1/4 cup kalamata olives, pitted",
-                    "1/4 cup feta cheese, crumbled",
-                    "2 tbsp olive oil",
-                    "1 tbsp lemon juice",
-                    "Fresh herbs (parsley, mint)",
-                    "Salt and pepper to taste"
-                ],
-                instructions: [
-                    "Cook quinoa according to package directions and let cool.",
-                    "In a large bowl, combine cucumber, tomatoes, olives, and feta.",
-                    "Add the cooled quinoa to the bowl.",
-                    "In a small bowl, whisk together olive oil and lemon juice.",
-                    "Drizzle the dressing over the salad and toss gently.",
-                    "Season with salt, pepper, and fresh herbs.",
-                    "Let sit for 5 minutes to allow flavors to meld."
-                ],
-                tips: "Prepare quinoa in advance and store in the refrigerator for quick assembly. The flavors develop even more if you let the dressed bowl sit for 10-15 minutes before eating."
+            tomorrow: {
+                title: "Tomorrow's AI Meal Plan",
+                breakfast: {
+                    title: "Greek Yogurt Parfait",
+                    subtitle: "Calcium Rich Breakfast",
+                    badge: "Calcium Rich",
+                    calories: "380",
+                    protein: "25g",
+                    carbs: "45g",
+                    time: "5m",
+                    description: "This creamy parfait provides excellent calcium intake to support bone health. The combination of Greek yogurt, berries, and nuts creates a balanced meal that's both nutritious and satisfying.",
+                    benefits: ["High Calcium", "Probiotic Rich", "Antioxidant Boost", "Quick Prep"],
+                    tags: [{ text: "Calcium Rich", color: "green-600", bgColor: "green-100" }],
+                    ingredients: [
+                        "1 cup Greek yogurt (plain, full-fat)",
+                        "1/2 cup mixed berries (strawberries, blueberries)",
+                        "1/4 cup granola (low-sugar)",
+                        "2 tbsp almonds, chopped",
+                        "1 tsp honey",
+                        "1/2 tsp cinnamon"
+                    ],
+                    instructions: [
+                        "In a glass or bowl, layer half the Greek yogurt.",
+                        "Add half the berries and granola.",
+                        "Repeat with remaining yogurt, berries, and granola.",
+                        "Top with chopped almonds, honey, and cinnamon.",
+                        "Serve immediately or chill for 5 minutes."
+                    ],
+                    tips: "Use full-fat Greek yogurt for better calcium absorption and satiety. The berries provide natural sweetness while adding powerful antioxidants."
+                },
+                lunch: {
+                    title: "Turkey & Vegetable Stir-Fry",
+                    subtitle: "Lean Protein Lunch",
+                    badge: "Lean Protein",
+                    calories: "420",
+                    protein: "35g",
+                    carbs: "25g",
+                    time: "20m",
+                    description: "This quick stir-fry provides lean protein with plenty of colorful vegetables. The combination of turkey and mixed veggies creates a nutrient-dense meal that's perfect for maintaining energy levels.",
+                    benefits: ["High Protein", "Low Carb", "Vitamin Rich", "Quick Cook"],
+                    tags: [{ text: "Lean Protein", color: "orange-600", bgColor: "orange-100" }],
+                    ingredients: [
+                        "6 oz ground turkey",
+                        "1 cup broccoli florets",
+                        "1 bell pepper, sliced",
+                        "1 carrot, julienned",
+                        "2 cloves garlic, minced",
+                        "1 tbsp ginger, grated",
+                        "2 tbsp low-sodium soy sauce",
+                        "1 tbsp sesame oil",
+                        "1 tsp cornstarch",
+                        "Green onions for garnish"
+                    ],
+                    instructions: [
+                        "Heat sesame oil in a large wok or skillet over medium-high heat.",
+                        "Add garlic and ginger, stir-fry for 30 seconds.",
+                        "Add ground turkey and cook until browned, breaking up with a spoon.",
+                        "Add broccoli, bell pepper, and carrot. Stir-fry for 5-7 minutes.",
+                        "Mix soy sauce with cornstarch and add to the pan.",
+                        "Cook for 2 more minutes until sauce thickens.",
+                        "Garnish with green onions and serve hot."
+                    ],
+                    tips: "Cut all vegetables to similar size for even cooking. Serve over cauliflower rice for a lower-carb option if desired."
+                },
+                dinner: {
+                    title: "Baked Salmon with Sweet Potato",
+                    subtitle: "Omega-3 Rich Dinner",
+                    badge: "Omega-3 Rich",
+                    calories: "520",
+                    protein: "38g",
+                    carbs: "35g",
+                    time: "30m",
+                    description: "This omega-3 powerhouse dinner supports heart and brain health. The combination of wild-caught salmon and nutrient-dense sweet potatoes creates a meal that's both delicious and incredibly healthy.",
+                    benefits: ["Omega-3 Rich", "Brain Healthy", "Anti-Inflammatory", "Vitamin A Boost"],
+                    tags: [{ text: "Omega-3 Rich", color: "teal-600", bgColor: "teal-100" }],
+                    ingredients: [
+                        "6 oz salmon fillet (wild-caught)",
+                        "1 medium sweet potato",
+                        "1 cup spinach",
+                        "1 tbsp olive oil",
+                        "1 lemon, sliced",
+                        "2 cloves garlic, minced",
+                        "1 tsp dried dill",
+                        "Salt and pepper to taste",
+                        "Fresh herbs for garnish"
+                    ],
+                    instructions: [
+                        "Preheat oven to 400°F (200°C).",
+                        "Pierce sweet potato with fork and microwave for 3 minutes to soften.",
+                        "Rub salmon with olive oil, garlic, dill, salt, and pepper.",
+                        "Place salmon on baking sheet with lemon slices on top.",
+                        "Cut sweet potato into wedges and toss with olive oil and seasonings.",
+                        "Bake salmon and sweet potatoes for 20-25 minutes.",
+                        "In last 5 minutes, add spinach to wilt.",
+                        "Serve salmon with sweet potato wedges and wilted spinach."
+                    ],
+                    tips: "Wild-caught salmon provides better omega-3 content than farmed. The sweet potato provides complex carbs and vitamin A for optimal nutrient absorption."
+                }
             },
-            dinner: {
-                title: "Lemon Herb Grilled Chicken",
-                subtitle: "Low Glycemic Dinner",
-                badge: "Low Glycemic",
-                calories: "480",
-                protein: "42g",
-                carbs: "12g",
-                time: "25m",
-                description: "This lean protein dinner with roasted vegetables provides stable blood sugar levels throughout the night. The combination of high-quality protein and low-glycemic vegetables makes this an excellent choice for maintaining fasting blood sugar.",
-                benefits: ["Low Glycemic", "High Protein", "Blood Sugar Stable", "Lean Protein"],
-                ingredients: [
-                    "6 oz chicken breast, boneless",
-                    "1 bunch asparagus, trimmed",
-                    "1 lemon, juiced and zested",
-                    "2 tbsp olive oil",
-                    "2 cloves garlic, minced",
-                    "1 tsp dried oregano",
-                    "1 tsp dried thyme",
-                    "Salt and pepper to taste",
-                    "Fresh parsley for garnish"
-                ],
-                instructions: [
-                    "Preheat grill or grill pan to medium-high heat.",
-                    "In a small bowl, combine lemon juice, olive oil, garlic, oregano, thyme, salt, and pepper.",
-                    "Place chicken in a shallow dish and pour half the marinade over it. Let marinate for 10 minutes.",
-                    "Toss asparagus with remaining marinade.",
-                    "Grill chicken for 6-7 minutes per side until internal temperature reaches 165°F.",
-                    "During last 5 minutes, add asparagus to grill and cook until tender-crisp.",
-                    "Let chicken rest for 3 minutes, then slice.",
-                    "Serve with asparagus and garnish with fresh parsley."
-                ],
-                tips: "Use a meat thermometer to ensure chicken is cooked to a safe internal temperature. The lemon zest adds bright flavor without significantly impacting blood sugar levels."
+            dayAfter: {
+                title: "Day After Tomorrow's AI Meal Plan",
+                breakfast: {
+                    title: "Chia Seed Pudding",
+                    subtitle: "Fiber Rich Breakfast",
+                    badge: "Fiber Rich",
+                    calories: "340",
+                    protein: "12g",
+                    carbs: "40g",
+                    time: "5m",
+                    description: "This fiber-packed pudding supports digestive health and provides sustained energy. Chia seeds are a complete protein and excellent source of omega-3s, making this a nutrient-dense start to your day.",
+                    benefits: ["High Fiber", "Complete Protein", "Omega-3 Rich", "Digestive Health"],
+                    tags: [{ text: "Fiber Rich", color: "emerald-600", bgColor: "emerald-100" }],
+                    ingredients: [
+                        "3 tbsp chia seeds",
+                        "1 cup almond milk (unsweetened)",
+                        "1/2 banana, mashed",
+                        "1/4 cup berries",
+                        "1 tbsp almond butter",
+                        "1/2 tsp vanilla extract",
+                        "Cinnamon to taste"
+                    ],
+                    instructions: [
+                        "In a jar, combine chia seeds and almond milk.",
+                        "Stir well and let sit for 5 minutes, then stir again.",
+                        "Add mashed banana, almond butter, and vanilla.",
+                        "Top with berries and sprinkle with cinnamon.",
+                        "Refrigerate overnight or for at least 2 hours.",
+                        "Stir before serving."
+                    ],
+                    tips: "Prepare this pudding the night before for a quick grab-and-go breakfast. The chia seeds will thicken the mixture as they absorb the liquid."
+                },
+                lunch: {
+                    title: "Lentil Soup with Vegetables",
+                    subtitle: "Plant-Based Lunch",
+                    badge: "Plant-Based",
+                    calories: "380",
+                    protein: "18g",
+                    carbs: "55g",
+                    time: "25m",
+                    description: "This hearty lentil soup is packed with plant-based protein and fiber. The combination of lentils, vegetables, and herbs creates a comforting meal that's both nutritious and satisfying.",
+                    benefits: ["Plant-Based Protein", "High Fiber", "Immune Boosting", "Heart Healthy"],
+                    tags: [{ text: "Plant-Based", color: "lime-600", bgColor: "lime-100" }],
+                    ingredients: [
+                        "1 cup green lentils, rinsed",
+                        "1 onion, diced",
+                        "2 carrots, diced",
+                        "2 celery stalks, diced",
+                        "2 cloves garlic, minced",
+                        "1 tsp cumin",
+                        "1 tsp paprika",
+                        "4 cups vegetable broth",
+                        "2 cups spinach",
+                        "1 tbsp olive oil",
+                        "Salt and pepper to taste"
+                    ],
+                    instructions: [
+                        "Heat olive oil in a large pot over medium heat.",
+                        "Add onion, carrots, and celery. Cook for 5 minutes.",
+                        "Add garlic, cumin, and paprika. Cook for 1 minute.",
+                        "Add lentils and vegetable broth. Bring to a boil.",
+                        "Reduce heat and simmer for 20 minutes until lentils are tender.",
+                        "Add spinach and cook for 2 more minutes.",
+                        "Season with salt and pepper.",
+                        "Serve hot with whole grain bread if desired."
+                    ],
+                    tips: "This soup tastes even better the next day. Store leftovers in the refrigerator and reheat gently. Add a squeeze of lemon juice for extra brightness."
+                },
+                dinner: {
+                    title: "Grilled Vegetable Skewers",
+                    subtitle: "Antioxidant Rich Dinner",
+                    badge: "Antioxidant Rich",
+                    calories: "360",
+                    protein: "15g",
+                    carbs: "45g",
+                    time: "20m",
+                    description: "These colorful vegetable skewers are loaded with antioxidants and vitamins. Grilled to perfection with herbs and olive oil, they make a light yet satisfying dinner option.",
+                    benefits: ["Antioxidant Rich", "Vitamin Dense", "Low Calorie", "Grilled"],
+                    tags: [{ text: "Antioxidant Rich", color: "rose-600", bgColor: "rose-100" }],
+                    ingredients: [
+                        "1 zucchini, cut into chunks",
+                        "1 red bell pepper, cut into chunks",
+                        "1 yellow bell pepper, cut into chunks",
+                        "1 red onion, cut into chunks",
+                        "8 cherry tomatoes",
+                        "8 mushrooms, halved",
+                        "3 tbsp olive oil",
+                        "2 cloves garlic, minced",
+                        "1 tsp dried oregano",
+                        "1 tsp dried thyme",
+                        "Salt and pepper to taste",
+                        "Wooden skewers, soaked"
+                    ],
+                    instructions: [
+                        "Preheat grill to medium-high heat.",
+                        "In a bowl, combine olive oil, garlic, oregano, thyme, salt, and pepper.",
+                        "Thread vegetables onto soaked skewers, alternating types.",
+                        "Brush skewers with the herb oil mixture.",
+                        "Grill for 10-12 minutes, turning occasionally.",
+                        "Brush with remaining oil halfway through cooking.",
+                        "Remove from grill and let rest for 2 minutes.",
+                        "Serve with quinoa or couscous if desired."
+                    ],
+                    tips: "Cut vegetables to similar size for even cooking. If using wooden skewers, soak them in water for 30 minutes to prevent burning. These skewers also make great meal prep for the week."
+                }
             }
         };
 
+        // Current day tracking
+        let currentDay = 'today';
+        const dayOrder = ['today', 'tomorrow', 'dayAfter'];
+
+        // Navigation functions
+        function navigateDay(direction) {
+            const currentIndex = dayOrder.indexOf(currentDay);
+            let newIndex;
+
+            if (direction === 'next') {
+                newIndex = Math.min(currentIndex + 1, dayOrder.length - 1);
+            } else if (direction === 'prev') {
+                newIndex = Math.max(currentIndex - 1, 0);
+            }
+
+            if (newIndex !== currentIndex) {
+                currentDay = dayOrder[newIndex];
+                updateMealPlan();
+                updateNavigationButtons();
+            }
+        }
+
+        function updateMealPlan() {
+            const plan = mealPlans[currentDay];
+
+            // Update title
+            document.getElementById('meal-plan-title').textContent = plan.title;
+
+            // Update breakfast
+            updateRecipeCard('breakfast', plan.breakfast);
+
+            // Update lunch
+            updateRecipeCard('lunch', plan.lunch);
+
+            // Update dinner
+            updateRecipeCard('dinner', plan.dinner);
+        }
+
+        function updateRecipeCard(mealType, recipe) {
+            // Update title
+            document.getElementById(`${mealType}-title`).textContent = recipe.title;
+
+            // Update description
+            document.getElementById(`${mealType}-description`).textContent = recipe.description;
+
+            // Update tags
+            const tagsContainer = document.getElementById(`${mealType}-tags`);
+            tagsContainer.innerHTML = '';
+            recipe.tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = `text-xs font-semibold text-${tag.color} bg-${tag.bgColor} px-2 py-0.5 rounded-full`;
+                tagElement.textContent = tag.text;
+                tagsContainer.appendChild(tagElement);
+            });
+
+            // Update nutrition
+            document.getElementById(`${mealType}-calories`).textContent = recipe.calories;
+            document.getElementById(`${mealType}-protein`).textContent = recipe.protein;
+            document.getElementById(`${mealType}-time`).textContent = recipe.time;
+        }
+
+        function updateNavigationButtons() {
+            const currentIndex = dayOrder.indexOf(currentDay);
+            const prevBtn = document.getElementById('prev-day-btn');
+            const nextBtn = document.getElementById('next-day-btn');
+
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === dayOrder.length - 1;
+        }
+
         // Modal functions
-        function openRecipeModal(recipeType) {
-            const recipe = recipes[recipeType];
+        function openRecipeModal(mealType) {
+            const recipe = mealPlans[currentDay][mealType];
             if (!recipe) return;
 
             // Update modal content
@@ -834,6 +1114,30 @@
             chip.classList.toggle('text-primary-foreground', active);
             chip.classList.toggle('border-border', !active);
             chip.classList.toggle('text-muted-foreground', !active);
+        });
+
+        function toggleSidebar(open) {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+            const isOpen = mobileSidebar.classList.contains('translate-x-0');
+            const shouldOpen = typeof open === 'boolean' ? open : !isOpen;
+
+            if (shouldOpen) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileSidebar.classList.add('translate-x-0');
+                mobileBackdrop.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.remove('translate-x-0');
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileBackdrop.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('prev-day-btn').addEventListener('click', () => navigateDay('prev'));
+            document.getElementById('next-day-btn').addEventListener('click', () => navigateDay('next'));
+            document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+            updateNavigationButtons();
         });
     </script>
 </body>

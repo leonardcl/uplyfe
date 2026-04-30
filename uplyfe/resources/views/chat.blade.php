@@ -63,8 +63,8 @@
 <body>
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation -->
-        <aside
-            class="hidden md:flex w-64 lg:w-72 bg-card border-r border-border flex-shrink-0 flex-col transition-all duration-300">
+        <aside id="mobile-sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <div
@@ -124,6 +124,8 @@
                 </div>
             </div>
         </aside>
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
+            onclick="toggleSidebar(false)"></div>
 
         <!-- Main Content (Chat Interface) -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
@@ -132,7 +134,7 @@
             <header
                 class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <button class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
+                    <button id="mobile-menu-button" class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
                         <iconify-icon icon="lucide:menu" class="text-2xl"></iconify-icon>
                     </button>
                     <div class="flex items-center gap-3">
@@ -284,7 +286,25 @@
                     </div>
                 `;
                 chatMessages.insertAdjacentHTML('beforeend', userMessageHTML);
+
+                const botMessageHTML = `
+                    <div class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
+                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
+                            <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
+                            <div class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
+                                Hello, I am Uplyfe chatbot.
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.insertAdjacentHTML('beforeend', botMessageHTML);
+
                 textarea.value = '';
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         });
@@ -295,6 +315,25 @@
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
         });
+
+        function toggleSidebar(open) {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+            const isOpen = mobileSidebar.classList.contains('translate-x-0');
+            const shouldOpen = typeof open === 'boolean' ? open : !isOpen;
+
+            if (shouldOpen) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileSidebar.classList.add('translate-x-0');
+                mobileBackdrop.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.remove('translate-x-0');
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileBackdrop.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
     </script>
 </body>
 

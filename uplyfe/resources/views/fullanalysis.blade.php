@@ -64,8 +64,8 @@
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
 
         <!-- Sidebar Navigation -->
-        <aside
-            class="w-full md:w-64 lg:w-72 bg-card border-r border-border flex-shrink-0 flex flex-col transition-all duration-300">
+        <aside id="mobile-sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <div
@@ -126,12 +126,19 @@
             </div>
         </aside>
 
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
+            onclick="toggleSidebar(false)"></div>
+            
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
 
             <!-- Topbar -->
             <header class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
                 <div class="flex items-center gap-4">
+                    <button id="mobile-menu-button" class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
+                        <iconify-icon icon="lucide:menu" class="text-xl"></iconify-icon>
+                    </button>
                     <button onclick="history.back()"
                         class="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
                         <iconify-icon icon="lucide:arrow-left" class="text-xl"></iconify-icon>
@@ -362,6 +369,28 @@
     </div>
 
     <script>
+        // Mobile sidebar toggle functionality
+        function toggleSidebar(open) {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+            const isOpen = mobileSidebar.classList.contains('translate-x-0');
+            const shouldOpen = typeof open === 'boolean' ? open : !isOpen;
+
+            if (shouldOpen) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileSidebar.classList.add('translate-x-0');
+                mobileBackdrop.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.remove('translate-x-0');
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileBackdrop.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+        });
+
         // Trends Chart
         const ctx = document.getElementById('trendsChart').getContext('2d');
         new Chart(ctx, {

@@ -64,7 +64,7 @@
 
 <body class="min-h-screen bg-background font-sans text-foreground">
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
-        <aside class="hidden md:flex w-64 lg:w-72 bg-card border-r border-border flex-shrink-0 flex-col transition-all duration-300">
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
@@ -97,13 +97,23 @@
                 </a>
             </div>
         </aside>
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
+            onclick="toggleSidebar(false)"></div>
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
+            <header class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <button id="mobile-menu-button" class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
+                        <iconify-icon icon="lucide:menu" class="text-2xl"></iconify-icon>
+                    </button>
+                    <h1 class="text-xl font-heading font-bold">Account</h1>
+                </div>
+            </header>
             <div class="flex-1 overflow-y-auto">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div class="flex flex-col gap-6">
             <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                 <div>
-                    <p class="text-sm text-muted-foreground uppercase tracking-[0.3em]">Account</p>
                     <h1 class="text-3xl sm:text-4xl font-heading font-bold mt-2">My Profile</h1>
                     <p class="mt-3 text-sm text-muted-foreground max-w-2xl">Manage your personal details, health goals, preferences, and security settings from one place.</p>
                 </div>
@@ -202,6 +212,30 @@
             </div>
         </main>
     </div>
+
+    <script>
+        // Mobile sidebar toggle functionality
+        function toggleSidebar(open) {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+            const isOpen = mobileSidebar.classList.contains('translate-x-0');
+            const shouldOpen = typeof open === 'boolean' ? open : !isOpen;
+
+            if (shouldOpen) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileSidebar.classList.add('translate-x-0');
+                mobileBackdrop.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.remove('translate-x-0');
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileBackdrop.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+        });
+    </script>
 </body>
 
 </html>

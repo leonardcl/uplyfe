@@ -63,8 +63,8 @@
 <body>
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation -->
-        <aside
-            class="hidden md:flex w-64 lg:w-72 bg-card border-r border-border flex-shrink-0 flex-col transition-all duration-300">
+        <aside id="mobile-sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <div
@@ -124,13 +124,15 @@
                 </div>
             </div>
         </aside>
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
+            onclick="toggleSidebar(false)"></div>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
             <!-- Topbar -->
             <header class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
                 <div class="flex items-center gap-4">
-                    <button class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
+                    <button id="mobile-menu-button" class="md:hidden text-foreground p-1 rounded-md hover:bg-muted">
                         <iconify-icon icon="lucide:menu" class="text-2xl"></iconify-icon>
                     </button>
                     <h1 class="text-xl font-heading font-bold">Exercise Routine</h1>
@@ -212,20 +214,36 @@
 
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div class="bg-background rounded-xl p-4 border border-border">
-                                    <p class="text-xs text-muted-foreground mb-1">Fitness Level</p>
-                                    <p class="font-bold text-sm">Intermediate</p>
+                                    <p class="text-xs text-muted-foreground mb-1">Body Weight</p>
+                                    <p class="font-bold text-sm" id="profile-weight">68 kg</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
-                                    <p class="text-xs text-muted-foreground mb-1">Goal</p>
-                                    <p class="font-bold text-sm">Cardio Health</p>
+                                    <p class="text-xs text-muted-foreground mb-1">Height</p>
+                                    <p class="font-bold text-sm" id="profile-height">165 cm</p>
+                                </div>
+                                <div class="bg-background rounded-xl p-4 border border-border">
+                                    <p class="text-xs text-muted-foreground mb-1">Age</p>
+                                    <p class="font-bold text-sm" id="profile-age">28</p>
+                                </div>
+                                <div class="bg-background rounded-xl p-4 border border-border">
+                                    <p class="text-xs text-muted-foreground mb-1">Exercise Preference</p>
+                                    <p class="font-bold text-sm" id="profile-exercise-pref">Cardio & Strength</p>
+                                </div>
+                                <div class="bg-background rounded-xl p-4 border border-border">
+                                    <p class="text-xs text-muted-foreground mb-1">Time Available</p>
+                                    <p class="font-bold text-sm" id="profile-time">45-60 mins</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Available Days</p>
-                                    <p class="font-bold text-sm">4 Days/Week</p>
+                                    <p class="font-bold text-sm" id="profile-days">4 days/week</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Equipment</p>
-                                    <p class="font-bold text-sm">Dumbbells, Mat</p>
+                                    <p class="font-bold text-sm" id="profile-equipment">Dumbbells, Mat</p>
+                                </div>
+                                <div class="bg-background rounded-xl p-4 border border-border">
+                                    <p class="text-xs text-muted-foreground mb-1">Fitness Goals</p>
+                                    <p class="font-bold text-sm" id="profile-goals">Weight Loss</p>
                                 </div>
                             </div>
                         </div>
@@ -370,12 +388,12 @@
 
         <div id="edit-activity-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditActivityModal()"></div>
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl mx-4">
-                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
-                    <div class="flex items-center justify-between mb-6">
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
+                <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
                         <div>
-                            <h3 class="text-xl font-heading font-bold">Edit Activity</h3>
-                            <p class="text-sm text-muted-foreground">Update the selected exercise details for your routine.</p>
+                            <h3 class="text-xl font-heading font-bold">Edit Activity Profile</h3>
+                            <p class="text-sm text-muted-foreground">Update your fitness profile to get personalized exercise recommendations.</p>
                         </div>
                         <button onclick="closeEditActivityModal()"
                             class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
@@ -383,40 +401,201 @@
                         </button>
                     </div>
 
-                    <div class="space-y-5">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Activity Name</label>
-                            <input id="activity-name" type="text" value="Cardio & Mobility Flow"
-                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Duration</label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <input id="activity-duration" type="text" value="45 mins"
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div class="space-y-6">
+                            <!-- Physical Information -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Body Weight (kg)</label>
+                                    <input id="profile-weight-input" type="number" step="0.1" value="68"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Height (cm)</label>
+                                    <input id="profile-height-input" type="number" value="165"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Age</label>
+                                <input id="profile-age-input" type="number" value="28"
                                     class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
-                                <select id="activity-intensity"
-                                    class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
-                                    <option>Low Impact</option>
-                                    <option selected>Moderate</option>
-                                    <option>High Intensity</option>
-                                </select>
+                            </div>
+
+                            <!-- Exercise Preferences -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Exercise Preference</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="exercise-preference" value="cardio" class="text-primary">
+                                        <span class="text-sm">Cardio</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="exercise-preference" value="strength" class="text-primary">
+                                        <span class="text-sm">Strength</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="radio" name="exercise-preference" value="cardio-strength" checked class="text-primary">
+                                        <span class="text-sm">Cardio & Strength</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="exercise-preference" value="flexibility" class="text-primary">
+                                        <span class="text-sm">Flexibility</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Time Available -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Time Available per Session</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="time-available" value="15-30" class="text-primary">
+                                        <span class="text-sm">15-30 mins</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="radio" name="time-available" value="45-60" checked class="text-primary">
+                                        <span class="text-sm">45-60 mins</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="time-available" value="60-90" class="text-primary">
+                                        <span class="text-sm">60-90 mins</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="time-available" value="90+" class="text-primary">
+                                        <span class="text-sm">90+ mins</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Available Days -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Available Days per Week</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="available-days" value="2" class="text-primary">
+                                        <span class="text-sm">2 days</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="available-days" value="3" class="text-primary">
+                                        <span class="text-sm">3 days</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="radio" name="available-days" value="4" checked class="text-primary">
+                                        <span class="text-sm">4 days</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="available-days" value="5-6" class="text-primary">
+                                        <span class="text-sm">5-6 days</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Equipment Available -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Equipment Available</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="checkbox" name="equipment" value="dumbbells" checked class="text-primary">
+                                        <span class="text-sm">Dumbbells</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="checkbox" name="equipment" value="mat" checked class="text-primary">
+                                        <span class="text-sm">Mat</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="equipment" value="resistance-bands" class="text-primary">
+                                        <span class="text-sm">Resistance Bands</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="equipment" value="treadmill" class="text-primary">
+                                        <span class="text-sm">Treadmill</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="equipment" value="bike" class="text-primary">
+                                        <span class="text-sm">Exercise Bike</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="equipment" value="none" class="text-primary">
+                                        <span class="text-sm">Bodyweight Only</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Fitness Goals -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Fitness Goals</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                        <input type="radio" name="fitness-goals" value="weight-loss" checked class="text-primary">
+                                        <span class="text-sm">Weight Loss</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="fitness-goals" value="muscle-gain" class="text-primary">
+                                        <span class="text-sm">Muscle Gain</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="fitness-goals" value="endurance" class="text-primary">
+                                        <span class="text-sm">Improve Endurance</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="fitness-goals" value="flexibility" class="text-primary">
+                                        <span class="text-sm">Increase Flexibility</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="fitness-goals" value="general-health" class="text-primary">
+                                        <span class="text-sm">General Health</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="radio" name="fitness-goals" value="sports-performance" class="text-primary">
+                                        <span class="text-sm">Sports Performance</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Body Part Focus -->
+                            <div>
+                                <label class="block text-sm font-medium mb-3">Body Part Focus (Optional)</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="upper-body" class="text-primary">
+                                        <span class="text-sm">Upper Body</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="lower-body" class="text-primary">
+                                        <span class="text-sm">Lower Body</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="core" class="text-primary">
+                                        <span class="text-sm">Core</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="full-body" class="text-primary">
+                                        <span class="text-sm">Full Body</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="back" class="text-primary">
+                                        <span class="text-sm">Back</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                        <input type="checkbox" name="body-focus" value="shoulders" class="text-primary">
+                                        <span class="text-sm">Shoulders</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Notes</label>
-                            <textarea id="activity-notes" rows="4"
-                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">A balanced routine designed to elevate heart rate safely while improving joint mobility.</textarea>
-                        </div>
-                        <div class="flex gap-3 pt-2">
-                            <button onclick="closeEditActivityModal()"
-                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
-                                Cancel
-                            </button>
-                            <button onclick="saveActivityEdits()"
-                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
-                                Save Changes
-                            </button>
-                        </div>
+                    </div>
+
+                    <div class="flex gap-3 p-6 border-t border-border">
+                        <button onclick="closeEditActivityModal()"
+                            class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="saveActivityProfile()"
+                            class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                            Save Profile
+                        </button>
                     </div>
                 </div>
             </div>
@@ -441,22 +620,157 @@
             }
         }
 
+        function toggleSidebar(open) {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+            const isOpen = mobileSidebar.classList.contains('translate-x-0');
+            const shouldOpen = typeof open === 'boolean' ? open : !isOpen;
+
+            if (shouldOpen) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileSidebar.classList.add('translate-x-0');
+                mobileBackdrop.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.remove('translate-x-0');
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileBackdrop.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+
         function openEditActivityModal() {
+            // Load current profile data into the modal
+            loadProfileData();
             document.getElementById('edit-activity-modal').classList.remove('hidden');
+            // Initialize form styling
+            initializeFormStyling();
         }
 
         function closeEditActivityModal() {
             document.getElementById('edit-activity-modal').classList.add('hidden');
         }
 
-        function saveActivityEdits() {
-            const name = document.getElementById('activity-name').value;
-            const duration = document.getElementById('activity-duration').value;
-            const intensity = document.getElementById('activity-intensity').value;
-            const notes = document.getElementById('activity-notes').value;
+        function initializeFormStyling() {
+            // Handle radio button groups
+            const radioGroups = ['exercise-preference', 'time-available', 'available-days', 'fitness-goals'];
+            radioGroups.forEach(groupName => {
+                const radios = document.querySelectorAll(`input[name="${groupName}"]`);
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        // Remove styling from all labels in this group
+                        document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
+                            r.closest('label').classList.remove('border-primary', 'bg-primary/10');
+                            r.closest('label').classList.add('border-border', 'bg-background');
+                        });
+                        // Add styling to selected label
+                        if (this.checked) {
+                            this.closest('label').classList.remove('border-border', 'bg-background');
+                            this.closest('label').classList.add('border-primary', 'bg-primary/10');
+                        }
+                    });
+                });
+            });
 
-            console.log('Activity saved', { name, duration, intensity, notes });
-            alert('Activity updates saved.');
+            // Handle checkbox groups
+            const checkboxGroups = ['equipment', 'body-focus'];
+            checkboxGroups.forEach(groupName => {
+                const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            this.closest('label').classList.remove('border-border', 'bg-background');
+                            this.closest('label').classList.add('border-primary', 'bg-primary/10');
+                        } else {
+                            this.closest('label').classList.remove('border-primary', 'bg-primary/10');
+                            this.closest('label').classList.add('border-border', 'bg-background');
+                        }
+                    });
+                });
+            });
+        }
+
+        function loadProfileData() {
+            // Load data from profile display elements into modal inputs
+            document.getElementById('profile-weight-input').value = document.getElementById('profile-weight').textContent.replace(' kg', '');
+            document.getElementById('profile-height-input').value = document.getElementById('profile-height').textContent.replace(' cm', '');
+            document.getElementById('profile-age-input').value = document.getElementById('profile-age').textContent;
+
+            // Set radio buttons based on current values
+            const exercisePref = document.getElementById('profile-exercise-pref').textContent.toLowerCase().replace(' & ', '-');
+            const exerciseRadio = document.querySelector(`input[name="exercise-preference"][value="${exercisePref}"]`);
+            if (exerciseRadio) exerciseRadio.checked = true;
+
+            const timeAvailable = document.getElementById('profile-time').textContent.toLowerCase().replace(' mins', '').replace('-', '-');
+            const timeRadio = document.querySelector(`input[name="time-available"][value="${timeAvailable}"]`);
+            if (timeRadio) timeRadio.checked = true;
+
+            const availableDays = document.getElementById('profile-days').textContent.split(' ')[0];
+            const daysRadio = document.querySelector(`input[name="available-days"][value="${availableDays}"]`);
+            if (daysRadio) daysRadio.checked = true;
+
+            const fitnessGoals = document.getElementById('profile-goals').textContent.toLowerCase().replace(' ', '-');
+            const goalsRadio = document.querySelector(`input[name="fitness-goals"][value="${fitnessGoals}"]`);
+            if (goalsRadio) goalsRadio.checked = true;
+
+            // Set equipment checkboxes
+            const equipment = document.getElementById('profile-equipment').textContent.toLowerCase().split(', ');
+            document.querySelectorAll('input[name="equipment"]').forEach(cb => {
+                cb.checked = equipment.includes(cb.value);
+            });
+
+            // Apply initial styling after setting checked states
+            setTimeout(() => {
+                applyInitialStyling();
+            }, 10);
+        }
+
+        function applyInitialStyling() {
+            // Apply styling to checked radio buttons
+            const radioGroups = ['exercise-preference', 'time-available', 'available-days', 'fitness-goals'];
+            radioGroups.forEach(groupName => {
+                const checkedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
+                if (checkedRadio) {
+                    checkedRadio.closest('label').classList.remove('border-border', 'bg-background');
+                    checkedRadio.closest('label').classList.add('border-primary', 'bg-primary/10');
+                }
+            });
+
+            // Apply styling to checked checkboxes
+            const checkboxGroups = ['equipment', 'body-focus'];
+            checkboxGroups.forEach(groupName => {
+                document.querySelectorAll(`input[name="${groupName}"]:checked`).forEach(cb => {
+                    cb.closest('label').classList.remove('border-border', 'bg-background');
+                    cb.closest('label').classList.add('border-primary', 'bg-primary/10');
+                });
+            });
+        }
+
+        function saveActivityProfile() {
+            // Collect form data
+            const profileData = {
+                body_weight: document.getElementById('profile-weight-input').value + ' kg',
+                height: document.getElementById('profile-height-input').value + ' cm',
+                age: document.getElementById('profile-age-input').value,
+                exercise_preference: document.querySelector('input[name="exercise-preference"]:checked').value.replace('-', ' & ').replace(/\b\w/g, l => l.toUpperCase()),
+                time_available: document.querySelector('input[name="time-available"]:checked').value + ' mins',
+                available_days: document.querySelector('input[name="available-days"]:checked').value + ' days/week',
+                equipment_available: Array.from(document.querySelectorAll('input[name="equipment"]:checked')).map(cb => cb.value.replace(/\b\w/g, l => l.toUpperCase())).join(', '),
+                fitness_goals: document.querySelector('input[name="fitness-goals"]:checked').value.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                body_part_focus: Array.from(document.querySelectorAll('input[name="body-focus"]:checked')).map(cb => cb.value.replace(/\b\w/g, l => l.toUpperCase())).join(', ') || 'None specified'
+            };
+
+            // Update the profile display
+            document.getElementById('profile-weight').textContent = profileData.body_weight;
+            document.getElementById('profile-height').textContent = profileData.height;
+            document.getElementById('profile-age').textContent = profileData.age;
+            document.getElementById('profile-exercise-pref').textContent = profileData.exercise_preference;
+            document.getElementById('profile-time').textContent = profileData.time_available;
+            document.getElementById('profile-days').textContent = profileData.available_days;
+            document.getElementById('profile-equipment').textContent = profileData.equipment_available;
+            document.getElementById('profile-goals').textContent = profileData.fitness_goals;
+
+            console.log('Activity profile saved', profileData);
+            alert('Activity profile updated successfully!');
             closeEditActivityModal();
         }
     </script>
