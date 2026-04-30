@@ -118,7 +118,7 @@
                     <p class="mt-3 text-sm text-muted-foreground max-w-2xl">Manage your personal details, health goals, preferences, and security settings from one place.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
+                    <button id="edit-profile-btn" type="button" onclick="openEditProfileModal()" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
                     <button class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground hover:bg-muted transition">Share Report</button>
                 </div>
             </div>
@@ -129,7 +129,7 @@
                         <div class="flex items-center gap-4">
                             <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                             <div>
-                                <h2 class="text-2xl font-heading font-bold">Sarah Jenkins</h2>
+                                <h2 id="profile-display-name" class="text-2xl font-heading font-bold">Sarah Jenkins</h2>
                                 <p class="text-sm text-muted-foreground mt-1">Member since January 2025</p>
                             </div>
                         </div>
@@ -154,9 +154,9 @@
                         <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
                             <h3 class="text-lg font-semibold">Personal Information</h3>
                             <div class="grid gap-3 text-sm text-muted-foreground">
-                                <div class="flex justify-between"><span>Name</span><span class="text-foreground font-medium">Sarah Jenkins</span></div>
-                                <div class="flex justify-between"><span>Email</span><span class="text-foreground font-medium">sarah@uplyfe.com</span></div>
-                                <div class="flex justify-between"><span>Phone</span><span class="text-foreground font-medium">+1 555 123 4567</span></div>
+                                <div class="flex justify-between"><span>Name</span><span id="profile-card-name" class="text-foreground font-medium">Sarah Jenkins</span></div>
+                                <div class="flex justify-between"><span>Email</span><span id="profile-card-email" class="text-foreground font-medium">sarah@uplyfe.com</span></div>
+                                <div class="flex justify-between"><span>Phone</span><span id="profile-card-phone" class="text-foreground font-medium">+1 555 123 4567</span></div>
                                 <div class="flex justify-between"><span>Location</span><span class="text-foreground font-medium">Austin, TX</span></div>
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                             <div class="grid gap-3 text-sm text-muted-foreground">
                                 <div class="flex justify-between"><span>Last Checkup</span><span class="text-foreground font-medium">Apr 24, 2026</span></div>
                                 <div class="flex justify-between"><span>Allergies</span><span class="text-foreground font-medium">Gluten, Dairy</span></div>
-                                <div class="flex justify-between"><span>Preferred Diet</span><span class="text-foreground font-medium">Balanced</span></div>
+                                <div class="flex justify-between"><span>Preferred Diet</span><span id="profile-card-diet" class="text-foreground font-medium">Balanced</span></div>
                                 <div class="flex justify-between"><span>Weekly Calories</span><span class="text-foreground font-medium">2,150 kcal</span></div>
                             </div>
                         </div>
@@ -176,7 +176,7 @@
                     <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold">Security</h3>
-                            <button class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
+                            <button id="security-manage-btn" type="button" onclick="openSecurityModal()" class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
                         </div>
                         <div class="space-y-4 text-sm text-muted-foreground">
                             <div class="rounded-3xl border border-border bg-background p-4">
@@ -213,6 +213,232 @@
         </main>
     </div>
 
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
+        <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditProfileModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
+            <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
+                    <div>
+                        <h3 class="text-xl font-heading font-bold">Edit Profile</h3>
+                        <p class="text-sm text-muted-foreground">Update your personal information and preferences.</p>
+                    </div>
+                    <button onclick="closeEditProfileModal()"
+                        class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="space-y-6">
+                        <!-- Profile Picture -->
+                        <div class="flex flex-col items-center space-y-4">
+                            <div class="relative">
+                                <img id="profile-picture-preview" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                <button type="button" onclick="changeProfilePicture()" class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-sm hover:bg-primary/80 transition-colors">
+                                    <iconify-icon icon="lucide:camera" class="text-sm"></iconify-icon>
+                                </button>
+                            </div>
+                            <input type="file" id="profile-picture-input" accept="image/*" class="hidden">
+                            <p class="text-sm text-muted-foreground">Click the camera icon to change your profile picture</p>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">First Name</label>
+                                <input id="profile-first-name" type="text" value="Sarah" placeholder="Enter your first name"
+                                    class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Last Name</label>
+                                <input id="profile-last-name" type="text" value="Jenkins" placeholder="Enter your last name"
+                                    class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email Address</label>
+                            <input id="profile-email" type="email" value="sarah.jenkins@email.com" placeholder="Enter your email"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Phone Number</label>
+                            <input id="profile-phone" type="tel" value="+1 (555) 123-4567" placeholder="Enter your phone number"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <!-- Health Information -->
+                        <div class="border-t border-border pt-6">
+                            <h4 class="text-lg font-semibold mb-4">Health Information</h4>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Date of Birth</label>
+                                    <input id="profile-dob" type="date" value="1995-06-15"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Gender</label>
+                                    <select id="profile-gender"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
+                                        <option value="female" selected>Female</option>
+                                        <option value="male">Male</option>
+                                        <option value="prefer-not-to-say">Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Height (cm)</label>
+                                    <input id="profile-height" type="number" value="165" placeholder="165"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Weight (kg)</label>
+                                    <input id="profile-weight" type="number" step="0.1" value="68.5" placeholder="68.5"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="border-t border-border pt-6">
+                            <h4 class="text-lg font-semibold mb-4">Dietary Preferences</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="balanced" checked class="text-primary">
+                                    <span class="text-sm">Balanced</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="high-protein" checked class="text-primary">
+                                    <span class="text-sm">High Protein</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="low-glycemic" checked class="text-primary">
+                                    <span class="text-sm">Low Glycemic</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="gluten-free" checked class="text-primary">
+                                    <span class="text-sm">Gluten Free</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="vegan" class="text-primary">
+                                    <span class="text-sm">Vegan</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="keto" class="text-primary">
+                                    <span class="text-sm">Keto</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="paleo" class="text-primary">
+                                    <span class="text-sm">Paleo</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="mediterranean" class="text-primary">
+                                    <span class="text-sm">Mediterranean</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="border-t border-border pt-6">
+                            <h4 class="text-lg font-semibold mb-4">Notification Preferences</h4>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked class="text-primary">
+                                    <span class="text-sm">Email notifications for health reports</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked class="text-primary">
+                                    <span class="text-sm">Weekly progress summaries</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" class="text-primary">
+                                    <span class="text-sm">Medication reminders</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked class="text-primary">
+                                    <span class="text-sm">Appointment reminders</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 p-6 border-t border-border">
+                    <button onclick="closeEditProfileModal()"
+                        class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveProfileChanges()"
+                        class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings Modal -->
+    <div id="security-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
+        <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeSecurityModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-lg mx-4">
+            <div class="bg-card rounded-3xl border border-border shadow-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-heading font-bold">Security Settings</h3>
+                        <p class="text-sm text-muted-foreground">Manage your account security and authentication.</p>
+                    </div>
+                    <button onclick="closeSecurityModal()"
+                        class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Change Password -->
+                    <div class="space-y-4">
+                        <h4 class="font-semibold">Change Password</h4>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Current Password</label>
+                            <input type="password" placeholder="Enter current password"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">New Password</label>
+                            <input type="password" placeholder="Enter new password"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Confirm New Password</label>
+                            <input type="password" placeholder="Confirm new password"
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <button class="w-full bg-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                            Update Password
+                        </button>
+                    </div>
+
+                    <!-- Two-Factor Authentication -->
+                    <div class="border-t border-border pt-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold">Two-Factor Authentication</h4>
+                                <p class="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                            </div>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Enable 2FA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Mobile sidebar toggle functionality
         function toggleSidebar(open) {
@@ -232,8 +458,137 @@
             }
         }
 
+        // Edit Profile Modal Functions
+        function openEditProfileModal() {
+            const editModal = document.getElementById('edit-profile-modal');
+            editModal.classList.remove('hidden');
+            editModal.style.display = 'block';
+            // Initialize form styling for checkboxes
+            initializeProfileFormStyling();
+        }
+
+        function closeEditProfileModal() {
+            const editModal = document.getElementById('edit-profile-modal');
+            editModal.classList.add('hidden');
+            editModal.style.display = 'none';
+        }
+
+        function openSecurityModal() {
+            const securityModal = document.getElementById('security-modal');
+            securityModal.classList.remove('hidden');
+            securityModal.style.display = 'block';
+        }
+
+        function closeSecurityModal() {
+            const securityModal = document.getElementById('security-modal');
+            securityModal.classList.add('hidden');
+            securityModal.style.display = 'none';
+        }
+
+        function saveProfileChanges() {
+            // Collect form data
+            const profileData = {
+                firstName: document.getElementById('profile-first-name').value,
+                lastName: document.getElementById('profile-last-name').value,
+                email: document.getElementById('profile-email').value,
+                phone: document.getElementById('profile-phone').value,
+                dob: document.getElementById('profile-dob').value,
+                gender: document.getElementById('profile-gender').value,
+                height: document.getElementById('profile-height').value,
+                weight: document.getElementById('profile-weight').value,
+                dietPreferences: Array.from(document.querySelectorAll('input[name="diet-preferences"]:checked')).map(cb => cb.value)
+            };
+
+            const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
+            document.getElementById('profile-display-name')?.textContent = fullName || 'Your Name';
+            document.getElementById('profile-card-name')?.textContent = fullName || 'Your Name';
+            document.getElementById('profile-card-email')?.textContent = profileData.email || 'Email not set';
+            document.getElementById('profile-card-phone')?.textContent = profileData.phone || 'Phone not set';
+            document.getElementById('profile-card-diet')?.textContent = profileData.dietPreferences.length ? profileData.dietPreferences.join(', ') : 'Balanced';
+
+            console.log('Profile updated:', profileData);
+            alert('Profile updated successfully!');
+            closeEditProfileModal();
+        }
+
+        // Profile Picture Functions
+        function changeProfilePicture() {
+            document.getElementById('profile-picture-input').click();
+        }
+
+        function handleProfilePictureChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    return;
+                }
+
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Please select an image smaller than 5MB.');
+                    return;
+                }
+
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-picture-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                console.log('Profile picture selected:', file.name);
+            }
+        }
+
+        // Expose modal functions globally for inline onclick handlers
+        window.openEditProfileModal = openEditProfileModal;
+        window.closeEditProfileModal = closeEditProfileModal;
+        window.openSecurityModal = openSecurityModal;
+        window.closeSecurityModal = closeSecurityModal;
+        window.saveProfileChanges = saveProfileChanges;
+        window.changeProfilePicture = changeProfilePicture;
+        window.handleProfilePictureChange = handleProfilePictureChange;
+
+        // Initialize form styling for profile modal
+        function initializeProfileFormStyling() {
+            // Handle checkbox groups
+            const checkboxGroups = ['diet-preferences'];
+            checkboxGroups.forEach(groupName => {
+                const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            this.closest('label').classList.remove('border-border', 'bg-background');
+                            this.closest('label').classList.add('border-primary', 'bg-primary/10');
+                        } else {
+                            this.closest('label').classList.remove('border-primary', 'bg-primary/10');
+                            this.closest('label').classList.add('border-border', 'bg-background');
+                        }
+                    });
+                });
+            });
+
+            // Apply initial styling
+            setTimeout(() => {
+                document.querySelectorAll('input[name="diet-preferences"]:checked').forEach(cb => {
+                    cb.closest('label').classList.remove('border-border', 'bg-background');
+                    cb.closest('label').classList.add('border-primary', 'bg-primary/10');
+                });
+            }, 10);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Mobile sidebar
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+
+            // Modal buttons
+            document.getElementById('edit-profile-btn')?.addEventListener('click', openEditProfileModal);
+            document.getElementById('security-manage-btn')?.addEventListener('click', openSecurityModal);
+
+            // Profile picture input
+            document.getElementById('profile-picture-input')?.addEventListener('change', handleProfilePictureChange);
         });
     </script>
 </body>
