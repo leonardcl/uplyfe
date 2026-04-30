@@ -125,8 +125,6 @@
                     </button>
                 </div>
                 <nav class="space-y-3">
-                    <a href="/"
-                        class="block rounded-2xl px-4 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors">Dashboard</a>
                     <a href="/health-check"
                         class="block rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">Health
                         Checkup</a>
@@ -147,28 +145,24 @@
             <aside id="dashboard-sidebar"
                 class="hidden md:flex w-72 flex-shrink-0 flex-col bg-card border-r border-border">
                 <div class="flex-1 overflow-y-auto p-6 space-y-3">
-                    <a href="/"
-                        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-foreground bg-muted">
-                        <iconify-icon icon="lucide:layout-dashboard" class="text-lg"></iconify-icon>
-                        Dashboard
-                    </a>
+
                     <a href="/health-check"
-                        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         <iconify-icon icon="lucide:file-text" class="text-lg"></iconify-icon>
                         Health Checkup
                     </a>
                     <a href="/recipe"
-                        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         <iconify-icon icon="lucide:apple" class="text-lg"></iconify-icon>
                         Nutrition & Recipes
                     </a>
                     <a href="/exercise"
-                        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         <iconify-icon icon="lucide:dumbbell" class="text-lg"></iconify-icon>
                         Exercise Routine
                     </a>
                     <a href="/chat"
-                        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         <iconify-icon icon="lucide:bot" class="text-lg"></iconify-icon>
                         AI Assistant
                     </a>
@@ -350,7 +344,17 @@
             const isDesktop = window.matchMedia('(min-width: 768px)').matches;
 
             if (isDesktop) {
-                if (sidebar) sidebar.classList.toggle('hidden');
+                if (sidebar) {
+                    const isHidden = sidebar.classList.contains('hidden');
+                    sidebar.classList.toggle('hidden');
+
+                    if (isHidden) {
+                        sidebar.classList.add('md:flex');
+                    } else {
+                        sidebar.classList.remove('md:flex');
+                    }
+                }
+
                 if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
                     mobileMenu.classList.add('hidden');
                 }
