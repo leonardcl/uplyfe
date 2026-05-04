@@ -895,9 +895,21 @@
             }
         };
 
+        const createMealPlanVariant = (basePlan, title) => {
+            return {
+                ...basePlan,
+                title
+            };
+        };
+
+        mealPlans.day4 = createMealPlanVariant(mealPlans.today, "Day 4 AI Meal Plan");
+        mealPlans.day5 = createMealPlanVariant(mealPlans.tomorrow, "Day 5 AI Meal Plan");
+        mealPlans.day6 = createMealPlanVariant(mealPlans.dayAfter, "Day 6 AI Meal Plan");
+        mealPlans.day7 = createMealPlanVariant(mealPlans.today, "Day 7 AI Meal Plan");
+
         // Current day tracking
         let currentDay = 'today';
-        const dayOrder = ['today', 'tomorrow', 'dayAfter'];
+        const dayOrder = ['today', 'tomorrow', 'dayAfter', 'day4', 'day5', 'day6', 'day7'];
 
         // Navigation functions
         function navigateDay(direction) {
