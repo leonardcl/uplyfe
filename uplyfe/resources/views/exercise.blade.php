@@ -405,6 +405,54 @@
             </div>
         </main>
 
+        <div id="exercise-detail-modal" class="fixed inset-0 z-50 hidden">
+            <div id="exercise-detail-backdrop" class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"></div>
+            <div class="absolute top-1/2 left-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-3xl mx-2 sm:mx-4 max-h-[92vh] -translate-x-1/2 -translate-y-1/2">
+                <div class="bg-card rounded-3xl border border-border shadow-xl overflow-hidden">
+                    <div class="flex items-center justify-between p-6 border-b border-border">
+                        <div>
+                            <p id="exercise-modal-subtitle" class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Exercise Detail</p>
+                            <h3 id="exercise-modal-title" class="text-xl font-heading font-bold">Exercise Name</h3>
+                        </div>
+                        <button id="exercise-modal-close-btn" type="button" class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="p-6 max-h-[70vh] overflow-y-auto space-y-6">
+                        <div class="rounded-2xl border border-border overflow-hidden bg-muted">
+                            <img id="exercise-modal-image" src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80" alt="Exercise preview" class="w-full h-48 sm:h-56 object-cover">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="rounded-xl border border-border bg-background p-4">
+                                <p class="text-xs text-muted-foreground mb-1">Duration</p>
+                                <p id="exercise-modal-duration" class="font-semibold text-sm">-</p>
+                            </div>
+                            <div class="rounded-xl border border-border bg-background p-4">
+                                <p class="text-xs text-muted-foreground mb-1">Body Part</p>
+                                <p id="exercise-modal-body-part" class="font-semibold text-sm">-</p>
+                            </div>
+                            <div class="rounded-xl border border-border bg-background p-4">
+                                <p class="text-xs text-muted-foreground mb-1">Equipment</p>
+                                <p id="exercise-modal-equipment" class="font-semibold text-sm">-</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Description</h4>
+                            <p id="exercise-modal-instructions" class="text-sm text-muted-foreground leading-relaxed"></p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">How To Perform</h4>
+                            <ol id="exercise-modal-steps" class="space-y-2"></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="edit-activity-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditActivityModal()"></div>
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
@@ -762,6 +810,72 @@
 
         let currentWorkoutDayIndex = 0;
 
+        const exerciseDetailMap = {
+            "Dynamic Stretching": {
+                bodyPart: "Full body mobility",
+                equipment: "Yoga mat (optional)",
+                image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=80",
+                steps: [
+                    "Stand upright and keep feet hip-width apart.",
+                    "Do arm circles, hip openers, and leg swings in a controlled range.",
+                    "Increase movement range gradually for 60-90 seconds each drill."
+                ],
+                instructions: "Move continuously without bouncing. Focus on smooth breathing and controlled transitions to warm up muscles and joints."
+            },
+            "Dumbbell Goblet Squats": {
+                bodyPart: "Quadriceps, glutes, core",
+                equipment: "1 dumbbell",
+                image: "https://images.unsplash.com/photo-1534367610401-9f5ed68180aa?auto=format&fit=crop&w=1200&q=80",
+                steps: [
+                    "Hold one dumbbell close to chest with both hands.",
+                    "Sit hips back and down while keeping chest up.",
+                    "Push through heels to stand and squeeze glutes at the top."
+                ],
+                instructions: "Keep knees tracking over toes and spine neutral. Reduce load if your form starts to collapse."
+            },
+            "Plank Variations": {
+                bodyPart: "Core, shoulders, lower back",
+                equipment: "Exercise mat",
+                image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=1200&q=80",
+                steps: [
+                    "Start in forearm plank with elbows under shoulders.",
+                    "Engage abs and keep body in a straight line.",
+                    "Hold or alternate side plank variations as programmed."
+                ],
+                instructions: "Do not let hips sag. Maintain core tension and normal breathing for each hold."
+            },
+            "Low-Intensity Steady State (LISS)": {
+                bodyPart: "Cardiovascular system, legs",
+                equipment: "Treadmill, bike, or open space",
+                image: "https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=1200&q=80",
+                steps: [
+                    "Choose a low-impact cardio activity.",
+                    "Maintain moderate conversational pace consistently.",
+                    "Finish with a gentle cooldown and hydration."
+                ],
+                instructions: "Keep intensity steady around light-to-moderate effort. The goal is endurance, not sprinting."
+            }
+        };
+
+        function buildExerciseDetail(exercise) {
+            const mapped = exerciseDetailMap[exercise.name];
+            if (mapped) {
+                return mapped;
+            }
+
+            return {
+                bodyPart: "Target area based on routine focus",
+                equipment: "Bodyweight or basic home equipment",
+                image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80",
+                steps: [
+                    "Prepare your posture and stabilize core before starting.",
+                    `Perform ${exercise.name.toLowerCase()} with controlled tempo.`,
+                    "Stop if form breaks and rest before next set."
+                ],
+                instructions: exercise.description
+            };
+        }
+
         function renderWorkoutDay(index) {
             const plan = weeklyWorkoutPlans[index];
             const heading = document.getElementById('workout-heading');
@@ -783,7 +897,7 @@
 
             exerciseList.innerHTML = plan.exercises
                 .map((exercise, idx) => `
-                    <div class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                    <div data-exercise-index="${idx}" class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
                         <div class="flex items-start gap-4 flex-1 min-w-0">
                             <div class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">${idx + 1}</div>
                             <div class="min-w-0">
@@ -796,6 +910,40 @@
                     </div>
                 `)
                 .join('');
+        }
+
+        function openExerciseDetailModal(exerciseIndex) {
+            const plan = weeklyWorkoutPlans[currentWorkoutDayIndex];
+            if (!plan || !plan.exercises[exerciseIndex]) {
+                return;
+            }
+
+            const exercise = plan.exercises[exerciseIndex];
+            const detail = buildExerciseDetail(exercise);
+
+            document.getElementById('exercise-modal-subtitle').textContent = `${plan.dayLabel} • ${exercise.detail}`;
+            document.getElementById('exercise-modal-title').textContent = exercise.name;
+            document.getElementById('exercise-modal-duration').textContent = exercise.duration;
+            document.getElementById('exercise-modal-body-part').textContent = detail.bodyPart;
+            document.getElementById('exercise-modal-equipment').textContent = detail.equipment;
+            document.getElementById('exercise-modal-instructions').textContent = detail.instructions;
+            document.getElementById('exercise-modal-image').src = detail.image;
+
+            const stepsContainer = document.getElementById('exercise-modal-steps');
+            stepsContainer.innerHTML = detail.steps
+                .map((step, idx) => `
+                    <li class="flex gap-3 text-sm text-muted-foreground leading-relaxed">
+                        <span class="w-6 h-6 shrink-0 rounded-full bg-primary/10 text-primary-foreground font-semibold text-xs flex items-center justify-center mt-0.5">${idx + 1}</span>
+                        <span>${step}</span>
+                    </li>
+                `)
+                .join('');
+
+            document.getElementById('exercise-detail-modal').classList.remove('hidden');
+        }
+
+        function closeExerciseDetailModal() {
+            document.getElementById('exercise-detail-modal').classList.add('hidden');
         }
 
         function showPreviousWorkoutDay() {
@@ -824,6 +972,16 @@
         document.querySelectorAll('[data-workout-day]').forEach((card) => {
             card.addEventListener('click', () => goToWorkoutDay(card.dataset.workoutDay));
         });
+        document.getElementById('workout-exercise-list')?.addEventListener('click', (event) => {
+            const exerciseCard = event.target.closest('[data-exercise-index]');
+            if (!exerciseCard) return;
+
+            const index = Number(exerciseCard.dataset.exerciseIndex);
+            if (Number.isNaN(index)) return;
+            openExerciseDetailModal(index);
+        });
+        document.getElementById('exercise-detail-backdrop')?.addEventListener('click', closeExerciseDetailModal);
+        document.getElementById('exercise-modal-close-btn')?.addEventListener('click', closeExerciseDetailModal);
         renderWorkoutDay(currentWorkoutDayIndex);
 
         function openEditActivityModal() {
