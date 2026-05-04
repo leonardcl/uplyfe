@@ -98,8 +98,7 @@
             </div>
         </aside>
         <!-- Mobile Sidebar Backdrop -->
-        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"
-            onclick="toggleSidebar(false)"></div>
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"></div>
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
             <header class="h-16 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
                 <div class="flex items-center gap-4">
@@ -118,8 +117,7 @@
                     <p class="mt-3 text-sm text-muted-foreground max-w-2xl">Manage your personal details, health goals, preferences, and security settings from one place.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="edit-profile-btn" type="button" onclick="openEditProfileModal()" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
-                    <button class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground hover:bg-muted transition">Share Report</button>
+                    <button id="edit-profile-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
                 </div>
             </div>
 
@@ -176,23 +174,19 @@
                     <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold">Security</h3>
-                            <button id="security-manage-btn" type="button" onclick="openSecurityModal()" class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
+                            <button id="security-manage-btn" type="button" class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
                         </div>
                         <div class="space-y-4 text-sm text-muted-foreground">
                             <div class="rounded-3xl border border-border bg-background p-4">
                                 <p class="font-semibold text-foreground mb-1">Password</p>
                                 <p>Last changed 8 weeks ago</p>
                             </div>
-                            <div class="rounded-3xl border border-border bg-background p-4">
-                                <p class="font-semibold text-foreground mb-1">Two-factor Authentication</p>
-                                <p>Disabled</p>
-                            </div>
                         </div>
                     </section>
 
                     <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
                         <h3 class="text-lg font-semibold mb-4">Preferences</h3>
-                        <div class="flex flex-wrap gap-2">
+                        <div id="profile-preferences-list" class="flex flex-wrap gap-2">
                             <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Balanced</span>
                             <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">High Protein</span>
                             <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Low Glycemic</span>
@@ -214,8 +208,8 @@
     </div>
 
     <!-- Edit Profile Modal -->
-    <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
-        <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditProfileModal()"></div>
+        <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
+        <div id="edit-profile-backdrop" class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
             <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
                 <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
@@ -223,7 +217,7 @@
                         <h3 class="text-xl font-heading font-bold">Edit Profile</h3>
                         <p class="text-sm text-muted-foreground">Update your personal information and preferences.</p>
                     </div>
-                    <button onclick="closeEditProfileModal()"
+                    <button id="edit-profile-close-btn" type="button"
                         class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
                         <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
                     </button>
@@ -235,7 +229,7 @@
                         <div class="flex flex-col items-center space-y-4">
                             <div class="relative">
                                 <img id="profile-picture-preview" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
-                                <button type="button" onclick="changeProfilePicture()" class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-sm hover:bg-primary/80 transition-colors">
+                                <button id="profile-picture-change-btn" type="button" class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-sm hover:bg-primary/80 transition-colors">
                                     <iconify-icon icon="lucide:camera" class="text-sm"></iconify-icon>
                                 </button>
                             </div>
@@ -369,11 +363,11 @@
                 </div>
 
                 <div class="flex gap-3 p-6 border-t border-border">
-                    <button onclick="closeEditProfileModal()"
+                    <button id="edit-profile-cancel-btn" type="button"
                         class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
                         Cancel
                     </button>
-                    <button onclick="saveProfileChanges()"
+                    <button id="edit-profile-save-btn" type="button" onclick="saveProfileChanges()"
                         class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                         Save Changes
                     </button>
@@ -384,7 +378,7 @@
 
     <!-- Security Settings Modal -->
     <div id="security-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
-        <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeSecurityModal()"></div>
+        <div id="security-modal-backdrop" class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-lg mx-4">
             <div class="bg-card rounded-3xl border border-border shadow-xl p-6">
                 <div class="flex items-center justify-between mb-6">
@@ -392,7 +386,7 @@
                         <h3 class="text-xl font-heading font-bold">Security Settings</h3>
                         <p class="text-sm text-muted-foreground">Manage your account security and authentication.</p>
                     </div>
-                    <button onclick="closeSecurityModal()"
+                    <button id="security-close-btn" type="button"
                         class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
                         <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
                     </button>
@@ -404,35 +398,23 @@
                         <h4 class="font-semibold">Change Password</h4>
                         <div>
                             <label class="block text-sm font-medium mb-2">Current Password</label>
-                            <input type="password" placeholder="Enter current password"
+                            <input id="security-current-password" type="password" placeholder="Enter current password"
                                 class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">New Password</label>
-                            <input type="password" placeholder="Enter new password"
+                            <input id="security-new-password" type="password" placeholder="Enter new password"
                                 class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Confirm New Password</label>
-                            <input type="password" placeholder="Confirm new password"
+                            <input id="security-confirm-password" type="password" placeholder="Confirm new password"
                                 class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                         </div>
-                        <button class="w-full bg-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                        <p id="security-password-feedback" class="hidden rounded-xl border px-4 py-3 text-sm"></p>
+                        <button id="security-update-password-btn" type="button" class="w-full bg-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                             Update Password
                         </button>
-                    </div>
-
-                    <!-- Two-Factor Authentication -->
-                    <div class="border-t border-border pt-6 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-semibold">Two-Factor Authentication</h4>
-                                <p class="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-                            </div>
-                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
-                                Enable 2FA
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -485,6 +467,83 @@
             securityModal.style.display = 'none';
         }
 
+        function showSecurityPasswordFeedback(message, type) {
+            const feedback = document.getElementById('security-password-feedback');
+            if (!feedback) return;
+
+            const isSuccess = type === 'success';
+            feedback.textContent = message;
+            feedback.classList.remove('hidden', 'border-destructive', 'bg-destructive/10', 'text-destructive', 'border-primary', 'bg-primary/10', 'text-foreground');
+            if (isSuccess) {
+                feedback.classList.add('border-primary', 'bg-primary/10', 'text-foreground');
+            } else {
+                feedback.classList.add('border-destructive', 'bg-destructive/10', 'text-destructive');
+            }
+        }
+
+        function clearSecurityPasswordFeedback() {
+            const feedback = document.getElementById('security-password-feedback');
+            if (!feedback) return;
+
+            feedback.textContent = '';
+            feedback.classList.add('hidden');
+            feedback.classList.remove('border-destructive', 'bg-destructive/10', 'text-destructive', 'border-primary', 'bg-primary/10', 'text-foreground');
+        }
+
+        function updatePassword() {
+            const currentPasswordInput = document.getElementById('security-current-password');
+            const newPasswordInput = document.getElementById('security-new-password');
+            const confirmPasswordInput = document.getElementById('security-confirm-password');
+            const updateButton = document.getElementById('security-update-password-btn');
+
+            if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
+                return;
+            }
+
+            clearSecurityPasswordFeedback();
+
+            const currentPassword = currentPasswordInput.value.trim();
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmPasswordInput.value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showSecurityPasswordFeedback('Please fill in all password fields.', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showSecurityPasswordFeedback('New password must be at least 8 characters long.', 'error');
+                return;
+            }
+
+            if (newPassword === currentPassword) {
+                showSecurityPasswordFeedback('New password must be different from current password.', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showSecurityPasswordFeedback('Password confirmation does not match.', 'error');
+                return;
+            }
+
+            if (updateButton) {
+                updateButton.disabled = true;
+                updateButton.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+
+            setTimeout(() => {
+                showSecurityPasswordFeedback('Password updated successfully.', 'success');
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                confirmPasswordInput.value = '';
+
+                if (updateButton) {
+                    updateButton.disabled = false;
+                    updateButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+            }, 500);
+        }
+
         function saveProfileChanges() {
             // Collect form data
             const profileData = {
@@ -499,12 +558,34 @@
                 dietPreferences: Array.from(document.querySelectorAll('input[name="diet-preferences"]:checked')).map(cb => cb.value)
             };
 
+            const formatPreferenceLabel = (value) => value
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+
             const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
-            document.getElementById('profile-display-name')?.textContent = fullName || 'Your Name';
-            document.getElementById('profile-card-name')?.textContent = fullName || 'Your Name';
-            document.getElementById('profile-card-email')?.textContent = profileData.email || 'Email not set';
-            document.getElementById('profile-card-phone')?.textContent = profileData.phone || 'Phone not set';
-            document.getElementById('profile-card-diet')?.textContent = profileData.dietPreferences.length ? profileData.dietPreferences.join(', ') : 'Balanced';
+            const updateText = (id, text) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = text;
+                }
+            };
+            const updatePreferenceChips = (preferences) => {
+                const container = document.getElementById('profile-preferences-list');
+                if (!container) return;
+
+                const safePreferences = preferences.length ? preferences : ['balanced'];
+                container.innerHTML = safePreferences
+                    .map((preference) => `<span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">${formatPreferenceLabel(preference)}</span>`)
+                    .join('');
+            };
+
+            updateText('profile-display-name', fullName || 'Your Name');
+            updateText('profile-card-name', fullName || 'Your Name');
+            updateText('profile-card-email', profileData.email || 'Email not set');
+            updateText('profile-card-phone', profileData.phone || 'Phone not set');
+            updateText('profile-card-diet', profileData.dietPreferences.length ? profileData.dietPreferences.map(formatPreferenceLabel).join(', ') : 'Balanced');
+            updatePreferenceChips(profileData.dietPreferences);
 
             console.log('Profile updated:', profileData);
             alert('Profile updated successfully!');
@@ -550,6 +631,7 @@
         window.saveProfileChanges = saveProfileChanges;
         window.changeProfilePicture = changeProfilePicture;
         window.handleProfilePictureChange = handleProfilePictureChange;
+        window.updatePassword = updatePassword;
 
         // Initialize form styling for profile modal
         function initializeProfileFormStyling() {
@@ -582,12 +664,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Mobile sidebar
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+            document.getElementById('mobile-sidebar-backdrop')?.addEventListener('click', () => toggleSidebar(false));
 
             // Modal buttons
             document.getElementById('edit-profile-btn')?.addEventListener('click', openEditProfileModal);
             document.getElementById('security-manage-btn')?.addEventListener('click', openSecurityModal);
+            document.getElementById('edit-profile-backdrop')?.addEventListener('click', closeEditProfileModal);
+            document.getElementById('edit-profile-close-btn')?.addEventListener('click', closeEditProfileModal);
+            document.getElementById('edit-profile-cancel-btn')?.addEventListener('click', closeEditProfileModal);
+            document.getElementById('edit-profile-save-btn')?.addEventListener('click', saveProfileChanges);
+            document.getElementById('security-modal-backdrop')?.addEventListener('click', closeSecurityModal);
+            document.getElementById('security-close-btn')?.addEventListener('click', closeSecurityModal);
+            document.getElementById('security-update-password-btn')?.addEventListener('click', updatePassword);
 
             // Profile picture input
+            document.getElementById('profile-picture-change-btn')?.addEventListener('click', changeProfilePicture);
             document.getElementById('profile-picture-input')?.addEventListener('change', handleProfilePictureChange);
         });
     </script>

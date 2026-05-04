@@ -335,18 +335,14 @@
                                     <p class="text-xs text-muted-foreground mb-4 line-clamp-2" id="breakfast-description">Rich in omega-3s and
                                         Vitamin D to support your recent checkup goals. Served on gluten-free bread.</p>
 
-                                    <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
+                                    <div class="mt-auto grid grid-cols-2 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
                                             <p class="text-sm font-bold" id="breakfast-calories">420</p>
                                         </div>
-                                        <div class="text-center border-x border-border">
+                                        <div class="text-center border-l border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
                                             <p class="text-sm font-bold" id="breakfast-protein">22g</p>
-                                        </div>
-                                        <div class="text-center">
-                                            <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold" id="breakfast-time">10m</p>
                                         </div>
                                     </div>
                                 </div>
@@ -382,18 +378,14 @@
                                         maintain your excellent cholesterol levels. Features olives, cucumber, and feta.
                                     </p>
 
-                                    <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
+                                    <div class="mt-auto grid grid-cols-2 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
                                             <p class="text-sm font-bold" id="lunch-calories">550</p>
                                         </div>
-                                        <div class="text-center border-x border-border">
+                                        <div class="text-center border-l border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
                                             <p class="text-sm font-bold" id="lunch-protein">18g</p>
-                                        </div>
-                                        <div class="text-center">
-                                            <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold" id="lunch-time">15m</p>
                                         </div>
                                     </div>
                                 </div>
@@ -428,18 +420,14 @@
                                         paired with roasted asparagus to keep your fasting blood sugar stable overnight.
                                     </p>
 
-                                    <div class="mt-auto grid grid-cols-3 gap-2 border-t border-border pt-4">
+                                    <div class="mt-auto grid grid-cols-2 gap-2 border-t border-border pt-4">
                                         <div class="text-center">
                                             <p class="text-xs text-muted-foreground">Cals</p>
                                             <p class="text-sm font-bold" id="dinner-calories">480</p>
                                         </div>
-                                        <div class="text-center border-x border-border">
+                                        <div class="text-center border-l border-border">
                                             <p class="text-xs text-muted-foreground">Protein</p>
                                             <p class="text-sm font-bold" id="dinner-protein">42g</p>
-                                        </div>
-                                        <div class="text-center">
-                                            <p class="text-xs text-muted-foreground">Time</p>
-                                            <p class="text-sm font-bold" id="dinner-time">25m</p>
                                         </div>
                                     </div>
                                 </div>
@@ -494,8 +482,8 @@
 
                         <!-- Recipe Details -->
                         <div class="p-6 space-y-6">
-                            <!-- Nutrition & Time -->
-                            <div class="grid grid-cols-4 gap-4 p-4 bg-background rounded-2xl border border-border">
+                            <!-- Nutrition -->
+                            <div class="grid grid-cols-3 gap-4 p-4 bg-background rounded-2xl border border-border">
                                 <div class="text-center">
                                     <p class="text-xs text-muted-foreground">Calories</p>
                                     <p id="modal-calories" class="text-lg font-bold">420</p>
@@ -507,10 +495,6 @@
                                 <div class="text-center">
                                     <p class="text-xs text-muted-foreground">Carbs</p>
                                     <p id="modal-carbs" class="text-lg font-bold">35g</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xs text-muted-foreground">Time</p>
-                                    <p id="modal-time" class="text-lg font-bold">10m</p>
                                 </div>
                             </div>
 
@@ -622,7 +606,6 @@
                     calories: "420",
                     protein: "22g",
                     carbs: "35g",
-                    time: "10m",
                     description: "Rich in omega-3s and Vitamin D to support your recent checkup goals. This nutrient-dense breakfast provides sustained energy while helping maintain healthy cholesterol levels. The combination of healthy fats from avocado and salmon, plus complex carbs from gluten-free bread, makes this an ideal morning meal.",
                     benefits: ["High in Vitamin D", "Omega-3 Rich", "Heart Healthy", "Gluten-Free"],
                     tags: [{ text: "High Vitamin D", color: "tertiary" }],
@@ -652,7 +635,6 @@
                     calories: "550",
                     protein: "18g",
                     carbs: "65g",
-                    time: "15m",
                     description: "This fiber-rich Mediterranean bowl supports cardiovascular health with its combination of whole grains, healthy fats, and lean protein. The olives and olive oil provide monounsaturated fats that help maintain healthy cholesterol levels.",
                     benefits: ["Heart Healthy", "High Fiber", "Anti-Inflammatory", "Plant-Based"],
                     tags: [{ text: "Heart Healthy", color: "blue-600", bgColor: "blue-100" }],
@@ -685,7 +667,6 @@
                     calories: "480",
                     protein: "42g",
                     carbs: "12g",
-                    time: "25m",
                     description: "This lean protein dinner with roasted vegetables provides stable blood sugar levels throughout the night. The combination of high-quality protein and low-glycemic vegetables makes this an excellent choice for maintaining fasting blood sugar.",
                     benefits: ["Low Glycemic", "High Protein", "Blood Sugar Stable", "Lean Protein"],
                     tags: [{ text: "Low Glycemic", color: "purple-600", bgColor: "purple-100" }],
@@ -722,7 +703,6 @@
                     calories: "380",
                     protein: "25g",
                     carbs: "45g",
-                    time: "5m",
                     description: "This creamy parfait provides excellent calcium intake to support bone health. The combination of Greek yogurt, berries, and nuts creates a balanced meal that's both nutritious and satisfying.",
                     benefits: ["High Calcium", "Probiotic Rich", "Antioxidant Boost", "Quick Prep"],
                     tags: [{ text: "Calcium Rich", color: "green-600", bgColor: "green-100" }],
@@ -750,7 +730,6 @@
                     calories: "420",
                     protein: "35g",
                     carbs: "25g",
-                    time: "20m",
                     description: "This quick stir-fry provides lean protein with plenty of colorful vegetables. The combination of turkey and mixed veggies creates a nutrient-dense meal that's perfect for maintaining energy levels.",
                     benefits: ["High Protein", "Low Carb", "Vitamin Rich", "Quick Cook"],
                     tags: [{ text: "Lean Protein", color: "orange-600", bgColor: "orange-100" }],
@@ -784,7 +763,6 @@
                     calories: "520",
                     protein: "38g",
                     carbs: "35g",
-                    time: "30m",
                     description: "This omega-3 powerhouse dinner supports heart and brain health. The combination of wild-caught salmon and nutrient-dense sweet potatoes creates a meal that's both delicious and incredibly healthy.",
                     benefits: ["Omega-3 Rich", "Brain Healthy", "Anti-Inflammatory", "Vitamin A Boost"],
                     tags: [{ text: "Omega-3 Rich", color: "teal-600", bgColor: "teal-100" }],
@@ -821,7 +799,6 @@
                     calories: "340",
                     protein: "12g",
                     carbs: "40g",
-                    time: "5m",
                     description: "This fiber-packed pudding supports digestive health and provides sustained energy. Chia seeds are a complete protein and excellent source of omega-3s, making this a nutrient-dense start to your day.",
                     benefits: ["High Fiber", "Complete Protein", "Omega-3 Rich", "Digestive Health"],
                     tags: [{ text: "Fiber Rich", color: "emerald-600", bgColor: "emerald-100" }],
@@ -851,7 +828,6 @@
                     calories: "380",
                     protein: "18g",
                     carbs: "55g",
-                    time: "25m",
                     description: "This hearty lentil soup is packed with plant-based protein and fiber. The combination of lentils, vegetables, and herbs creates a comforting meal that's both nutritious and satisfying.",
                     benefits: ["Plant-Based Protein", "High Fiber", "Immune Boosting", "Heart Healthy"],
                     tags: [{ text: "Plant-Based", color: "lime-600", bgColor: "lime-100" }],
@@ -887,7 +863,6 @@
                     calories: "360",
                     protein: "15g",
                     carbs: "45g",
-                    time: "20m",
                     description: "These colorful vegetable skewers are loaded with antioxidants and vitamins. Grilled to perfection with herbs and olive oil, they make a light yet satisfying dinner option.",
                     benefits: ["Antioxidant Rich", "Vitamin Dense", "Low Calorie", "Grilled"],
                     tags: [{ text: "Antioxidant Rich", color: "rose-600", bgColor: "rose-100" }],
@@ -978,7 +953,6 @@
             // Update nutrition
             document.getElementById(`${mealType}-calories`).textContent = recipe.calories;
             document.getElementById(`${mealType}-protein`).textContent = recipe.protein;
-            document.getElementById(`${mealType}-time`).textContent = recipe.time;
         }
 
         function updateNavigationButtons() {
@@ -1002,7 +976,6 @@
             document.getElementById('modal-calories').textContent = recipe.calories;
             document.getElementById('modal-protein').textContent = recipe.protein;
             document.getElementById('modal-carbs').textContent = recipe.carbs;
-            document.getElementById('modal-time').textContent = recipe.time;
             document.getElementById('modal-description').textContent = recipe.description;
 
             // Benefits
