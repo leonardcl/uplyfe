@@ -335,15 +335,15 @@
                                 <div id="workout-exercise-list" class="space-y-3">
                                     <!-- Exercise 1 -->
                                     <div
-                                        class="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-center gap-4">
+                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                                        <div class="flex items-start gap-4 flex-1 min-w-0">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
                                                 1</div>
-                                            <div>
+                                            <div class="min-w-0">
                                                 <p class="font-bold text-sm">Dynamic Stretching</p>
                                                 <p class="text-xs text-muted-foreground">Warm up</p>
-                                                <p class="text-xs text-muted-foreground">This exercise is a great way to warm up your muscles and get your heart rate up.</p>
+                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to warm up your muscles and get your heart rate up.</p>
                                             </div>
                                         </div>
                                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">5 mins</div>
@@ -351,15 +351,15 @@
 
                                     <!-- Exercise 2 -->
                                     <div
-                                        class="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-center gap-4">
+                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                                        <div class="flex items-start gap-4 flex-1 min-w-0">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
                                                 2</div>
-                                            <div>
+                                            <div class="min-w-0">
                                                 <p class="font-bold text-sm">Dumbbell Goblet Squats</p>
                                                 <p class="text-xs text-muted-foreground">3 sets x 12 reps</p>
-                                                <p class="text-xs text-muted-foreground">This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.</p>
+                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.</p>
                                             </div>
                                         </div>
                                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">10 mins</div>
@@ -367,15 +367,15 @@
 
                                     <!-- Exercise 3 -->
                                     <div
-                                        class="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-center gap-4">
+                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                                        <div class="flex items-start gap-4 flex-1 min-w-0">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
                                                 3</div>
-                                            <div>
+                                            <div class="min-w-0">
                                                 <p class="font-bold text-sm">Plank Variations</p>
                                                 <p class="text-xs text-muted-foreground">3 sets x 45 secs</p>
-                                                <p class="text-xs text-muted-foreground">This exercise is a great way to work your core and improve your balance and stability.</p>
+                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to work your core and improve your balance and stability.</p>
                                             </div>
                                         </div>
                                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">8 mins</div>
@@ -383,15 +383,15 @@
 
                                     <!-- Exercise 4 -->
                                     <div
-                                        class="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-center gap-4">
+                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                                        <div class="flex items-start gap-4 flex-1 min-w-0">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
                                                 4</div>
-                                            <div>
+                                            <div class="min-w-0">
                                                 <p class="font-bold text-sm">Low-Intensity Steady State (LISS)</p>
                                                 <p class="text-xs text-muted-foreground">Brisk walking or cycling</p>
-                                                <p class="text-xs text-muted-foreground">This exercise is a great way to improve your cardiovascular health and endurance.</p>
+                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to improve your cardiovascular health and endurance.</p>
                                             </div>
                                         </div>
                                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">22 mins</div>
@@ -674,7 +674,7 @@
                 duration: "45 Mins",
                 description: "A balanced routine designed to elevate heart rate safely while improving joint mobility. Perfect for your current health markers.",
                 exercises: [
-                    { name: "Dynamic Stretching", detail: "Warm up", description: "This exercise is a great way to warm up your muscles and get your heart rate up.", duration: "5 mins" },
+                    { name: "Dynamic Stretching", detail: "Warm up", description: "This exercise is a great way to warm up your muscles and get your heart rate up.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", duration: "5 mins" },
                     { name: "Dumbbell Goblet Squats", detail: "3 sets x 12 reps", description: "This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.", duration: "10 mins" },
                     { name: "Plank Variations", detail: "3 sets x 45 secs", description: "This exercise is a great way to work your core and improve your balance and stability.", duration: "8 mins" },
                     { name: "Low-Intensity Steady State (LISS)", detail: "Brisk walking or cycling", description: "This exercise is a great way to improve your cardiovascular health and endurance.", duration: "22 mins" }
@@ -783,13 +783,13 @@
 
             exerciseList.innerHTML = plan.exercises
                 .map((exercise, idx) => `
-                    <div class="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">${idx + 1}</div>
-                            <div>
+                    <div class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
+                        <div class="flex items-start gap-4 flex-1 min-w-0">
+                            <div class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">${idx + 1}</div>
+                            <div class="min-w-0">
                                 <p class="font-bold text-sm">${exercise.name}</p>
                                 <p class="text-xs text-muted-foreground">${exercise.detail}</p>
-                                <p class="text-xs text-muted-foreground">${exercise.description}</p>
+                                <p class="text-xs text-muted-foreground leading-relaxed break-words">${exercise.description}</p>
                             </div>
                         </div>
                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">${exercise.duration}</div>
