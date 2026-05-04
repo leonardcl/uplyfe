@@ -302,6 +302,21 @@
                         </div>
                     </section>
 
+                    <!-- Clinical Summary -->
+                    <section class="bg-card rounded-3xl border border-border p-8 shadow-sm">
+                        <h2 class="text-xl font-heading font-bold mb-4 flex items-center gap-2">
+                            <iconify-icon icon="lucide:file-text" class="text-primary"></iconify-icon>
+                            Summary
+                        </h2>
+                        <p class="text-sm text-muted-foreground leading-relaxed">
+                            Your latest analysis shows an overall stable and improving metabolic profile. Cholesterol and blood
+                            sugar markers remain within healthy targets, indicating good response to your current nutrition and
+                            activity plan. The primary focus area is Vitamin D, which is still below optimal range. Prioritize
+                            consistent sunlight exposure, Vitamin D-rich foods, and supplementation as recommended, then recheck
+                            labs in the next cycle to confirm improvement.
+                        </p>
+                    </section>
+
                     <!-- AI Recommendations -->
                     <section class="bg-gradient-to-r from-primary/5 to-tertiary/5 rounded-3xl border border-primary/20 p-8">
                         <h2 class="text-xl font-heading font-bold mb-6 flex items-center gap-2">

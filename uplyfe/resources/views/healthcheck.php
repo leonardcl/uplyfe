@@ -319,6 +319,25 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Summary Column -->
+                        <div class="mt-6">
+                            <div class="bg-card rounded-2xl p-6 border border-border shadow-sm">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary-foreground">
+                                        <iconify-icon icon="lucide:file-text" class="text-lg"></iconify-icon>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold mb-2">Summary</h3>
+                                        <p class="text-sm text-muted-foreground leading-relaxed">
+                                            Overall health trend is positive. Cholesterol and fasting blood sugar are in a healthy range,
+                                            while Vitamin D still needs improvement. Continue your current diet and exercise routine,
+                                            and add daily sunlight exposure or Vitamin D-rich foods to close the gap.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- Action Plan Generator -->

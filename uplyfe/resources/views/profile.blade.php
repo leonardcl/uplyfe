@@ -367,7 +367,7 @@
                         class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
                         Cancel
                     </button>
-                    <button id="edit-profile-save-btn" type="button" onclick="saveProfileChanges()"
+                    <button id="edit-profile-save-btn" type="button"
                         class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                         Save Changes
                     </button>
