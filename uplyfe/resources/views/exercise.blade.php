@@ -292,7 +292,7 @@
                         <div class="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
                             <div class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 border-b border-border">
                                 <div
-                                    class="w-full md:w-1/3 aspect-video bg-muted rounded-2xl relative overflow-hidden flex items-center justify-center group cursor-pointer">
+                                    class="w-[180px] h-[180px] bg-muted rounded-2xl relative overflow-hidden flex items-center justify-center group cursor-pointer">
                                     <div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors">
                                     </div>
                                     <div
@@ -420,22 +420,26 @@
                     </div>
 
                     <div class="p-6 max-h-[70vh] overflow-y-auto space-y-6">
-                        <div class="rounded-2xl border border-border overflow-hidden bg-muted">
-                            <img id="exercise-modal-image" src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80" alt="Exercise preview" class="w-full h-48 sm:h-56 object-cover">
-                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 lg:gap-5 items-start">
+                            <div class="rounded-2xl border border-border bg-muted/60 p-4 sm:p-5">
+                                <div class="flex items-center justify-center rounded-xl border border-border/60 bg-background min-h-[220px]">
+                                    <img id="exercise-modal-image" src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80" alt="Exercise preview" class="w-[180px] h-[180px] rounded-xl object-cover shadow-sm">
+                                </div>
+                            </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div class="rounded-xl border border-border bg-background p-4">
-                                <p class="text-xs text-muted-foreground mb-1">Duration</p>
-                                <p id="exercise-modal-duration" class="font-semibold text-sm">-</p>
-                            </div>
-                            <div class="rounded-xl border border-border bg-background p-4">
-                                <p class="text-xs text-muted-foreground mb-1">Body Part</p>
-                                <p id="exercise-modal-body-part" class="font-semibold text-sm">-</p>
-                            </div>
-                            <div class="rounded-xl border border-border bg-background p-4">
-                                <p class="text-xs text-muted-foreground mb-1">Equipment</p>
-                                <p id="exercise-modal-equipment" class="font-semibold text-sm">-</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+                                <div class="rounded-xl border border-border bg-background p-4">
+                                    <p class="text-xs text-muted-foreground mb-1">Duration</p>
+                                    <p id="exercise-modal-duration" class="font-semibold text-sm">-</p>
+                                </div>
+                                <div class="rounded-xl border border-border bg-background p-4">
+                                    <p class="text-xs text-muted-foreground mb-1">Body Part</p>
+                                    <p id="exercise-modal-body-part" class="font-semibold text-sm">-</p>
+                                </div>
+                                <div class="rounded-xl border border-border bg-background p-4">
+                                    <p class="text-xs text-muted-foreground mb-1">Equipment</p>
+                                    <p id="exercise-modal-equipment" class="font-semibold text-sm">-</p>
+                                </div>
                             </div>
                         </div>
 
@@ -722,7 +726,7 @@
                 duration: "45 Mins",
                 description: "A balanced routine designed to elevate heart rate safely while improving joint mobility. Perfect for your current health markers.",
                 exercises: [
-                    { name: "Dynamic Stretching", detail: "Warm up", description: "This exercise is a great way to warm up your muscles and get your heart rate up.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", duration: "5 mins" },
+                    { name: "Dynamic Stretching", detail: "Warm up", description: "This exercise is a great way to warm up your muscles and get your heart rate up.", duration: "5 mins" },
                     { name: "Dumbbell Goblet Squats", detail: "3 sets x 12 reps", description: "This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.", duration: "10 mins" },
                     { name: "Plank Variations", detail: "3 sets x 45 secs", description: "This exercise is a great way to work your core and improve your balance and stability.", duration: "8 mins" },
                     { name: "Low-Intensity Steady State (LISS)", detail: "Brisk walking or cycling", description: "This exercise is a great way to improve your cardiovascular health and endurance.", duration: "22 mins" }
