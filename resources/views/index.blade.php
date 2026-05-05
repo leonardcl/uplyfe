@@ -61,6 +61,11 @@
 </head>
 
 <body>
+    @if (session('user'))
+    <script>
+        alert("Welcome, {{ session('user')->first_name }}");
+    </script>
+    @endif
     <div class="min-h-screen w-full bg-background flex flex-col relative overflow-x-hidden text-foreground font-sans">
 
         <!-- Navigation -->

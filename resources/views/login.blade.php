@@ -60,6 +60,18 @@
     </style>
 </head>
 
+@if (session('success'))
+<script>
+    alert("{{ session('success') }}");
+</script>
+@endif
+
+@if ($errors->any())
+<script>
+    alert("{{ $errors->first() }}");
+</script>
+@endif
+
 <body>
   <div
     class="min-h-screen w-full bg-background flex flex-col relative items-center justify-center p-4 sm:p-8 font-sans">
@@ -155,14 +167,15 @@
           <div class="flex-1 h-px bg-border"></div>
         </div>
 
-        <form class="flex flex-col gap-5">
+        <form action="{{ route('login.process') }}" method="POST" class="flex flex-col gap-5">
+          @csrf
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-foreground ml-1">Email Address</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:mail" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="email" placeholder="you@example.com"
+              <input type="email" name="email" placeholder="you@example.com" required
                 class="w-full pl-11 pr-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
           </div>
@@ -177,7 +190,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:lock" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="password" placeholder="••••••••"
+              <input type="password" name="password" placeholder="••••••••" required
                 class="w-full pl-11 pr-11 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
               <button type="button"
                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground transition-colors">
@@ -186,7 +199,7 @@
             </div>
           </div>
 
-          <button type="button"
+          <button type="submit"
             class="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 mt-2 flex items-center justify-center gap-2">
             Sign In
             <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>

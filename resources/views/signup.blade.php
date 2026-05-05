@@ -155,16 +155,17 @@
           <div class="flex-1 h-px bg-border"></div>
         </div>
 
-        <form class="flex flex-col gap-5">
+        <form action="{{ route('users.store') }}" method="POST" class="flex flex-col gap-5">
+          @csrf
           <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-foreground ml-1">First Name</label>
-              <input type="text" placeholder="John"
+              <input type="text" name="first_name" placeholder="John" required
                 class="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-foreground ml-1">Last Name</label>
-              <input type="text" placeholder="Doe"
+              <input type="text" name="last_name" placeholder="Doe" required
                 class="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
           </div>
@@ -175,7 +176,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:mail" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="email" placeholder="you@example.com"
+              <input type="email" name="email" placeholder="you@example.com" required
                 class="w-full pl-11 pr-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
           </div>
@@ -186,7 +187,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:lock" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="password" placeholder="••••••••"
+              <input type="password" name="password" placeholder="••••••••" required
                 class="w-full pl-11 pr-11 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
               <button type="button"
                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground transition-colors">
@@ -201,7 +202,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:lock" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="password" placeholder="••••••••"
+              <input type="password" name="password_confirmation" placeholder="••••••••" required
                 class="w-full pl-11 pr-11 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
               <button type="button"
                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground transition-colors">
@@ -211,13 +212,14 @@
           </div>
 
           <div class="flex items-start gap-3">
-            <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary">
+            <input type="checkbox" name="terms" value="1" required
+              class="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary">
             <label for="terms" class="text-sm text-muted-foreground leading-relaxed">
               I agree to the <button type="button" onclick="openTermsModal()" class="text-primary hover:text-tertiary transition-colors font-medium underline">Terms of Service</button> and <button type="button" onclick="openPrivacyModal()" class="text-primary hover:text-tertiary transition-colors font-medium underline">Privacy Policy</button>
             </label>
           </div>
 
-          <button type="button"
+          <button type="submit"
             class="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 mt-2 flex items-center justify-center gap-2">
             Create Account
             <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
@@ -228,7 +230,6 @@
           Already have an account?
           <a href="/login" class="font-semibold text-primary hover:text-tertiary transition-colors ml-1">Sign in</a>
         </p>
-
       </div>
     </div>
   </div>
@@ -336,6 +337,22 @@
     function closePrivacyModal() {
       document.getElementById('privacy-modal').classList.add('hidden');
     }
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+  $(document).ready(function() {
+      $("form").on("submit", function(e) {
+          let password = $("input[name='password']").val();
+          let confirmPassword = $("input[name='password_confirmation']").val();
+          if (password !== confirmPassword) {
+              e.preventDefault();
+              alert("Password and Confirm Password do not match!");
+              return;
+          }
+      });
+  });
   </script>
 </body>
 
