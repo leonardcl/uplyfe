@@ -282,7 +282,7 @@
                                             yolks, and fatty fish.</p>
                                     </div>
                                 </div>
-                                <button
+                                <button id="generate-recipes-btn"
                                     class="w-full mt-2 bg-primary text-primary-foreground py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
                                     <iconify-icon icon="lucide:sparkles"></iconify-icon>
                                     Generate New Recipes
@@ -304,7 +304,7 @@
                                         icon="lucide:chevron-right"></iconify-icon></button>
                             </div>
                         </div>
-
+                        <div id="recipe-feedback" class="mb-4 text-sm text-muted-foreground"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-grid">
 
                             <!-- Recipe Card 1: Breakfast -->
@@ -595,332 +595,88 @@
     </div>
 
     <script>
-        // Recipe data for different days
-        const mealPlans = {
-            today: {
-                title: "Today's AI Meal Plan",
-                breakfast: {
-                    title: "Smoked Salmon & Avocado Toast",
-                    subtitle: "High Vitamin D Breakfast",
-                    badge: "High Vitamin D",
-                    calories: "420",
-                    protein: "22g",
-                    carbs: "35g",
-                    description: "Rich in omega-3s and Vitamin D to support your recent checkup goals. This nutrient-dense breakfast provides sustained energy while helping maintain healthy cholesterol levels. The combination of healthy fats from avocado and salmon, plus complex carbs from gluten-free bread, makes this an ideal morning meal.",
-                    benefits: ["High in Vitamin D", "Omega-3 Rich", "Heart Healthy", "Gluten-Free"],
-                    tags: [{ text: "High Vitamin D", color: "tertiary" }],
-                    ingredients: [
-                        "2 slices gluten-free bread, toasted",
-                        "4 oz smoked salmon",
-                        "1/2 avocado, mashed",
-                        "1 tbsp lemon juice",
-                        "1 tsp olive oil",
-                        "Fresh dill, chopped",
-                        "Black pepper to taste"
-                    ],
-                    instructions: [
-                        "Toast the gluten-free bread until golden brown.",
-                        "In a small bowl, mash the avocado with lemon juice and a pinch of salt.",
-                        "Spread the avocado mixture evenly on both slices of toast.",
-                        "Top with smoked salmon slices.",
-                        "Drizzle with olive oil and sprinkle with fresh dill.",
-                        "Season with black pepper and serve immediately."
-                    ],
-                    tips: "For maximum Vitamin D absorption, enjoy this meal with morning sunlight exposure. The healthy fats in avocado help your body absorb the Vitamin D from the salmon more effectively."
-                },
-                lunch: {
-                    title: "Mediterranean Quinoa Bowl",
-                    subtitle: "Heart Healthy Lunch",
-                    badge: "Heart Healthy",
-                    calories: "550",
-                    protein: "18g",
-                    carbs: "65g",
-                    description: "This fiber-rich Mediterranean bowl supports cardiovascular health with its combination of whole grains, healthy fats, and lean protein. The olives and olive oil provide monounsaturated fats that help maintain healthy cholesterol levels.",
-                    benefits: ["Heart Healthy", "High Fiber", "Anti-Inflammatory", "Plant-Based"],
-                    tags: [{ text: "Heart Healthy", color: "blue-600", bgColor: "blue-100" }],
-                    ingredients: [
-                        "1 cup cooked quinoa",
-                        "1/2 cucumber, diced",
-                        "1/2 cup cherry tomatoes, halved",
-                        "1/4 cup kalamata olives, pitted",
-                        "1/4 cup feta cheese, crumbled",
-                        "2 tbsp olive oil",
-                        "1 tbsp lemon juice",
-                        "Fresh herbs (parsley, mint)",
-                        "Salt and pepper to taste"
-                    ],
-                    instructions: [
-                        "Cook quinoa according to package directions and let cool.",
-                        "In a large bowl, combine cucumber, tomatoes, olives, and feta.",
-                        "Add the cooled quinoa to the bowl.",
-                        "In a small bowl, whisk together olive oil and lemon juice.",
-                        "Drizzle the dressing over the salad and toss gently.",
-                        "Season with salt, pepper, and fresh herbs.",
-                        "Let sit for 5 minutes to allow flavors to meld."
-                    ],
-                    tips: "Prepare quinoa in advance and store in the refrigerator for quick assembly. The flavors develop even more if you let the dressed bowl sit for 10-15 minutes before eating."
-                },
-                dinner: {
-                    title: "Lemon Herb Grilled Chicken",
-                    subtitle: "Low Glycemic Dinner",
-                    badge: "Low Glycemic",
-                    calories: "480",
-                    protein: "42g",
-                    carbs: "12g",
-                    description: "This lean protein dinner with roasted vegetables provides stable blood sugar levels throughout the night. The combination of high-quality protein and low-glycemic vegetables makes this an excellent choice for maintaining fasting blood sugar.",
-                    benefits: ["Low Glycemic", "High Protein", "Blood Sugar Stable", "Lean Protein"],
-                    tags: [{ text: "Low Glycemic", color: "purple-600", bgColor: "purple-100" }],
-                    ingredients: [
-                        "6 oz chicken breast, boneless",
-                        "1 bunch asparagus, trimmed",
-                        "1 lemon, juiced and zested",
-                        "2 tbsp olive oil",
-                        "2 cloves garlic, minced",
-                        "1 tsp dried oregano",
-                        "1 tsp dried thyme",
-                        "Salt and pepper to taste",
-                        "Fresh parsley for garnish"
-                    ],
-                    instructions: [
-                        "Preheat grill or grill pan to medium-high heat.",
-                        "In a small bowl, combine lemon juice, olive oil, garlic, oregano, thyme, salt, and pepper.",
-                        "Place chicken in a shallow dish and pour half the marinade over it. Let marinate for 10 minutes.",
-                        "Toss asparagus with remaining marinade.",
-                        "Grill chicken for 6-7 minutes per side until internal temperature reaches 165°F.",
-                        "During last 5 minutes, add asparagus to grill and cook until tender-crisp.",
-                        "Let chicken rest for 3 minutes, then slice.",
-                        "Serve with asparagus and garnish with fresh parsley."
-                    ],
-                    tips: "Use a meat thermometer to ensure chicken is cooked to a safe internal temperature. The lemon zest adds bright flavor without significantly impacting blood sugar levels."
-                }
-            },
-            tomorrow: {
-                title: "Tomorrow's AI Meal Plan",
-                breakfast: {
-                    title: "Greek Yogurt Parfait",
-                    subtitle: "Calcium Rich Breakfast",
-                    badge: "Calcium Rich",
-                    calories: "380",
-                    protein: "25g",
-                    carbs: "45g",
-                    description: "This creamy parfait provides excellent calcium intake to support bone health. The combination of Greek yogurt, berries, and nuts creates a balanced meal that's both nutritious and satisfying.",
-                    benefits: ["High Calcium", "Probiotic Rich", "Antioxidant Boost", "Quick Prep"],
-                    tags: [{ text: "Calcium Rich", color: "green-600", bgColor: "green-100" }],
-                    ingredients: [
-                        "1 cup Greek yogurt (plain, full-fat)",
-                        "1/2 cup mixed berries (strawberries, blueberries)",
-                        "1/4 cup granola (low-sugar)",
-                        "2 tbsp almonds, chopped",
-                        "1 tsp honey",
-                        "1/2 tsp cinnamon"
-                    ],
-                    instructions: [
-                        "In a glass or bowl, layer half the Greek yogurt.",
-                        "Add half the berries and granola.",
-                        "Repeat with remaining yogurt, berries, and granola.",
-                        "Top with chopped almonds, honey, and cinnamon.",
-                        "Serve immediately or chill for 5 minutes."
-                    ],
-                    tips: "Use full-fat Greek yogurt for better calcium absorption and satiety. The berries provide natural sweetness while adding powerful antioxidants."
-                },
-                lunch: {
-                    title: "Turkey & Vegetable Stir-Fry",
-                    subtitle: "Lean Protein Lunch",
-                    badge: "Lean Protein",
-                    calories: "420",
-                    protein: "35g",
-                    carbs: "25g",
-                    description: "This quick stir-fry provides lean protein with plenty of colorful vegetables. The combination of turkey and mixed veggies creates a nutrient-dense meal that's perfect for maintaining energy levels.",
-                    benefits: ["High Protein", "Low Carb", "Vitamin Rich", "Quick Cook"],
-                    tags: [{ text: "Lean Protein", color: "orange-600", bgColor: "orange-100" }],
-                    ingredients: [
-                        "6 oz ground turkey",
-                        "1 cup broccoli florets",
-                        "1 bell pepper, sliced",
-                        "1 carrot, julienned",
-                        "2 cloves garlic, minced",
-                        "1 tbsp ginger, grated",
-                        "2 tbsp low-sodium soy sauce",
-                        "1 tbsp sesame oil",
-                        "1 tsp cornstarch",
-                        "Green onions for garnish"
-                    ],
-                    instructions: [
-                        "Heat sesame oil in a large wok or skillet over medium-high heat.",
-                        "Add garlic and ginger, stir-fry for 30 seconds.",
-                        "Add ground turkey and cook until browned, breaking up with a spoon.",
-                        "Add broccoli, bell pepper, and carrot. Stir-fry for 5-7 minutes.",
-                        "Mix soy sauce with cornstarch and add to the pan.",
-                        "Cook for 2 more minutes until sauce thickens.",
-                        "Garnish with green onions and serve hot."
-                    ],
-                    tips: "Cut all vegetables to similar size for even cooking. Serve over cauliflower rice for a lower-carb option if desired."
-                },
-                dinner: {
-                    title: "Baked Salmon with Sweet Potato",
-                    subtitle: "Omega-3 Rich Dinner",
-                    badge: "Omega-3 Rich",
-                    calories: "520",
-                    protein: "38g",
-                    carbs: "35g",
-                    description: "This omega-3 powerhouse dinner supports heart and brain health. The combination of wild-caught salmon and nutrient-dense sweet potatoes creates a meal that's both delicious and incredibly healthy.",
-                    benefits: ["Omega-3 Rich", "Brain Healthy", "Anti-Inflammatory", "Vitamin A Boost"],
-                    tags: [{ text: "Omega-3 Rich", color: "teal-600", bgColor: "teal-100" }],
-                    ingredients: [
-                        "6 oz salmon fillet (wild-caught)",
-                        "1 medium sweet potato",
-                        "1 cup spinach",
-                        "1 tbsp olive oil",
-                        "1 lemon, sliced",
-                        "2 cloves garlic, minced",
-                        "1 tsp dried dill",
-                        "Salt and pepper to taste",
-                        "Fresh herbs for garnish"
-                    ],
-                    instructions: [
-                        "Preheat oven to 400°F (200°C).",
-                        "Pierce sweet potato with fork and microwave for 3 minutes to soften.",
-                        "Rub salmon with olive oil, garlic, dill, salt, and pepper.",
-                        "Place salmon on baking sheet with lemon slices on top.",
-                        "Cut sweet potato into wedges and toss with olive oil and seasonings.",
-                        "Bake salmon and sweet potatoes for 20-25 minutes.",
-                        "In last 5 minutes, add spinach to wilt.",
-                        "Serve salmon with sweet potato wedges and wilted spinach."
-                    ],
-                    tips: "Wild-caught salmon provides better omega-3 content than farmed. The sweet potato provides complex carbs and vitamin A for optimal nutrient absorption."
-                }
-            },
-            dayAfter: {
-                title: "Day After Tomorrow's AI Meal Plan",
-                breakfast: {
-                    title: "Chia Seed Pudding",
-                    subtitle: "Fiber Rich Breakfast",
-                    badge: "Fiber Rich",
-                    calories: "340",
-                    protein: "12g",
-                    carbs: "40g",
-                    description: "This fiber-packed pudding supports digestive health and provides sustained energy. Chia seeds are a complete protein and excellent source of omega-3s, making this a nutrient-dense start to your day.",
-                    benefits: ["High Fiber", "Complete Protein", "Omega-3 Rich", "Digestive Health"],
-                    tags: [{ text: "Fiber Rich", color: "emerald-600", bgColor: "emerald-100" }],
-                    ingredients: [
-                        "3 tbsp chia seeds",
-                        "1 cup almond milk (unsweetened)",
-                        "1/2 banana, mashed",
-                        "1/4 cup berries",
-                        "1 tbsp almond butter",
-                        "1/2 tsp vanilla extract",
-                        "Cinnamon to taste"
-                    ],
-                    instructions: [
-                        "In a jar, combine chia seeds and almond milk.",
-                        "Stir well and let sit for 5 minutes, then stir again.",
-                        "Add mashed banana, almond butter, and vanilla.",
-                        "Top with berries and sprinkle with cinnamon.",
-                        "Refrigerate overnight or for at least 2 hours.",
-                        "Stir before serving."
-                    ],
-                    tips: "Prepare this pudding the night before for a quick grab-and-go breakfast. The chia seeds will thicken the mixture as they absorb the liquid."
-                },
-                lunch: {
-                    title: "Lentil Soup with Vegetables",
-                    subtitle: "Plant-Based Lunch",
-                    badge: "Plant-Based",
-                    calories: "380",
-                    protein: "18g",
-                    carbs: "55g",
-                    description: "This hearty lentil soup is packed with plant-based protein and fiber. The combination of lentils, vegetables, and herbs creates a comforting meal that's both nutritious and satisfying.",
-                    benefits: ["Plant-Based Protein", "High Fiber", "Immune Boosting", "Heart Healthy"],
-                    tags: [{ text: "Plant-Based", color: "lime-600", bgColor: "lime-100" }],
-                    ingredients: [
-                        "1 cup green lentils, rinsed",
-                        "1 onion, diced",
-                        "2 carrots, diced",
-                        "2 celery stalks, diced",
-                        "2 cloves garlic, minced",
-                        "1 tsp cumin",
-                        "1 tsp paprika",
-                        "4 cups vegetable broth",
-                        "2 cups spinach",
-                        "1 tbsp olive oil",
-                        "Salt and pepper to taste"
-                    ],
-                    instructions: [
-                        "Heat olive oil in a large pot over medium heat.",
-                        "Add onion, carrots, and celery. Cook for 5 minutes.",
-                        "Add garlic, cumin, and paprika. Cook for 1 minute.",
-                        "Add lentils and vegetable broth. Bring to a boil.",
-                        "Reduce heat and simmer for 20 minutes until lentils are tender.",
-                        "Add spinach and cook for 2 more minutes.",
-                        "Season with salt and pepper.",
-                        "Serve hot with whole grain bread if desired."
-                    ],
-                    tips: "This soup tastes even better the next day. Store leftovers in the refrigerator and reheat gently. Add a squeeze of lemon juice for extra brightness."
-                },
-                dinner: {
-                    title: "Grilled Vegetable Skewers",
-                    subtitle: "Antioxidant Rich Dinner",
-                    badge: "Antioxidant Rich",
-                    calories: "360",
-                    protein: "15g",
-                    carbs: "45g",
-                    description: "These colorful vegetable skewers are loaded with antioxidants and vitamins. Grilled to perfection with herbs and olive oil, they make a light yet satisfying dinner option.",
-                    benefits: ["Antioxidant Rich", "Vitamin Dense", "Low Calorie", "Grilled"],
-                    tags: [{ text: "Antioxidant Rich", color: "rose-600", bgColor: "rose-100" }],
-                    ingredients: [
-                        "1 zucchini, cut into chunks",
-                        "1 red bell pepper, cut into chunks",
-                        "1 yellow bell pepper, cut into chunks",
-                        "1 red onion, cut into chunks",
-                        "8 cherry tomatoes",
-                        "8 mushrooms, halved",
-                        "3 tbsp olive oil",
-                        "2 cloves garlic, minced",
-                        "1 tsp dried oregano",
-                        "1 tsp dried thyme",
-                        "Salt and pepper to taste",
-                        "Wooden skewers, soaked"
-                    ],
-                    instructions: [
-                        "Preheat grill to medium-high heat.",
-                        "In a bowl, combine olive oil, garlic, oregano, thyme, salt, and pepper.",
-                        "Thread vegetables onto soaked skewers, alternating types.",
-                        "Brush skewers with the herb oil mixture.",
-                        "Grill for 10-12 minutes, turning occasionally.",
-                        "Brush with remaining oil halfway through cooking.",
-                        "Remove from grill and let rest for 2 minutes.",
-                        "Serve with quinoa or couscous if desired."
-                    ],
-                    tips: "Cut vegetables to similar size for even cooking. If using wooden skewers, soak them in water for 30 minutes to prevent burning. These skewers also make great meal prep for the week."
-                }
+        const GENERATED_RECIPE_JSON_PATH = '/food/data/example.json';
+        let mealPlans = {};
+        let dayOrder = [];
+        let currentDay = 'monday';
+
+        function setRecipeFeedback(message, type = 'info') {
+            const feedback = document.getElementById('recipe-feedback');
+            if (!feedback) return;
+
+            feedback.textContent = message || '';
+            feedback.classList.remove('text-muted-foreground', 'text-destructive', 'text-tertiary');
+            if (type === 'error') {
+                feedback.classList.add('text-destructive');
+            } else if (type === 'success') {
+                feedback.classList.add('text-tertiary');
+            } else {
+                feedback.classList.add('text-muted-foreground');
             }
-        };
+        }
 
-        const createMealPlanVariant = (basePlan, title) => {
+        function formatDayTitle(dayKey) {
+            return `${dayKey.charAt(0).toUpperCase()}${dayKey.slice(1)} AI Meal Plan`;
+        }
+
+        function normalizeDayPlan(dayData, dayKey) {
+            if (!dayData || !dayData.breakfast || !dayData.lunch || !dayData.dinner) {
+                return null;
+            }
+
             return {
-                ...basePlan,
-                title
+                title: dayData.title || formatDayTitle(dayKey),
+                breakfast: dayData.breakfast,
+                lunch: dayData.lunch,
+                dinner: dayData.dinner
             };
-        };
+        }
 
-        mealPlans.day4 = createMealPlanVariant(mealPlans.today, "Day 4 AI Meal Plan");
-        mealPlans.day5 = createMealPlanVariant(mealPlans.tomorrow, "Day 5 AI Meal Plan");
-        mealPlans.day6 = createMealPlanVariant(mealPlans.dayAfter, "Day 6 AI Meal Plan");
-        mealPlans.day7 = createMealPlanVariant(mealPlans.today, "Day 7 AI Meal Plan");
+        function updateRecipeCard(mealType, recipe) {
+            if (!recipe) return;
 
-        // Current day tracking
-        let currentDay = 'today';
-        const dayOrder = ['today', 'tomorrow', 'dayAfter', 'day4', 'day5', 'day6', 'day7'];
+            document.getElementById(`${mealType}-title`).textContent = recipe.title || '-';
+            document.getElementById(`${mealType}-description`).textContent = recipe.description || '-';
+            document.getElementById(`${mealType}-calories`).textContent = recipe.calories || '-';
+            document.getElementById(`${mealType}-protein`).textContent = recipe.protein || '-';
 
-        // Navigation functions
+            const tagsContainer = document.getElementById(`${mealType}-tags`);
+            tagsContainer.innerHTML = '';
+            const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
+            tags.forEach((tag) => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'text-xs font-semibold text-tertiary bg-tertiary/10 px-2 py-0.5 rounded-full';
+                tagElement.textContent = tag.text || '';
+                tagsContainer.appendChild(tagElement);
+            });
+        }
+
+        function updateMealPlan() {
+            const plan = mealPlans[currentDay];
+            if (!plan) return;
+
+            document.getElementById('meal-plan-title').textContent = plan.title;
+            updateRecipeCard('breakfast', plan.breakfast);
+            updateRecipeCard('lunch', plan.lunch);
+            updateRecipeCard('dinner', plan.dinner);
+        }
+
+        function updateNavigationButtons() {
+            const currentIndex = dayOrder.indexOf(currentDay);
+            const prevBtn = document.getElementById('prev-day-btn');
+            const nextBtn = document.getElementById('next-day-btn');
+
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex === -1 || currentIndex >= dayOrder.length - 1;
+        }
+
         function navigateDay(direction) {
             const currentIndex = dayOrder.indexOf(currentDay);
-            let newIndex;
+            if (currentIndex === -1) return;
 
-            if (direction === 'next') {
-                newIndex = Math.min(currentIndex + 1, dayOrder.length - 1);
-            } else if (direction === 'prev') {
-                newIndex = Math.max(currentIndex - 1, 0);
-            }
+            let newIndex = currentIndex;
+            if (direction === 'next') newIndex = Math.min(currentIndex + 1, dayOrder.length - 1);
+            if (direction === 'prev') newIndex = Math.max(currentIndex - 1, 0);
 
             if (newIndex !== currentIndex) {
                 currentDay = dayOrder[newIndex];
@@ -929,81 +685,79 @@
             }
         }
 
-        function updateMealPlan() {
-            const plan = mealPlans[currentDay];
+        async function loadGeneratedMealPlans() {
+            const response = await fetch(`${GENERATED_RECIPE_JSON_PATH}?t=${Date.now()}`, { cache: 'no-store' });
 
-            // Update title
-            document.getElementById('meal-plan-title').textContent = plan.title;
+            if (response.status === 404) {
+                setRecipeFeedback('Generated recipes are not available yet. Please generate recipes first.', 'info');
+                return;
+            }
 
-            // Update breakfast
-            updateRecipeCard('breakfast', plan.breakfast);
+            if (!response.ok) {
+                setRecipeFeedback('Unable to load generated recipes right now. Please try again.', 'error');
+                return;
+            }
 
-            // Update lunch
-            updateRecipeCard('lunch', plan.lunch);
+            let jsonData;
+            try {
+                jsonData = await response.json();
+            } catch (error) {
+                setRecipeFeedback('Generated recipe file is invalid JSON. Please regenerate it.', 'error');
+                return;
+            }
 
-            // Update dinner
-            updateRecipeCard('dinner', plan.dinner);
-        }
+            const rawDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                .filter((day) => jsonData[day]);
 
-        function updateRecipeCard(mealType, recipe) {
-            // Update title
-            document.getElementById(`${mealType}-title`).textContent = recipe.title;
-
-            // Update description
-            document.getElementById(`${mealType}-description`).textContent = recipe.description;
-
-            // Update tags
-            const tagsContainer = document.getElementById(`${mealType}-tags`);
-            tagsContainer.innerHTML = '';
-            recipe.tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.className = `text-xs font-semibold text-${tag.color} bg-${tag.bgColor} px-2 py-0.5 rounded-full`;
-                tagElement.textContent = tag.text;
-                tagsContainer.appendChild(tagElement);
+            const normalized = {};
+            rawDays.forEach((day) => {
+                const normalizedDay = normalizeDayPlan(jsonData[day], day);
+                if (normalizedDay) {
+                    normalized[day] = normalizedDay;
+                }
             });
 
-            // Update nutrition
-            document.getElementById(`${mealType}-calories`).textContent = recipe.calories;
-            document.getElementById(`${mealType}-protein`).textContent = recipe.protein;
+            if (!Object.keys(normalized).length) {
+                setRecipeFeedback('Generated recipe data format is incomplete. Please regenerate recipes.', 'error');
+                return;
+            }
+
+            mealPlans = normalized;
+            dayOrder = Object.keys(normalized);
+            currentDay = normalized.monday ? 'monday' : dayOrder[0];
+
+            updateMealPlan();
+            updateNavigationButtons();
+            setRecipeFeedback('Generated recipes loaded.', 'success');
         }
 
-        function updateNavigationButtons() {
-            const currentIndex = dayOrder.indexOf(currentDay);
-            const prevBtn = document.getElementById('prev-day-btn');
-            const nextBtn = document.getElementById('next-day-btn');
-
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex === dayOrder.length - 1;
-        }
-
-        // Modal functions
         function openRecipeModal(mealType) {
-            const recipe = mealPlans[currentDay][mealType];
-            if (!recipe) return;
+            const dayPlan = mealPlans[currentDay];
+            if (!dayPlan || !dayPlan[mealType]) return;
+            const recipe = dayPlan[mealType];
 
-            // Update modal content
-            document.getElementById('modal-recipe-title').textContent = recipe.title;
-            document.getElementById('modal-recipe-subtitle').textContent = recipe.subtitle;
-            document.getElementById('modal-recipe-badge').textContent = recipe.badge;
-            document.getElementById('modal-calories').textContent = recipe.calories;
-            document.getElementById('modal-protein').textContent = recipe.protein;
-            document.getElementById('modal-carbs').textContent = recipe.carbs;
-            document.getElementById('modal-description').textContent = recipe.description;
+            document.getElementById('modal-recipe-title').textContent = recipe.title || '-';
+            document.getElementById('modal-recipe-subtitle').textContent = recipe.subtitle || '-';
+            document.getElementById('modal-recipe-badge').textContent = recipe.badge || '-';
+            document.getElementById('modal-calories').textContent = recipe.calories || '-';
+            document.getElementById('modal-protein').textContent = recipe.protein || '-';
+            document.getElementById('modal-carbs').textContent = recipe.carbs || '-';
+            document.getElementById('modal-description').textContent = recipe.description || '-';
 
-            // Benefits
             const benefitsContainer = document.getElementById('modal-benefits');
             benefitsContainer.innerHTML = '';
-            recipe.benefits.forEach(benefit => {
+            const benefits = Array.isArray(recipe.benefits) ? recipe.benefits : [];
+            benefits.forEach((benefit) => {
                 const badge = document.createElement('span');
                 badge.className = 'px-2 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold';
                 badge.textContent = benefit;
                 benefitsContainer.appendChild(badge);
             });
 
-            // Ingredients
             const ingredientsContainer = document.getElementById('modal-ingredients');
             ingredientsContainer.innerHTML = '';
-            recipe.ingredients.forEach(ingredient => {
+            const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+            ingredients.forEach((ingredient) => {
                 const li = document.createElement('li');
                 li.className = 'flex items-center gap-2';
                 li.innerHTML = `
@@ -1013,10 +767,10 @@
                 ingredientsContainer.appendChild(li);
             });
 
-            // Instructions
             const instructionsContainer = document.getElementById('modal-instructions');
             instructionsContainer.innerHTML = '';
-            recipe.instructions.forEach((instruction, index) => {
+            const instructions = Array.isArray(recipe.instructions) ? recipe.instructions : [];
+            instructions.forEach((instruction, index) => {
                 const step = document.createElement('div');
                 step.className = 'flex gap-4';
                 step.innerHTML = `
@@ -1028,10 +782,7 @@
                 instructionsContainer.appendChild(step);
             });
 
-            // Tips
-            document.getElementById('modal-tips').textContent = recipe.tips;
-
-            // Show modal
+            document.getElementById('modal-tips').textContent = recipe.tips || '-';
             document.getElementById('recipe-modal').classList.remove('hidden');
         }
 
@@ -1121,8 +872,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('prev-day-btn').addEventListener('click', () => navigateDay('prev'));
             document.getElementById('next-day-btn').addEventListener('click', () => navigateDay('next'));
+            document.getElementById('generate-recipes-btn')?.addEventListener('click', loadGeneratedMealPlans);
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+            dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             updateNavigationButtons();
+            loadGeneratedMealPlans();
         });
     </script>
 </body>

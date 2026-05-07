@@ -61,19 +61,16 @@
 </head>
 
 <body>
-    @if (session('user'))
+    @if (session('success'))
     <script>
-        alert("Welcome, {{ session('user')->first_name }}");
+        alert("{{ session('success') }}");
     </script>
     @endif
     <div class="min-h-screen w-full bg-background flex flex-col relative overflow-x-hidden text-foreground font-sans">
-
         <!-- Navigation -->
         <header
             class="fixed inset-x-0 top-0 z-50 w-full bg-card/80 backdrop-blur-md border-b border-border transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
-
                 <div class="flex items-center gap-2 cursor-pointer group">
                     <button onclick="toggleDashboardMenu()"
                         class="text-foreground p-2 hover:bg-muted transition-colors">

@@ -19,6 +19,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Victorio',
             'email' => 'nico@gmail.com',
             'password' => Hash::make('nico'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
 
         User::create([
@@ -26,6 +29,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Santoso',
             'email' => 'alvin@gmail.com',
             'password' => Hash::make('alvin'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
 
         User::create([
@@ -33,6 +39,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Soekamto',
             'email' => 'yosua@gmail.com',
             'password' => Hash::make('yosua'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
 
         User::create([
@@ -40,6 +49,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Limanjaya',
             'email' => 'leo@gmail.com',
             'password' => Hash::make('leo'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
 
         User::create([
@@ -47,6 +59,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Citra',
             'email' => 'carin@gmail.com',
             'password' => Hash::make('carin'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
 
         User::create([
@@ -54,7 +69,9 @@ class UserSeeder extends Seeder
             'last_name' => 'Angela',
             'email' => 'sally@gmail.com',
             'password' => Hash::make('sally'),
+            'weight' => null,
+            'height' => null,
+            'age' => null,
         ]);
-
     }
 }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +34,17 @@ Route::get('/chat', function () {
 });
 
 Route::get('/exercise', function () {
-    return view('exercise');
+    $sessionUser = session('user');
+    $user = null;
+
+    if ($sessionUser && isset($sessionUser->id)) {
+        $user = User::find($sessionUser->id);
+        if ($user !== null) {
+            session(['user' => $user]);
+        }
+    }
+
+    return view('exercise', ['user' => $user]);
 });
 
 Route::get('/health-check', function () {

@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Uplyfe</title>
@@ -220,15 +221,21 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Body Weight</p>
-                                    <p class="font-bold text-sm" id="profile-weight">68 kg</p>
+                                    <p class="font-bold text-sm" id="profile-weight">
+                                        {{ session('user')->weight ? session('user')->weight . ' kg' : 'Not set' }}
+                                    </p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Height</p>
-                                    <p class="font-bold text-sm" id="profile-height">165 cm</p>
+                                    <p class="font-bold text-sm" id="profile-height">
+                                        {{ session('user')->height ? session('user')->height . ' cm' : 'Not set' }}
+                                    </p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Age</p>
-                                    <p class="font-bold text-sm" id="profile-age">28</p>
+                                    <p class="font-bold text-sm" id="profile-age">
+                                        {{ session('user')->age ?? 'Not set' }}
+                                    </p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Exercise Preference</p>
@@ -267,7 +274,7 @@
                                         strain.</p>
                                 </div>
                             </div>
-                            <button
+                            <button id="generate-routine-btn" onclick="generateNewRoutine()"
                                 class="w-full bg-primary text-primary-foreground py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
                                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
                                 Generate New Routine
@@ -1095,33 +1102,55 @@
             });
         }
 
-        function saveActivityProfile() {
-            // Collect form data
-            const profileData = {
-                body_weight: document.getElementById('profile-weight-input').value + ' kg',
-                height: document.getElementById('profile-height-input').value + ' cm',
-                age: document.getElementById('profile-age-input').value,
-                exercise_preference: document.querySelector('input[name="exercise-preference"]:checked').value.replace('-', ' & ').replace(/\b\w/g, l => l.toUpperCase()),
-                time_available: document.querySelector('input[name="time-available"]:checked').value + ' mins',
-                available_days: document.querySelector('input[name="available-days"]:checked').value + ' days/week',
-                equipment_available: Array.from(document.querySelectorAll('input[name="equipment"]:checked')).map(cb => cb.value.replace(/\b\w/g, l => l.toUpperCase())).join(', '),
-                fitness_goals: document.querySelector('input[name="fitness-goals"]:checked').value.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                body_part_focus: Array.from(document.querySelectorAll('input[name="body-focus"]:checked')).map(cb => cb.value.replace(/\b\w/g, l => l.toUpperCase())).join(', ') || 'None specified'
-            };
+        const userId = {{ session('user')->id }};
 
-            // Update the profile display
-            document.getElementById('profile-weight').textContent = profileData.body_weight;
-            document.getElementById('profile-height').textContent = profileData.height;
-            document.getElementById('profile-age').textContent = profileData.age;
-            document.getElementById('profile-exercise-pref').textContent = profileData.exercise_preference;
-            document.getElementById('profile-time').textContent = profileData.time_available;
-            document.getElementById('profile-days').textContent = profileData.available_days;
-            document.getElementById('profile-equipment').textContent = profileData.equipment_available;
-            document.getElementById('profile-goals').textContent = profileData.fitness_goals;
+        async function saveActivityProfile() {
+            const weight = document.getElementById('profile-weight-input').value.trim();
+            const height = document.getElementById('profile-height-input').value.trim();
+            const age = document.getElementById('profile-age-input').value.trim();
 
-            console.log('Activity profile saved', profileData);
+            if (!weight || !height || !age) {
+                alert('Please complete all required profile fields.');
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const response = await fetch(`/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ weight, height, age }),
+            });
+
+            if (!response.ok) {
+                alert('Failed to save profile.');
+                return;
+            }
+
+            const result = await response.json();
+            const saved = result.data;
+
+            document.getElementById('profile-weight').textContent = `${saved.weight} kg`;
+            document.getElementById('profile-height').textContent = `${saved.height} cm`;
+            document.getElementById('profile-age').textContent = saved.age;
+
             alert('Activity profile updated successfully!');
             closeEditActivityModal();
+        }
+
+        function generateNewRoutine() {
+            const weight = document.getElementById('profile-weight').textContent.replace(' kg', '').trim();
+            const height = document.getElementById('profile-height').textContent.replace(' cm', '').trim();
+            const age = document.getElementById('profile-age').textContent.trim();
+
+            if (!weight || !height || !age || weight === 'Not set' || height === 'Not set' || age === 'Not set') {
+                alert('Please complete your profile first.');
+                return;
+            }
         }
     </script>
 </body>

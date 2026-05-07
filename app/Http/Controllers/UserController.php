@@ -60,7 +60,37 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $sessionUser = $request->session()->get('user');
+        if (!$sessionUser || !isset($sessionUser->id)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'weight' => ['required', 'numeric'],
+            'height' => ['required', 'numeric'],
+            'age' => ['required', 'integer'],
+        ]);
+
+        $user = User::find($sessionUser->id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->weight = $validated['weight'];
+        $user->height = $validated['height'];
+        $user->age = $validated['age'];
+        $user->save();
+
+        $request->session()->put('user', $user);
+
+        return response()->json([
+            'message' => 'Activity profile updated successfully!',
+            'data' => [
+                'weight' => $user->weight,
+                'height' => $user->height,
+                'age' => $user->age,
+            ],
+        ]);
     }
 
     /**
