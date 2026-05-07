@@ -1,0 +1,955 @@
+{
+  "monday": {
+    "breakfast": {
+      "title": "good ole chicken creole",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "631.019",
+      "protein": "42.609",
+      "carbs": "14.835",
+      "description": "A hearty, high-protein dish featuring tender chicken pieces simmered with peppers, celery, and a savory tomato-chili sauce.",
+      "benefits": [
+        "High-protein",
+        "Dairy-free",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "High-protein",
+          "color": "green"
+        },
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 lbs boneless chicken breasts, skinless",
+        "2 green peppers, sliced",
+        "2 celery ribs, medium sliced",
+        "1 onion, chopped in slices",
+        "2 teaspoons garlic, minced",
+        "2 teaspoons olive oil",
+        "2 cups tomatoes, canned diced",
+        "1 cup chili sauce",
+        "2 teaspoons ground basil",
+        "2 teaspoons dried parsley",
+        "1 teaspoon ground cayenne pepper"
+      ],
+      "instructions": [
+        "Cut Chicken into 1 inch pieces.",
+        "Add chicken to heated oil on medium high.",
+        "Cook, while stirring, for 3-5 minutes to slightly brown the chicken.",
+        "Reduce heat.",
+        "Add canned tomatoes with their juice, chili sauce, peppers, onions, celery, garlic and spices.",
+        "Bring to a boil.",
+        "Reduce heat, cover and simmer for 10 minutes."
+      ],
+      "tips": "Make sure to brown the chicken thoroughly to lock in flavor before adding the liquid ingredients."
+    },
+    "lunch": {
+      "title": "veal chops with rosemary butter",
+      "subtitle": "Lunch",
+      "badge": "Protein Rich",
+      "calories": "3333.7",
+      "protein": "38.045",
+      "carbs": "45.331",
+      "description": "Tender veal rib chops prepared with a fragrant rosemary-infused butter and a savory white wine and chicken broth reduction.",
+      "benefits": [
+        "High Protein",
+        "Low-Gluten"
+      ],
+      "tags": [
+        {
+          "text": "Low-Gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1/4 cup (1/2 stick) unsalted butter, room temperature",
+        "2 1/2 teaspoons minced fresh rosemary, divided",
+        "1 teaspoon chopped fresh thyme, divided",
+        "pinch of salt",
+        "4 12-ounce veal rib chops, 1 inch thick",
+        "4 tablespoons olive oil, divided",
+        "1 4-intch-long fresh rosemary sprig",
+        "1 garlic clove, flattened",
+        "3 tablespoons dry white wine",
+        "3 tablespoons low-salt chicken broth",
+        "black pepper to taste"
+      ],
+      "instructions": [
+        "Whisk butter, 1 teaspoon rosemary, 1/4 teaspoon thyme, and pinch of salt in a small bowl to blend.",
+        "Wrap rosemary butter in plastic wrap, forming a 1 1/2-inch-diameter log. Chill for at least 2 hours.",
+        "Arrange chops in a single layer in a large baking dish. Drizzle with 2 tablespoons olive oil.",
+        "Sprinkle with the remaining 1 1/2 teaspoons rosemary, 3/4 teaspoon thyme, salt, and pepper. Rub oil and seasonings into the chops.",
+        "Heat 2 tablespoons olive oil in a heavy large skillet over medium-high heat. Add rosemary sprig and garlic. Saute until garlic is fragrant but not brown, about 2 minutes.",
+        "Discard rosemary sprig and garlic. Increase heat to high. Add chops; cook until browned and internal temperature reaches 130F, about 2 minutes per side.",
+        "Transfer chops to a plate. Pour off drippings from the pan and reduce heat to medium-high.",
+        "Add wine to skillet and cook until reduced to about 2 teaspoons, scraping up browned bits, about 30 seconds.",
+        "Add chicken broth; cook until reduced to about 2 tablespoons, about 30 seconds. Drizzle the sauce over the chops.",
+        "Cut rosemary butter into 4 slices. Place 1 slice atop each chop and serve."
+      ],
+      "tips": "You can prepare the rosemary butter up to one week in advance; just keep it refrigerated."
+    },
+    "dinner": {
+      "title": "pork omelette",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "795.422",
+      "protein": "26.049",
+      "carbs": "53.161",
+      "description": "A savory and protein-rich pork omelette featuring dried mushrooms, shrimp, and vermicelli, pan-fried until golden brown.",
+      "benefits": [
+        "Dairy-free",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "13 lb ground pork",
+        "12 cup dried chinese mushroom",
+        "14 cup dried shrimp",
+        "1 bunch bean thread vermicelli",
+        "2 stalks scallions",
+        "12 teaspoon sesame oil",
+        "2 tablespoons fish sauce (nuc nam)",
+        "4 eggs",
+        "salt",
+        "oil"
+      ],
+      "instructions": [
+        "Soak the dried mushrooms, shrimp, and bean thread vermicelli in hot water until soft, then mince them.",
+        "Combine the ground pork, minced mushrooms, shrimp, vermicelli, and chopped scallions in a bowl.",
+        "Add sesame oil, fish sauce, and salt to the mixture.",
+        "Marinate the meat mixture for half an hour at room temperature.",
+        "Incorporate the beaten eggs into the meat mixture.",
+        "Heat oil in a small pan and fry the mixture into a round shape, flipping each side until golden brown over medium-low heat.",
+        "Serve warm with white rice."
+      ],
+      "tips": "Ensure the dried mushrooms and shrimp are thoroughly soaked and minced to achieve a consistent texture throughout the omelette."
+    },
+    "title": "pork omelette"
+  },
+  "tuesday": {
+    "breakfast": {
+      "title": "easy cheese sauce",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "763.955",
+      "protein": "30.059",
+      "carbs": "24.41",
+      "description": "A smooth and creamy cheese sauce made with processed American cheese and a hint of onion salt.",
+      "benefits": [
+        "low-gluten",
+        "vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "low-gluten",
+          "color": "green"
+        },
+        {
+          "text": "vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "6 ounces process american cheese, sliced",
+        "13 cup milk",
+        "14 teaspoon onion salt",
+        "1 drop red pepper sauce (optional)"
+      ],
+      "instructions": [
+        "Put milk, onion salt and pepper sauce into a medium saucepan.",
+        "Tear cheese into small pieces and add to pan.",
+        "Heat over medium-low to medium heat until cheese is melted and mixture is smooth."
+      ],
+      "tips": "Tear the cheese into very small pieces to ensure it melts quickly and creates a smooth texture."
+    },
+    "lunch": {
+      "title": "sun-dried tomato remoulade",
+      "subtitle": "Lunch",
+      "badge": "Balanced Meal",
+      "calories": "1162.492",
+      "protein": "28.088",
+      "carbs": "37.957",
+      "description": "A creamy, tangy, and flavorful remoulade featuring sun-dried tomatoes, vibrant peppers, and a blend of aromatic spices.",
+      "benefits": [
+        "Dairy-free",
+        "Low-gluten",
+        "Vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "3 stalks celery, minced",
+        "1/4 cup red pepper, minced",
+        "1/4 cup green pepper, minced",
+        "1/4 cup red bermuda onion, minced",
+        "1/4 cup parsley, chopped",
+        "1/2 cup green onion, minced",
+        "2 1/2 cups mayonnaise",
+        "1 1/2 cups creole mustard",
+        "1/4 cup paprika",
+        "1/4 teaspoon cayenne pepper",
+        "1/2 teaspoon white pepper",
+        "1/3 cup sun-dried tomato packed in oil, drained and minced"
+      ],
+      "instructions": [
+        "Mince all vegetables using a food processor or by hand.",
+        "Place the minced vegetables into a large bowl.",
+        "Add the remaining ingredients to the bowl.",
+        "Mix with a thin wire whip until well combined."
+      ],
+      "tips": "If creole mustard is unavailable, you can use whole ground or brown mustard as a substitute."
+    },
+    "dinner": {
+      "title": "shrimp and caper salad",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "620.292",
+      "protein": "7.027",
+      "carbs": "17.234",
+      "description": "A refreshing and tangy shrimp salad featuring savory capers, sliced black olives, and crisp celery in a creamy dressing.",
+      "benefits": [
+        "Dairy-free",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 pounds frozen cooked shrimp without tails, peeled and deveined",
+        "3/4 cup chopped green onions",
+        "1 1/2 cups chopped celery",
+        "3 tablespoons drained capers",
+        "1 cup black olives, sliced",
+        "1/2 cup oil and vinegar salad dressing",
+        "3/4 cup mayonnaise",
+        "1 tablespoon celery seed",
+        "1 dash lemon juice"
+      ],
+      "instructions": [
+        "In a large bowl, toss the shrimp, green onions, celery, capers, black olives, oil and vinegar dressing, mayonnaise, celery seed, and lemon juice.",
+        "Chill at least 1 hour in the refrigerator before serving."
+      ],
+      "tips": "Allow the salad to chill for at least an hour to let the flavors meld together."
+    },
+    "title": "shrimp and caper salad"
+  },
+  "wednesday": {
+    "breakfast": {
+      "title": "grandma's split pea soup",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "2323.333",
+      "protein": "155.938",
+      "carbs": "41.887",
+      "description": "A hearty, thick, and comforting split pea soup featuring savory ham, carrots, and creamy evaporated milk.",
+      "benefits": [
+        "High Protein",
+        "Filling"
+      ],
+      "tags": [
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        },
+        {
+          "text": "Hearty",
+          "color": "orange"
+        }
+      ],
+      "ingredients": [
+        "2 cups dried split peas",
+        "3 carrots, finely chopped",
+        "1/2 onion, finely chopped",
+        "1/2 teaspoon minced garlic",
+        "1 lb ham steak, diced to bite size pieces",
+        "salt and pepper",
+        "1 (12 ounce) can evaporated milk"
+      ],
+      "instructions": [
+        "Add all ingredients except for the milk to a soup pan and cover with water.",
+        "Simmer for 4 hours covered, adding more water as needed or until the peas break up.",
+        "After the peas break up, remove the lid and let excess water steam off until the mixture reaches a thick paste consistency.",
+        "Add the evaporated milk and serve."
+      ],
+      "tips": "Ensure you keep an eye on the water level during the long simmer to prevent the peas from sticking or burning."
+    },
+    "lunch": {
+      "title": "grilled rosemary salmon spedini",
+      "subtitle": "Lunch",
+      "badge": "Balanced Meal",
+      "calories": "2265.85",
+      "protein": "19.717",
+      "carbs": "43.809",
+      "description": "Delicious salmon skewers marinated in a fragrant blend of rosemary, garlic, and lemon, grilled with fresh cherry tomatoes.",
+      "benefits": [
+        "Dairy-free",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "Healthy",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 teaspoons rosemary (minced)",
+        "2 teaspoons olive oil",
+        "2 garlic cloves",
+        "1 teaspoon lemon zest",
+        "1 teaspoon lemon juice",
+        "12 teaspoon salt",
+        "14 teaspoon pepper",
+        "1 lb salmon (skinned & cut into 1 inch cubes)",
+        "1 pint cherry tomatoes"
+      ],
+      "instructions": [
+        "Preheat grill to medium-high.",
+        "Combine rosemary, oil, garlic, lemon zest, lemon juice, salt & pepper into a bowl.",
+        "Add the salmon and toss to coat.",
+        "Alternate salmon & tomatoes on skewers.",
+        "Oil the grill rack and grill spedini carefully, turning once until salmon is cooked (4-6 minutes).",
+        "Serve immediately!"
+      ],
+      "tips": "Ensure the grill rack is well-oiled to prevent the salmon from sticking during turning."
+    },
+    "dinner": {
+      "title": "roasted corn, black bean & mango salad",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "252.815",
+      "protein": "4.956",
+      "carbs": "26.51",
+      "description": "A refreshing and smoky salad featuring roasted corn, sweet mango, and black beans, perfect for a light and nutritious dinner.",
+      "benefits": [
+        "Dairy-free",
+        "Low-calorie",
+        "Low-gluten",
+        "Vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-calorie",
+          "color": "green"
+        },
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1 tablespoon olive oil",
+        "2 garlic cloves, minced",
+        "3 cups fresh corn kernels (about 6 ears)",
+        "2 cups diced peeled ripe mangoes (about 2 pounds)",
+        "1 cup chopped red onion",
+        "1 cup chopped red bell pepper",
+        "1/3 cup fresh lime juice",
+        "3 tablespoons chopped fresh cilantro",
+        "1/2 teaspoon ground cumin",
+        "4 ounces chipotle chiles, drained & chopped",
+        "2 (15 ounce) cans black beans, rinsed and drained",
+        "8 cups salad greens"
+      ],
+      "instructions": [
+        "Heat oil in a large skillet over medium-high heat.",
+        "Add garlic and cook for 30 seconds.",
+        "Stir in corn; cook 8 minutes or until browned, stirring occasionally.",
+        "Place corn mixture in a large bowl, add mango and remaining ingredients except greens; stir well.",
+        "Arrange 1 cup greens on each of 8 plates.",
+        "Spoon 1 cup corn mixture over greens."
+      ],
+      "tips": "Roast the corn until slightly charred to enhance the smoky, sweet flavor profile."
+    },
+    "title": "roasted corn, black bean & mango salad"
+  },
+  "thursday": {
+    "breakfast": {
+      "title": "lapsee",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "4804.0",
+      "protein": "49.36",
+      "carbs": "102.4",
+      "description": "A traditional, warm, and energy-rich wheat germ porridge (lapsee) prepared with ghee, cardamom, and crunchy nuts.",
+      "benefits": [
+        "Energy Boosting",
+        "Vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1 cup wheat germ (dalia)",
+        "1.5 cups sugar or 2 cups jaggery",
+        "1 cup ghee",
+        "0.5 tablespoon chopped almonds",
+        "0.5 tablespoon chopped pistachios",
+        "0.5 teaspoon cardamom powder"
+      ],
+      "instructions": [
+        "Warm ghee in a heavy pan.",
+        "Add wheat germ and stir, cooking until the germ is golden in colour and aromatic.",
+        "Meanwhile, melt sugar or jaggery in 1 cup water and set aside.",
+        "Boil and add the remaining water to the roasted wheat germ.",
+        "Stir gently and cook until the grain of the germ is soft when pressed.",
+        "Add the prepared sugar or jaggery, cardamom, and chopped nuts.",
+        "Stir and simmer the mixture covered, stirring occasionally, until the ghee separates along the sides.",
+        "Serve hot."
+      ],
+      "tips": "If frozen, reheat by sprinkling with hot water and stirring over heat until the ghee separates again."
+    },
+    "lunch": {
+      "title": "german potato dumplings",
+      "subtitle": "Lunch",
+      "badge": "Vegetarian",
+      "calories": "627.429",
+      "protein": "22.577",
+      "carbs": "163.029",
+      "description": "Soft and hearty German-style potato dumplings, a perfect dairy-free side dish seasoned with fresh parsley.",
+      "benefits": [
+        "Dairy-free",
+        "Vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1 cup mashed potatoes",
+        "1 cup flour",
+        "1 bunch fresh parsley"
+      ],
+      "instructions": [
+        "Mix the mashed potatoes together with the flour.",
+        "Do not knead the mixture, as this will cause the dumplings to sink.",
+        "Shape the dough into small balls.",
+        "Place the balls into a kettle of boiling salted water.",
+        "Once the dumplings rise to the surface, let them cook for 10 minutes.",
+        "Drain the dumplings and sprinkle with fresh parsley."
+      ],
+      "tips": "Avoid kneading the dough to ensure the dumplings stay buoyant and don't sink."
+    },
+    "dinner": {
+      "title": "crab salad with endive and tomato-cilantro sauce",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "259.565",
+      "protein": "5.372",
+      "carbs": "20.111",
+      "description": "A refreshing and light salad featuring tender crabmeat, crisp endive, and a vibrant, creamy tomato-cilantro sauce.",
+      "benefits": [
+        "Dairy-free",
+        "Low-calorie",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-calorie",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 tablespoons olive oil",
+        "2 shallots, thinly sliced",
+        "1 teaspoon minced peeled fresh ginger",
+        "1/2 cup chopped tart green apple (such as granny smith)",
+        "1/2 cup chopped zucchini",
+        "1/2 cup chopped seeded red bell pepper",
+        "1/2 cup chopped seeded green bell pepper",
+        "1/4 cup chopped carrot",
+        "1/2 pound crabmeat, drained well and picked over",
+        "1/4 cup mayonnaise",
+        "2 tablespoons chopped fresh chives",
+        "2 tomatoes, peeled, seeded, and chopped",
+        "1/3 cup chopped fresh cilantro",
+        "2 tablespoons sherry wine vinegar",
+        "1 garlic clove, chopped",
+        "pinch of cayenne pepper",
+        "1/2 cup olive oil",
+        "2 heads belgian endive, trimmed and separated into spears",
+        "extra chopped fresh chives for garnish"
+      ],
+      "instructions": [
+        "Heat oil in heavy large skillet over medium-high heat.",
+        "Add shallots and ginger and saute until tender, about 4 minutes.",
+        "Add apple, zucchini, both bell peppers, and carrot and saute until tender but not brown, about 5 minutes.",
+        "Remove from heat and allow to cool to room temperature.",
+        "In a large bowl, mix crabmeat, mayonnaise, 2 tablespoons chopped chives, and the sauteed vegetables; season to taste with salt and pepper.",
+        "Combine tomatoes, cilantro, vinegar, garlic, and cayenne in a blender and puree until almost smooth.",
+        "Gradually add the 1/2 cup olive oil to the blender and blend until sauce is thick; transfer to a medium bowl and season with salt and pepper.",
+        "Arrange endive spears on a large platter with the tips toward the platter edge.",
+        "Spoon the crab salad into the center of the platter, drizzle with the tomato-cilantro sauce, and garnish with chopped fresh chives."
+      ],
+      "tips": "Ensure the crabmeat is thoroughly drained and picked over to remove any bits of shell for the best texture."
+    },
+    "title": "crab salad with endive and tomato-cilantro sauce"
+  },
+  "friday": {
+    "breakfast": {
+      "title": "crispy fried chicken",
+      "subtitle": "Breakfast",
+      "badge": "Protein Rich",
+      "calories": "1505.304",
+      "protein": "35.222",
+      "carbs": "129.708",
+      "description": "Golden, crispy fried chicken marinated in buttermilk and coated in a heavily seasoned flour blend for maximum flavor.",
+      "benefits": [
+        "High Protein",
+        "Flavorful"
+      ],
+      "tags": [
+        {
+          "text": "High Protein",
+          "color": "orange"
+        }
+      ],
+      "ingredients": [
+        "1 whole fryer, cut into 8 pieces",
+        "essence",
+        "2 cups plus 2 tablespoons buttermilk",
+        "vegetable oil for frying",
+        "2 1/2 cups flour",
+        "2 eggs, beaten",
+        "salt and pepper",
+        "2 1/2 tablespoons paprika",
+        "2 tablespoons salt",
+        "2 tablespoons garlic powder",
+        "1 tablespoon black pepper",
+        "1 tablespoon onion powder",
+        "1 tablespoon cayenne pepper",
+        "1 tablespoon dried oregano",
+        "1 tablespoon dried thyme"
+      ],
+      "instructions": [
+        "Season the chicken pieces with Essence.",
+        "Pour 2 cups of the buttermilk over the chicken and cover with plastic wrap.",
+        "Place the chicken in the refrigerator and marinate for 1 hour.",
+        "Heat the oil in a large cast iron skillet.",
+        "Remove the chicken from the refrigerator and drain.",
+        "Season the flour with Essence.",
+        "In a shallow bowl, whisk the eggs with the remaining buttermilk.",
+        "Dredge each piece of chicken in the seasoned flour.",
+        "Dip each piece of chicken in the egg wash, letting the excess drip off.",
+        "Dredge the chicken pieces back in the seasoned flour, coating each piece of the chicken completely.",
+        "Carefully lay the chicken in the hot oil.",
+        "Fry the chicken for 4 to 6 minutes on each side, or until golden brown and the juices run clear.",
+        "Remove the chicken from the oil and drain on a paper-lined plate.",
+        "Season the chicken with salt and pepper."
+      ],
+      "tips": "Ensure the oil is hot enough before adding the chicken to maintain crispiness and prevent excessive oil absorption."
+    },
+    "lunch": {
+      "title": "chilled sweet corn broth with crab and avocado salad",
+      "subtitle": "Lunch",
+      "badge": "Balanced Meal",
+      "calories": "780.963",
+      "protein": "45.737",
+      "carbs": "7.329",
+      "description": "A refreshing, chilled sweet corn broth paired with a creamy crab and avocado salad, brightened with citrus and fresh herbs.",
+      "benefits": [
+        "High-Protein",
+        "Dairy-Free",
+        "Low-Gluten"
+      ],
+      "tags": [
+        {
+          "text": "High Protein",
+          "color": "green"
+        },
+        {
+          "text": "Dairy-Free",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1/4 cup olive oil",
+        "1 cup finely chopped white onion",
+        "1/2 cup finely chopped celery",
+        "4 ears fresh corn, kernels removed (about 2 cups)",
+        "4 sprigs fresh thyme",
+        "4 1/2 cups water",
+        "Salt and freshly ground pepper",
+        "2 oranges, juiced",
+        "1 lime, juiced",
+        "1 lemon, juiced",
+        "1/2 cup extra-virgin olive oil",
+        "1 pound jumbo lump or lump crabmeat, flaked",
+        "3 avocados, peeled and coarsely chopped",
+        "Chopped fresh chives (for garnish)",
+        "Freshly ground white pepper (for garnish)",
+        "Extra-virgin olive oil (for garnish)"
+      ],
+      "instructions": [
+        "Heat the olive oil in a saucepan over medium heat. Add the onion and celery and saute for 5 minutes.",
+        "Stir in the corn, thyme, and water and season with salt and pepper. Bring to a boil, reduce the/the heat and simmer for 15 minutes.",
+        "Remove the thyme sprigs. Remove the soup in batches to a blender and puree until smooth. Strain the soup through a fine sieve.",
+        "Season with salt and white pepper. Add slightly more salt than needed to compensate for the cold serving temperature. Cover and chill for 3 hours or longer.",
+        "Whisk the orange juice, lime juice, lemon juice, and 1/2 cup extra-virgin olive oil in a bowl. Season with salt and white pepper.",
+        "Fold in the flaked crabmeat and avocados. Adjust seasonings. Cover and chill.",
+        "Divide the Crab and Avocado Salad between 6 chilled bowls. Arrange the salad in a ring in each bowl.",
+        "Spoon the soup into the center. Garnish with chopped fresh chives, freshly ground white pepper and a drizzle of extra-virgin olive oil."
+      ],
+      "tips": "Ensure the corn broth is thoroughly chilled before serving to maximize the refreshing contrast with the creamy salad."
+    },
+    "dinner": {
+      "title": "cheesy herbed egg sandwich",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "55.0",
+      "protein": "28.037",
+      "carbs": "11.918",
+      "description": "A creamy and savory sandwich featuring fluffy scrambled eggs blended with chive and onion cream cheese on a toasted English muffin.",
+      "benefits": [
+        "High Protein",
+        "Vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "low-calorie",
+          "color": "green"
+        },
+        {
+          "text": "low-gluten",
+          "color": "green"
+        },
+        {
+          "text": "vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 eggs, scrambled",
+        "2 tbsp. philadelphia chive & onion cream cheese spread",
+        "1 english muffin, split, toasted",
+        "1 kraft singles"
+      ],
+      "instructions": [
+        "COOK the eggs over medium heat until fluffy, stirring frequently.",
+        "Stir in the cream cheese, until well blended.",
+        "SPOON the cream cheese mixture onto one muffin half.",
+        "TOP with the egg mixture and cheese slice.",
+        "Top with the remaining muffin half."
+      ],
+      "tips": "To ensure the cream cheese incorporates smoothly, ensure the eggs are still warm when you stir it in."
+    },
+    "title": "cheesy herbed egg sandwich"
+  },
+  "saturday": {
+    "breakfast": {
+      "title": "Boiled Onions",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "1393.619",
+      "protein": "9.631",
+      "carbs": "32.52",
+      "description": "Tender, boiled onions tossed with butter or margarine, sugar, salt, and pepper for a simple, sweet, and savory flavor.",
+      "benefits": [
+        "low-gluten",
+        "vegetarian"
+      ],
+      "tags": [
+        {
+          "text": "low-gluten",
+          "color": "green"
+        },
+        {
+          "text": "vegetarian",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 lbs onions (white, yellow, or vidalia)",
+        "1 tablespoon margarine or 1 tablespoon butter",
+        "1 tablespoon sugar",
+        "salt",
+        "pepper"
+      ],
+      "instructions": [
+        "Wash onions, trim ends and remove outer layer (keep whole).",
+        "Cook in salted boiling water for 30-50 minutes (depending on size of onions) until soft and onion layers start to 'come apart'.",
+        "Drain water, and toss onions with margarine, sugar, salt and pepper."
+      ],
+      "tips": "You can make this recipe a day or 2 in advance; store in the fridge and heat up in the microwave just before serving."
+    },
+    "lunch": {
+      "title": "harrison muesli",
+      "subtitle": "Lunch",
+      "badge": "Balanced Meal",
+      "calories": "367.317",
+      "protein": "28.203",
+      "carbs": "48.351",
+      "description": "A creamy and nutritious overnight muesli featuring a blueberry-infused soy milk base, rolled oats, and a crunchy mix of coconut and pecans.",
+      "benefits": [
+        "Vegetarian",
+        "Low-Gluten",
+        "High Protein"
+      ],
+      "tags": [
+        {
+          "text": "Low-Calorie",
+          "color": "green"
+        },
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        },
+        {
+          "text": "Low-Gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "2 cups vanilla soy milk, divided",
+        "1 cup frozen blueberries",
+        "1 cup rolled oats",
+        "1/2 cup sweetened flaked coconut",
+        "1/2 cup chopped pecans",
+        "1 cup vanilla yogurt"
+      ],
+      "instructions": [
+        "Blend 1 cup soy milk with blueberries in a blender until the mixture has the consistency of a smoothie, about 1 minute.",
+        "Stir together the oats, coconut, and pecans in a large bowl.",
+        "Stir in the blueberry mixture, yogurt, and the remaining soy milk.",
+        "Cover; refrigerate for at least 4 hours or up to overnight."
+      ],
+      "tips": "Prepare this the night before to allow the oats to fully absorb the liquid for a much creamier texture."
+    },
+    "dinner": {
+      "title": "orange - rosemary chicken",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "693.434",
+      "protein": "50.95",
+      "carbs": "12.951",
+      "description": "A smoky and flavorful grilled chicken dish featuring a sweet and tangy orange-rosemary glaze, infused with hickory wood smoke.",
+      "benefits": [
+        "Dairy-free",
+        "Low-gluten",
+        "High Protein"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1 (12 ounce) container frozen orange juice concentrate, thawed",
+        "13 cup dry white wine",
+        "13 cup honey dijon mustard",
+        "2 tablespoons finely-chopped fresh rosemary or 2 teaspoons dried rosemary",
+        "4 teaspoons soy sauce",
+        "2 teaspoons tabasco sauce",
+        "1 clove garlic, chopped",
+        "1 cup hickory chips, soaked in water 30 minutes, drained",
+        "2 chicken, each cut into 8 pieces (breasts halved if large)"
+      ],
+      "instructions": [
+        "Blend the first 7 ingredients in a processor.",
+        "Set the orange glaze aside.",
+        "Prepare the BBQ to medium heat.",
+        "Place smoke chips in an 8x6-inch foil packet with an open top.",
+        "Set the packet atop coals about 5 minutes before grilling.",
+        "Sprinkle chicken with salt and pepper.",
+        "Grill chicken until golden, turning occasionally, about 5 minutes per side.",
+        "Continue grilling chicken until cooked through, brushing glaze over chicken and turning occasionally, about 25 minutes longer."
+      ],
+      "tips": "Ensure the hickory chips are well-drained before placing them in the foil packet to control smoke intensity."
+    },
+    "title": "orange - rosemary chicken"
+  },
+  "sunday": {
+    "breakfast": {
+      "title": "calico beans",
+      "subtitle": "Breakfast",
+      "badge": "Balanced Meal",
+      "calories": "2413.667",
+      "protein": "88.047",
+      "carbs": "12.899",
+      "description": "A hearty and savory bean medley featuring ground beef, bacon, and a variety of beans in a sweet and tangy sauce.",
+      "benefits": [
+        "High Protein",
+        "Low-Gluten"
+      ],
+      "tags": [
+        {
+          "text": "low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "1 lb ground beef",
+        "12 lb bacon",
+        "1 cup onion",
+        "1 cup ketchup",
+        "1 teaspoon salt",
+        "34 cup brown sugar",
+        "1 teaspoon mustard",
+        "2 teaspoons vinegar",
+        "12 cup white sugar",
+        "1 can pork & beans",
+        "1 can kidney bean",
+        "1 can butter beans",
+        "1 can garbanzo beans"
+      ],
+      "instructions": [
+        "Brown beef and bacon; drain.",
+        "Add onion cook until transparent.",
+        "Add the rest of the ingredients and heat.",
+        "Simmer 10 minutes and serve."
+      ],
+      "tips": "Ensure you drain the excess fat from the beef and bacon thoroughly before adding the onions to prevent the dish from becoming too oily."
+    },
+    "lunch": {
+      "title": "dinner in a skillet recipe",
+      "subtitle": "lunch",
+      "badge": "Hearty Meal",
+      "calories": "881.817",
+      "protein": "18.668",
+      "carbs": "32.883",
+      "description": "A comforting one-pan meal featuring savory meatballs simmered in a creamy soup base with mixed vegetables.",
+      "benefits": [
+        "High Protein",
+        "Easy Cleanup"
+      ],
+      "tags": [
+        {
+          "text": "Skillet Meal",
+          "color": "orange"
+        },
+        {
+          "text": "Hearty",
+          "color": "brown"
+        }
+      ],
+      "ingredients": [
+        "1/2 pound ground beef, ham or possibly chicken",
+        "1 egg, slightly beaten",
+        "1/2 c. lowfat milk",
+        "1/4 c. fine bread crumbs",
+        "1 1/2 tbsp. finely minced onion",
+        "1/2 teaspoon salt",
+        "1/4 teaspoon dry mustard",
+        "few grains pepper",
+        "2 tbsp. flour",
+        "1/4 c. puritan oil",
+        "1 can condensed tomato or possibly mushroom soup",
+        "3/4 c. lowfat milk",
+        "1 1/2 c. cooked or possibly canned mixed vegetables",
+        "1/2 teaspoon salt"
+      ],
+      "instructions": [
+        "Combine the first 8 ingredients in a bowl.",
+        "Shape the mixture into small meatballs.",
+        "Roll each meatball in flour.",
+        "Heat oil in a skillet over medium heat for about 3 minutes.",
+        "Fry the meatballs for about 10 minutes.",
+        "Once browned, arrange the meatballs around the sides of the skillet.",
+        "Mix the condensed soup and 3/4 cup lowfat milk together, then pour the mixture into the center of the skillet.",
+        "Add the mixed vegetables and salt to the skillet.",
+        "Cover and simmer for about 10 minutes."
+      ],
+      "tips": "Using canned mixed vegetables can save preparation time and makes this an even quicker meal."
+    },
+    "dinner": {
+      "title": "gazpacho",
+      "subtitle": "Dinner",
+      "badge": "Balanced Meal",
+      "calories": "1590.0",
+      "protein": "13.918",
+      "carbs": "23.376",
+      "description": "A refreshing and chilled Mediterranean-style tomato soup loaded with fresh bell peppers, cucumber, and aromatic basil.",
+      "benefits": [
+        "Dairy-free",
+        "Vegetarian",
+        "Low-gluten"
+      ],
+      "tags": [
+        {
+          "text": "Dairy-free",
+          "color": "green"
+        },
+        {
+          "text": "Vegetarian",
+          "color": "green"
+        },
+        {
+          "text": "Low-gluten",
+          "color": "green"
+        }
+      ],
+      "ingredients": [
+        "8 tomatoes, quartered",
+        "kosher salt",
+        "1 red onion, cut into small dice",
+        "1 green bell pepper, cut into small dice",
+        "1 red bell pepper, cut into small dice",
+        "1 yellow bell pepper, cut into small dice",
+        "1/2 cucumber, cut into small dice",
+        "extra-virgin olive oil, for drizzling",
+        "3 leaves fresh basil, finely chopped"
+      ],
+      "instructions": [
+        "Add the tomatoes to a food processor with a pinch of salt and puree until smooth.",
+        "Combine the onions, bell peppers and cucumbers with the tomato puree in a large bowl.",
+        "Chill at least 1 hour.",
+        "Drizzle with olive oil, garnish with chopped basil and serve."
+      ],
+      "tips": "For a more intense flavor, allow the soup to chill for at least 2-3 hours before serving."
+    },
+    "title": "gazpacho"
+  }
+}
