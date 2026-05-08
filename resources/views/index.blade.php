@@ -106,6 +106,7 @@
             </div>
         </header>
 
+        @if(session('user'))
         <div id="mobile-dashboard-menu" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="toggleMenu()"></div>
             <aside
@@ -142,8 +143,10 @@
                 </nav>
             </aside>
         </div>
+        @endif
 
         <div class="flex flex-1 mt-16">
+            @if(session('user'))        
             <aside id="dashboard-sidebar"
                 class="hidden md:flex fixed top-16 left-0 bottom-0 w-72 flex-col bg-card border-r border-border overflow-y-auto">
                 <div class="flex-1 p-6 space-y-3">
@@ -170,6 +173,7 @@
                     </a>
                 </div>
             </aside>
+            @endif
 
             <!-- Hero Section -->
             <main id="dashboard-main" class="flex-1 flex flex-col md:ml-72">

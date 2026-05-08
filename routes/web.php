@@ -23,44 +23,11 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('login');
 });
+
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 
 Route::get('/signup', function () {
     return view('signup');
-});
-
-Route::get('/chat', function () {
-    return view('chat');
-});
-
-Route::get('/exercise', function () {
-    $sessionUser = session('user');
-    $user = null;
-
-    if ($sessionUser && isset($sessionUser->id)) {
-        $user = User::find($sessionUser->id);
-        if ($user !== null) {
-            session(['user' => $user]);
-        }
-    }
-
-    return view('exercise', ['user' => $user]);
-});
-
-Route::get('/health-check', function () {
-    return view('healthcheck');
-});
-
-Route::get('/full-analysis', function () {
-    return view('fullanalysis');
-});
-
-Route::get('/recipe', function () {
-    return view('recipe');
-});
-
-Route::get('/profile', function () {
-    return view('profile');
 });
 
 Route::get('/features', function () {
@@ -75,5 +42,42 @@ Route::get('/testimonials', function () {
     return view('testimonials');
 });
 
-Route::resource('users', UserController::class);
+Route::resource('users', UserController::class)->only(['store']);
 
+Route::middleware(['checklogin'])->group(function () {
+    Route::get('/health-check', function () {
+        return view('healthcheck');
+    });
+
+    Route::get('/recipe', function () {
+        return view('recipe');
+    });
+    
+    Route::get('/exercise', function () {
+        $sessionUser = session('user');
+        $user = null;
+    
+        if ($sessionUser && isset($sessionUser->id)) {
+            $user = User::find($sessionUser->id);
+            if ($user !== null) {
+                session(['user' => $user]);
+            }
+        }
+    
+        return view('exercise', ['user' => $user]);
+    });
+    
+    Route::get('/chat', function () {
+        return view('chat');
+    });
+
+    Route::get('/full-analysis', function () {
+        return view('fullanalysis');
+    });
+    
+    Route::get('/profile', function () {
+        return view('profile');
+    });
+
+    Route::resource('users', UserController::class)->only(['update']);
+});
