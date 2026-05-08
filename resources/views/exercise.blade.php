@@ -116,7 +116,6 @@
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold truncate">Sarah Jenkins</p>
-                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
@@ -326,10 +325,6 @@
                                         <button
                                             class="flex-1 bg-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
                                             Start Workout
-                                        </button>
-                                        <button
-                                            class="w-12 h-12 rounded-xl border border-border bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                                            <iconify-icon icon="lucide:share-2"></iconify-icon>
                                         </button>
                                     </div>
                                 </div>

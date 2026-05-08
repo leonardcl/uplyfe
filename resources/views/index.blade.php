@@ -94,6 +94,9 @@
                 </nav>
 
                 <div class="flex items-center gap-4">
+                    <a href="#"
+                        class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
+                        Out</a>
                     <a href="/login"
                         class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                         In</a>

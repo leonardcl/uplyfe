@@ -111,104 +111,102 @@
             <div class="flex-1 overflow-y-auto">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div class="flex flex-col gap-6">
-            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl sm:text-4xl font-heading font-bold mt-2">My Profile</h1>
-                    <p class="mt-3 text-sm text-muted-foreground max-w-2xl">Manage your personal details, health goals, preferences, and security settings from one place.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button id="edit-profile-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
-                <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6 space-y-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                        <div class="flex items-center gap-4">
-                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                             <div>
-                                <h2 id="profile-display-name" class="text-2xl font-heading font-bold">Sarah Jenkins</h2>
-                                <p class="text-sm text-muted-foreground mt-1">Member since January 2025</p>
+                                <h1 class="text-3xl sm:text-4xl font-heading font-bold mt-2">My Profile</h1>
+                                <p class="mt-3 text-sm text-muted-foreground max-w-2xl">Manage your personal details, health goals, preferences, and security settings from one place.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button id="edit-profile-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
+                                <button id="log-out-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Log Out</button>
                             </div>
                         </div>
-                        <div class="bg-primary/10 text-primary-foreground rounded-3xl px-4 py-3 text-sm font-semibold inline-flex items-center gap-2">
-                            <iconify-icon icon="lucide:check-circle" class="text-lg"></iconify-icon>
-                            Premium Plan
+
+                        <div class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+                            <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6 space-y-6">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                        <div>
+                                            <h2 id="profile-display-name" class="text-2xl font-heading font-bold">Sarah Jenkins</h2>
+                                            <p class="text-sm text-muted-foreground mt-1">Member since January 2025</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="rounded-3xl border border-border bg-background p-5">
+                                        <p class="text-sm text-muted-foreground">Health Goal</p>
+                                        <p class="mt-2 font-semibold">Improve Vitamin D & manage cholesterol</p>
+                                    </div>
+                                    <div class="rounded-3xl border border-border bg-background p-5">
+                                        <p class="text-sm text-muted-foreground">Weekly Progress</p>
+                                        <p class="mt-2 font-semibold">84% target completion</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
+                                        <h3 class="text-lg font-semibold">Personal Information</h3>
+                                        <div class="grid gap-3 text-sm text-muted-foreground">
+                                            <div class="flex justify-between"><span>Name</span><span id="profile-card-name" class="text-foreground font-medium">Sarah Jenkins</span></div>
+                                            <div class="flex justify-between"><span>Email</span><span id="profile-card-email" class="text-foreground font-medium">sarah@uplyfe.com</span></div>
+                                            <div class="flex justify-between"><span>Phone</span><span id="profile-card-phone" class="text-foreground font-medium">+1 555 123 4567</span></div>
+                                            <div class="flex justify-between"><span>Height</span><span id="profile-card-height" class="text-foreground font-medium">165</span></div>
+                                            <div class="flex justify-between"><span>Weight</span><span id="profile-card-weight" class="text-foreground font-medium">68,5</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
+                                        <h3 class="text-lg font-semibold">Health Summary</h3>
+                                        <div class="grid gap-3 text-sm text-muted-foreground">
+                                            <div class="flex justify-between"><span>Last Checkup</span><span class="text-foreground font-medium">Apr 24, 2026</span></div>
+                                            <div class="flex justify-between"><span>Allergies</span><span class="text-foreground font-medium">Gluten, Dairy</span></div>
+                                            <div class="flex justify-between"><span>Preferred Diet</span><span id="profile-card-diet" class="text-foreground font-medium">Balanced</span></div>
+                                            <div class="flex justify-between"><span>Weekly Calories</span><span class="text-foreground font-medium">2,150 kcal</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <aside class="space-y-6">
+                                <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-semibold">Security</h3>
+                                        <button id="security-manage-btn" type="button" class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
+                                    </div>
+                                    <div class="space-y-4 text-sm text-muted-foreground">
+                                        <div class="rounded-3xl border border-border bg-background p-4">
+                                            <p class="font-semibold text-foreground mb-1">Password</p>
+                                            <p>Last changed 8 weeks ago</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
+                                    <h3 class="text-lg font-semibold mb-4">Preferences</h3>
+                                    <div id="profile-preferences-list" class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Balanced</span>
+                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">High Protein</span>
+                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Low Glycemic</span>
+                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Gluten Free</span>
+                                    </div>
+                                </section>
+
+                                <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
+                                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                                    <p class="text-sm text-muted-foreground">Need help with your account or health plan? Our team is ready to assist.</p>
+                                    <a href="mailto:support@uplyfe.com" class="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Contact Support</a>
+                                </section>
+                            </aside>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="rounded-3xl border border-border bg-background p-5">
-                            <p class="text-sm text-muted-foreground">Health Goal</p>
-                            <p class="mt-2 font-semibold">Improve Vitamin D & manage cholesterol</p>
-                        </div>
-                        <div class="rounded-3xl border border-border bg-background p-5">
-                            <p class="text-sm text-muted-foreground">Weekly Progress</p>
-                            <p class="mt-2 font-semibold">84% target completion</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
-                            <h3 class="text-lg font-semibold">Personal Information</h3>
-                            <div class="grid gap-3 text-sm text-muted-foreground">
-                                <div class="flex justify-between"><span>Name</span><span id="profile-card-name" class="text-foreground font-medium">Sarah Jenkins</span></div>
-                                <div class="flex justify-between"><span>Email</span><span id="profile-card-email" class="text-foreground font-medium">sarah@uplyfe.com</span></div>
-                                <div class="flex justify-between"><span>Phone</span><span id="profile-card-phone" class="text-foreground font-medium">+1 555 123 4567</span></div>
-                                <div class="flex justify-between"><span>Location</span><span class="text-foreground font-medium">Austin, TX</span></div>
-                            </div>
-                        </div>
-                        <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
-                            <h3 class="text-lg font-semibold">Health Summary</h3>
-                            <div class="grid gap-3 text-sm text-muted-foreground">
-                                <div class="flex justify-between"><span>Last Checkup</span><span class="text-foreground font-medium">Apr 24, 2026</span></div>
-                                <div class="flex justify-between"><span>Allergies</span><span class="text-foreground font-medium">Gluten, Dairy</span></div>
-                                <div class="flex justify-between"><span>Preferred Diet</span><span id="profile-card-diet" class="text-foreground font-medium">Balanced</span></div>
-                                <div class="flex justify-between"><span>Weekly Calories</span><span class="text-foreground font-medium">2,150 kcal</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <aside class="space-y-6">
-                    <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Security</h3>
-                            <button id="security-manage-btn" type="button" class="text-sm text-primary font-semibold hover:text-tertiary transition">Manage</button>
-                        </div>
-                        <div class="space-y-4 text-sm text-muted-foreground">
-                            <div class="rounded-3xl border border-border bg-background p-4">
-                                <p class="font-semibold text-foreground mb-1">Password</p>
-                                <p>Last changed 8 weeks ago</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
-                        <h3 class="text-lg font-semibold mb-4">Preferences</h3>
-                        <div id="profile-preferences-list" class="flex flex-wrap gap-2">
-                            <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Balanced</span>
-                            <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">High Protein</span>
-                            <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Low Glycemic</span>
-                            <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Gluten Free</span>
-                        </div>
-                    </section>
-
-                    <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
-                        <h3 class="text-lg font-semibold mb-4">Support</h3>
-                        <p class="text-sm text-muted-foreground">Need help with your account or health plan? Our team is ready to assist.</p>
-                        <a href="mailto:support@uplyfe.com" class="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Contact Support</a>
-                    </section>
-                </aside>
-            </div>
-        </div>
-    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <!-- Edit Profile Modal -->
-        <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
+    <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden" style="display:none;">
         <div id="edit-profile-backdrop" class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
             <div class="bg-card rounded-3xl border border-border shadow-xl flex-1 flex flex-col overflow-hidden">
@@ -313,10 +311,6 @@
                                 <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
                                     <input type="checkbox" name="diet-preferences" value="low-glycemic" checked class="text-primary">
                                     <span class="text-sm">Low Glycemic</span>
-                                </label>
-                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="gluten-free" checked class="text-primary">
-                                    <span class="text-sm">Gluten Free</span>
                                 </label>
                                 <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
                                     <input type="checkbox" name="diet-preferences" value="vegan" class="text-primary">
@@ -584,6 +578,8 @@
             updateText('profile-card-name', fullName || 'Your Name');
             updateText('profile-card-email', profileData.email || 'Email not set');
             updateText('profile-card-phone', profileData.phone || 'Phone not set');
+            updateText('profile-card-height', profileData.height || 'Height not set');
+            updateText('profile-card-weight', profileData.weight || 'Weight not set');
             updateText('profile-card-diet', profileData.dietPreferences.length ? profileData.dietPreferences.map(formatPreferenceLabel).join(', ') : 'Balanced');
             updatePreferenceChips(profileData.dietPreferences);
 

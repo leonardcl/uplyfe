@@ -115,7 +115,6 @@
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold truncate">Sarah Jenkins</p>
-                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
@@ -181,9 +180,14 @@
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Paleo</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Low-Carb</button>
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Low-Glycemic</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">High-Protein</button>
+                                            <button id="add-diet-type-btn" type="button"
+                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
+                                                <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+                                                Add Diet Type
+                                            </button>
                                         </div>
                                     </div>
 
@@ -205,6 +209,11 @@
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Baked</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="meal"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Stir-Fry</button>
+                                            <button id="add-meal-preference-btn" type="button"
+                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
+                                                <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+                                                Add Meal Preference
+                                            </button>
                                         </div>
                                     </div>
 
@@ -263,6 +272,11 @@
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">American</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
+                                            <button id="add-cuisine-preference-btn" type="button"
+                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
+                                                <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+                                                Add Cuisine Preference
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -473,10 +487,6 @@
                                     class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
                                     <iconify-icon icon="lucide:heart"></iconify-icon>
                                 </button>
-                                <button
-                                    class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm">
-                                    <iconify-icon icon="lucide:share-2"></iconify-icon>
-                                </button>
                             </div>
                         </div>
 
@@ -592,6 +602,41 @@
                 </div>
             </div>
         </div>
+
+        <!-- Add Diet Type Modal -->
+        <div id="add-diet-type-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeAddDietTypeModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Add Diet Type</h3>
+                        <button onclick="closeAddDietTypeModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Diet Type</label>
+                            <input id="diet-item" type="text" placeholder="vegan, low-carb, high-protein..."
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="closeAddDietTypeModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="addDietType()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Add Diet Type
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -686,7 +731,9 @@
         }
 
         async function loadGeneratedMealPlans() {
-            const response = await fetch(`${GENERATED_RECIPE_JSON_PATH}?t=${Date.now()}`, { cache: 'no-store' });
+            const response = await fetch(`${GENERATED_RECIPE_JSON_PATH}?t=${Date.now()}`, {
+                cache: 'no-store'
+            });
 
             if (response.status === 404) {
                 setRecipeFeedback('Generated recipes are not available yet. Please generate recipes first.', 'info');
@@ -814,7 +861,7 @@
             const exclusionGroup = document.getElementById('exclusion-chip-group');
 
             if (exclusionGroup) {
-                exclusionGroup.insertBefore(createExclusionChip(label), document.getElementById('add-exclusion-btn'));
+                exclusionGroup.insertBefore(createChip(label), document.getElementById('add-exclusion-btn'));
             }
 
             closeAddExclusionModal();
@@ -824,24 +871,56 @@
             document.getElementById('exclusion-item').value = '';
         }
 
-        function createExclusionChip(name) {
+        // Add diet type functions
+        document.getElementById('add-diet-type-btn').addEventListener('click', openAddDietTypeModal);
+
+        function openAddDietTypeModal() {
+            document.getElementById('add-diet-type-modal').classList.remove('hidden');
+        }
+
+        function closeAddDietTypeModal() {
+            document.getElementById('add-diet-type-modal').classList.add('hidden');
+        }
+
+        function addDietType() {
+            const item = document.getElementById('diet-item').value;
+
+            if (!item) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const label = `${item}`;
+            const dietGroup = document.getElementById('diet-type-chips');
+
+            if (dietGroup) {
+                dietGroup.insertBefore(createChip(label), document.getElementById('add-diet-type-btn'));
+            }
+
+            closeAddDietTypeModal();
+
+            // Reset form
+            document.getElementById('diet-item').value = '';
+        }
+
+        function createChip(name) {
             const chip = document.createElement('div');
-            chip.dataset.exclusionName = name;
+            chip.dataset.name = name;
             chip.className = 'flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium';
             chip.innerHTML = `
                 <span>${name}</span>
-                <button type="button" onclick="removeExclusion(this, '${name}')" class="text-muted-foreground hover:text-destructive"><iconify-icon icon="lucide:x" class="text-sm"></iconify-icon></button>
+                <button type="button" onclick="removeChip(this, '${name}')" class="text-muted-foreground hover:text-destructive"><iconify-icon icon="lucide:x" class="text-sm"></iconify-icon></button>
             `;
             return chip;
         }
 
-        function removeExclusion(button, exclusionName) {
+        function removeChip(button, chipName) {
             button.parentElement.remove();
-            console.log('Removing exclusion:', exclusionName);
-            alert(`Removed ${exclusionName} from exclusions.`);
+            console.log('Removing:', chipName);
+            alert(`Removed ${chipName}.`);
         }
 
-        document.addEventListener('click', function (event) {
+        document.addEventListener('click', function(event) {
             const chip = event.target.closest('[data-chip-toggle="true"]');
             if (!chip) return;
 

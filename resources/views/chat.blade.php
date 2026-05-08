@@ -115,7 +115,6 @@
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold truncate">Sarah Jenkins</p>
-                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
