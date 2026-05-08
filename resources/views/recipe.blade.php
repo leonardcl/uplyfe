@@ -220,34 +220,18 @@
                                     <div>
                                         <label class="text-sm font-bold mb-3 block">Allergies & Exclusions</label>
                                         <div id="exclusion-chip-group" class="flex flex-wrap gap-2">
-                                            <div data-exclusion-name="Gluten-free"
-                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                <span>Gluten-free</span>
-                                                <button type="button" onclick="removeExclusion(this, 'Gluten-free')"
-                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
-                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
-                                            </div>
-                                            <div data-exclusion-name="Dairy-free"
-                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                <span>Dairy-free</span>
-                                                <button type="button" onclick="removeExclusion(this, 'Dairy-free')"
-                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
-                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
-                                            </div>
-                                            <div data-exclusion-name="Nut-free"
-                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                <span>Nut-free</span>
-                                                <button type="button" onclick="removeExclusion(this, 'Nut-free')"
-                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
-                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
-                                            </div>
-                                            <div data-exclusion-name="Soy-free"
-                                                class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
-                                                <span>Soy-free</span>
-                                                <button type="button" onclick="removeExclusion(this, 'Soy-free')"
-                                                    class="text-muted-foreground hover:text-destructive"><iconify-icon
-                                                        icon="lucide:x" class="text-sm"></iconify-icon></button>
-                                            </div>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="exclusion"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Gluten-free
+                                            </button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="exclusion"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Dairy-free
+                                            </button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="exclusion"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Nut-free
+                                            </button>
+                                            <button type="button" data-chip-toggle="true" data-chip-group="exclusion"
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Soy-free
+                                            </button>
                                             <button id="add-exclusion-btn" type="button"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
                                                 <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
@@ -270,8 +254,6 @@
                                                 Eastern</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">American</button>
-                                            <button type="button" data-chip-toggle="true" data-chip-group="cuisine"
-                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Mediterranean</button>
                                             <button id="add-cuisine-preference-btn" type="button"
                                                 class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">
                                                 <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
@@ -637,6 +619,76 @@
                 </div>
             </div>
         </div>
+
+        <!-- Add Meal Preference Modal -->
+        <div id="add-meal-preference-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeAddMealPreferenceModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Add Meal Preference</h3>
+                        <button onclick="closeAddMealPreferenceModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Meal Preference</label>
+                            <input id="meal-preference-item" type="text" placeholder="simple, healthy, quick..."
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="closeAddMealPreferenceModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="addMealPreference()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Add Meal Preference
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Cuisine Preference Modal -->
+        <div id="add-cuisine-preference-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeAddCuisinePreferenceModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold">Add Cuisine Preference</h3>
+                        <button onclick="closeAddCuisinePreferenceModal()"
+                            class="text-muted-foreground p-2 rounded-full hover:bg-muted transition-colors">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Cuisine Preference</label>
+                            <input id="cuisine-preference-item" type="text" placeholder="Italian, Mexican, Asian..."
+                                class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="closeAddCuisinePreferenceModal()"
+                                class="flex-1 bg-muted text-muted-foreground px-4 py-3 rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="addCuisinePreference()"
+                                class="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+                                Add Cuisine Preference
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -901,6 +953,70 @@
 
             // Reset form
             document.getElementById('diet-item').value = '';
+        }
+
+        // Add meal prefs functions
+        document.getElementById('add-meal-preference-btn').addEventListener('click', openAddMealPreferenceModal);
+
+        function openAddMealPreferenceModal() {
+            document.getElementById('add-meal-preference-modal').classList.remove('hidden');
+        }
+
+        function closeAddMealPreferenceModal() {
+            document.getElementById('add-meal-preference-modal').classList.add('hidden');
+        }
+
+        function addMealPreference() {
+            const item = document.getElementById('meal-preference-item').value;
+
+            if (!item) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const label = `${item}`;
+            const mealGroup = document.getElementById('meal-preference-chips');
+
+            if (mealGroup) {
+                mealGroup.insertBefore(createChip(label), document.getElementById('add-meal-preference-btn'));
+            }
+
+            closeAddMealPreferenceModal();
+
+            // Reset form
+            document.getElementById('meal-preference-item').value = '';
+        }
+
+        // Add cuisine prefs functions
+        document.getElementById('add-cuisine-preference-btn').addEventListener('click', openAddCuisinePreferenceModal);
+
+        function openAddCuisinePreferenceModal() {
+            document.getElementById('add-cuisine-preference-modal').classList.remove('hidden');
+        }
+
+        function closeAddCuisinePreferenceModal() {
+            document.getElementById('add-cuisine-preference-modal').classList.add('hidden');
+        }
+
+        function addCuisinePreference() {
+            const item = document.getElementById('cuisine-preference-item').value;
+
+            if (!item) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const label = `${item}`;
+            const cuisineGroup = document.getElementById('cuisine-preference-chips');
+
+            if (cuisineGroup) {
+                cuisineGroup.insertBefore(createChip(label), document.getElementById('add-cuisine-preference-btn'));
+            }
+
+            closeAddCuisinePreferenceModal();
+
+            // Reset form
+            document.getElementById('cuisine-preference-item').value = '';
         }
 
         function createChip(name) {
