@@ -149,7 +149,7 @@
         @endif
 
         <div class="flex flex-1 mt-16">
-            @if(session('user'))        
+            @if(session('user'))
             <aside id="dashboard-sidebar"
                 class="hidden md:flex fixed top-16 left-0 bottom-0 w-72 flex-col bg-card border-r border-border overflow-y-auto">
                 <div class="flex-1 p-6 space-y-3">

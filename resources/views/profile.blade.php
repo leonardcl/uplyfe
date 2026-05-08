@@ -96,6 +96,19 @@
                     AI Assistant
                 </a>
             </div>
+            <div class="p-4 border-t border-border">
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                        class="w-10 h-10 rounded-full border border-border">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                    </div>
+                    <a href="/profile"
+                        class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
+                        <iconify-icon icon="lucide:settings" class="text-lg"></iconify-icon>
+                    </a>
+                </div>
+            </div>
         </aside>
         <!-- Mobile Sidebar Backdrop -->
         <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm hidden md:hidden"></div>
@@ -165,6 +178,11 @@
                                             <div class="flex justify-between"><span>Weekly Calories</span><span class="text-foreground font-medium">2,150 kcal</span></div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="mt-4 space-y-2">
+                                    <p class="mt-4 text-sm text-muted-foreground">Want to see your liked recipes?</p>
+                                    <a href="/favorite-recipes" class="inline-flex items-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Liked Recipes</a>
                                 </div>
                             </section>
 

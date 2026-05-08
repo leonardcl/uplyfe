@@ -79,5 +79,9 @@ Route::middleware(['checklogin'])->group(function () {
         return view('profile');
     });
 
+    Route::get('/favorite-recipes', function () {
+        return view('favoriterecipes');
+    });
+
     Route::resource('users', UserController::class)->only(['update']);
 });
