@@ -1,0 +1,17 @@
+{
+  "biomarkers": {
+    "glucose_fasting": 112,
+    "total_cholesterol": 232,
+    "ldl": 165,
+    "hdl": 38,
+    "triglycerides": 215,
+    "alt": 48,
+    "ast": 35,
+    "creatinine": 1.0,
+    "hemoglobin": 14.5,
+    "wbc": 7.0,
+    "platelets": 250,
+    "bp_systolic": 138,
+    "bp_diastolic": 86
+  }
+}

@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'ai_service' => [
+        'url' => env('AI_SERVICE_URL', 'http://localhost:8000'),
+        'key' => env('AI_SERVICE_KEY'),
+        'timeout' => (int) env('AI_SERVICE_TIMEOUT', 120),
+    ],
+
 ];

@@ -1,0 +1,152 @@
+[
+  {
+    "path": "knowledge/medlineplus/glucose-blood-test.md",
+    "topic": "glucose",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Blood Glucose Test",
+    "url": "https://medlineplus.gov/lab-tests/blood-glucose-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024-01",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/hba1c.md",
+    "topic": "glucose",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Hemoglobin A1c (HbA1c) Test",
+    "url": "https://medlineplus.gov/lab-tests/hemoglobin-a1c-hba1c-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024-01",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/ada/standards-of-care-2024-summary.md",
+    "topic": "glucose",
+    "source": "ADA Standards of Care 2024",
+    "title": "ADA Standards of Care in Diabetes — Summary 2024",
+    "url": "https://diabetesjournals.org/care/issue/47/Supplement_1",
+    "license": "© ADA. Use under fair use; do not redistribute.",
+    "last_updated": "2024-01",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/aha/2018-cholesterol-guideline-summary.md",
+    "topic": "lipids",
+    "source": "AHA/ACC 2018 Cholesterol Guideline",
+    "title": "AHA/ACC 2018 Guideline on the Management of Blood Cholesterol — Summary",
+    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000625",
+    "license": "© AHA. Use under fair use; do not redistribute.",
+    "last_updated": "2018-11",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/cdc/physical-activity-guidelines.md",
+    "topic": "exercise",
+    "source": "CDC / HHS Physical Activity Guidelines (2nd ed.)",
+    "title": "Physical Activity Guidelines for Americans (2018)",
+    "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+    "license": "Public domain (US government work).",
+    "last_updated": "2018",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/usda/dietary-guidelines-2020-2025.pdf",
+    "topic": "diet",
+    "source": "USDA / HHS Dietary Guidelines for Americans 2020-2025",
+    "title": "Dietary Guidelines for Americans, 2020–2025",
+    "url": "https://www.dietaryguidelines.gov/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2020-12",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/kdigo/ckd-2024-summary.md",
+    "topic": "kidney",
+    "source": "KDIGO 2024 CKD Guideline",
+    "title": "KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD — Summary",
+    "url": "https://kdigo.org/guidelines/ckd-evaluation-and-management/",
+    "license": "Open access; attribution required.",
+    "last_updated": "2024",
+    "jurisdiction": "International"
+  },
+  {
+    "path": "knowledge/aasld/alt-elevation-2017.md",
+    "topic": "liver",
+    "source": "AASLD 2017 ALT guidance",
+    "title": "AASLD ACG Clinical Guideline: Evaluation of Abnormal Liver Chemistries",
+    "url": "https://www.aasld.org/practice-guidelines",
+    "license": "© AASLD. Use under fair use; do not redistribute.",
+    "last_updated": "2017",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/ata/thyroid-disease-pregnancy.md",
+    "topic": "thyroid",
+    "source": "American Thyroid Association — Pregnancy Guideline",
+    "title": "ATA Guidelines for Diagnosis and Management of Thyroid Disease in Pregnancy",
+    "url": "https://www.thyroid.org/professionals/ata-professional-guidelines/",
+    "license": "Open access via Thyroid (journal).",
+    "last_updated": "2017",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/nih-ods/vitamin-d-fact-sheet.md",
+    "topic": "vitamins",
+    "source": "NIH Office of Dietary Supplements",
+    "title": "NIH ODS — Vitamin D Fact Sheet for Health Professionals",
+    "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2023",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/nih-ods/vitamin-b12-fact-sheet.md",
+    "topic": "vitamins",
+    "source": "NIH Office of Dietary Supplements",
+    "title": "NIH ODS — Vitamin B12 Fact Sheet for Health Professionals",
+    "url": "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/acc-aha/2017-hypertension-guideline-summary.md",
+    "topic": "anthropometric",
+    "source": "ACC/AHA 2017 Hypertension Guideline",
+    "title": "2017 ACC/AHA Guideline for High Blood Pressure in Adults — Summary",
+    "url": "https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065",
+    "license": "© AHA. Use under fair use; do not redistribute.",
+    "last_updated": "2017-11",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/who/healthy-diet-fact-sheet.md",
+    "topic": "diet",
+    "source": "WHO — Healthy Diet Fact Sheet",
+    "title": "WHO Healthy Diet Fact Sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
+    "license": "CC BY-NC-SA 3.0 IGO.",
+    "last_updated": "2020-04",
+    "jurisdiction": "International"
+  },
+  {
+    "path": "knowledge/medlineplus/cbc.md",
+    "topic": "cbc",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Complete Blood Count (CBC)",
+    "url": "https://medlineplus.gov/lab-tests/complete-blood-count-cbc/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/electrolyte-panel.md",
+    "topic": "electrolytes",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Electrolyte Panel",
+    "url": "https://medlineplus.gov/lab-tests/electrolyte-panel/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  }
+]

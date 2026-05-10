@@ -175,21 +175,35 @@
                                     translate complex terms, and update your health profile.
                                 </p>
 
-                                <div class="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group/drop"
+                                <div class="relative border-2 border-dashed border-border rounded-2xl p-8 bg-background/50 hover:bg-muted/50 hover:border-primary/50 transition-all group/drop"
                                     id="drop-zone">
-                                    <input type="file" id="file-input" accept=".pdf,.jpg,.png" class="hidden">
-                                    <div
-                                        class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover/drop:scale-110 transition-transform duration-300">
-                                        <iconify-icon icon="lucide:file-up" class="text-3xl"></iconify-icon>
+                                    <!-- The file input itself fills the drop-zone, transparent.
+                                         Clicking ANYWHERE in the box opens the picker — no JS,
+                                         no label-for indirection. -->
+                                    <input type="file" id="file-input" accept=".pdf,.jpg,.png"
+                                        style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:10;">
+                                    <div id="drop-zone-idle" class="flex flex-col items-center pointer-events-none relative">
+                                        <div
+                                            class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover/drop:scale-110 transition-transform duration-300">
+                                            <iconify-icon icon="lucide:file-up" class="text-3xl"></iconify-icon>
+                                        </div>
+                                        <p class="font-medium text-sm mb-1">Drag &amp; drop your file here</p>
+                                        <p class="text-xs text-muted-foreground mb-4">PDF, JPG, PNG up to 10MB</p>
+                                        <span
+                                            class="bg-card border border-border px-5 py-2 rounded-full text-sm font-semibold shadow-sm">
+                                            Browse Files
+                                        </span>
                                     </div>
-                                    <p class="font-medium text-sm mb-1">Drag & drop your file here</p>
-                                    <p class="text-xs text-muted-foreground mb-4">PDF, JPG, PNG up to 10MB</p>
-                                    <button
-                                        class="bg-card border border-border px-5 py-2 rounded-full text-sm font-semibold shadow-sm hover:bg-muted transition-colors"
-                                        id="browse-btn">
-                                        Browse Files
-                                    </button>
+                                    <div id="drop-zone-busy" class="hidden flex-col items-center text-center pointer-events-none relative">
+                                        <div
+                                            class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+                                            <iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin"></iconify-icon>
+                                        </div>
+                                        <p class="font-medium text-sm mb-1" id="hc-status-title">Uploading…</p>
+                                        <p class="text-xs text-muted-foreground" id="hc-status-detail">Sending file to AI gateway</p>
+                                    </div>
                                 </div>
+                                <div id="hc-error" class="hidden mt-4 p-4 rounded-xl border border-red-300 bg-red-50 text-sm text-red-700"></div>
                             </div>
 
                             <!-- Analysis Status Card (Simulating processing) -->
@@ -234,6 +248,64 @@
                         </div>
                     </section>
 
+                    <!-- Live AI Result (populated by handleFile) -->
+                    <section id="hc-results" class="hidden bg-card rounded-3xl border border-border p-8 shadow-sm">
+                        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                            <h2 class="text-xl font-heading font-bold flex items-center gap-2">
+                                <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
+                                Your AI Health Report
+                            </h2>
+                            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span id="hc-file-name"></span>
+                                <span id="hc-overall-badge" class="px-2 py-1 rounded-md text-xs font-bold"></span>
+                            </div>
+                        </div>
+
+                        <p id="hc-summary" class="text-sm leading-relaxed mb-6"></p>
+
+                        <div id="hc-critical-block" class="hidden mb-6 p-4 rounded-xl border border-red-300 bg-red-50">
+                            <h3 class="font-bold text-sm text-red-800 mb-2 flex items-center gap-2">
+                                <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+                                Critical — please consult a clinician
+                            </h3>
+                            <ul id="hc-critical" class="space-y-1 text-sm text-red-800"></ul>
+                        </div>
+
+                        <div id="hc-abnormal-block" class="hidden mb-6">
+                            <h3 class="font-bold text-sm mb-2">Findings outside reference ranges</h3>
+                            <ul id="hc-abnormal" class="divide-y divide-border border border-border rounded-xl overflow-hidden"></ul>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div id="hc-diet-block" class="hidden">
+                                <h3 class="font-bold text-sm mb-2 flex items-center gap-2">
+                                    <iconify-icon icon="lucide:salad" class="text-tertiary"></iconify-icon>
+                                    Diet
+                                </h3>
+                                <ul id="hc-diet" class="list-disc pl-5 space-y-1 text-sm"></ul>
+                            </div>
+                            <div id="hc-exercise-block" class="hidden">
+                                <h3 class="font-bold text-sm mb-2 flex items-center gap-2">
+                                    <iconify-icon icon="lucide:dumbbell" class="text-tertiary"></iconify-icon>
+                                    Exercise
+                                </h3>
+                                <ul id="hc-exercise" class="list-disc pl-5 space-y-1 text-sm"></ul>
+                            </div>
+                        </div>
+
+                        <div id="hc-doctor-block" class="hidden mb-6">
+                            <h3 class="font-bold text-sm mb-2">When to see a doctor</h3>
+                            <ul id="hc-doctor" class="list-disc pl-5 space-y-1 text-sm"></ul>
+                        </div>
+
+                        <div id="hc-recheck-block" class="hidden mb-6">
+                            <h3 class="font-bold text-sm mb-2">What to recheck</h3>
+                            <ul id="hc-recheck" class="list-disc pl-5 space-y-1 text-sm"></ul>
+                        </div>
+
+                        <p id="hc-disclaimer" class="text-xs text-muted-foreground border-t border-border pt-4"></p>
+                    </section>
+
                     <!-- AI Insights Section -->
                     <section>
                         <div class="flex items-center justify-between mb-6">
@@ -248,75 +320,11 @@
                             </select>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Insight Card 1 -->
-                            <div
-                                class="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                        <iconify-icon icon="lucide:activity" class="text-lg"></iconify-icon>
-                                    </div>
-                                    <span
-                                        class="px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-bold">Optimal</span>
-                                </div>
-                                <h3 class="font-bold mb-1">Cholesterol Levels</h3>
-                                <p class="text-2xl font-heading font-extrabold mb-1">175 <span
-                                        class="text-sm font-medium text-muted-foreground">mg/dL</span></p>
-                                <p class="text-xs text-muted-foreground mb-4">Total cholesterol is within healthy range.
-                                    HDL is excellent.</p>
-                                <div
-                                    class="mt-auto pt-4 border-t border-border flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                    <iconify-icon icon="lucide:arrow-down-right" class="text-tertiary"></iconify-icon>
-                                    <span class="text-tertiary">Down 5%</span> from last checkup
-                                </div>
-                            </div>
-
-                            <!-- Insight Card 2 -->
-                            <div
-                                class="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                        <iconify-icon icon="lucide:sun" class="text-lg"></iconify-icon>
-                                    </div>
-                                    <span
-                                        class="px-2 py-1 rounded-md bg-yellow-100 text-yellow-700 text-xs font-bold">Attention</span>
-                                </div>
-                                <h3 class="font-bold mb-1">Vitamin D</h3>
-                                <p class="text-2xl font-heading font-extrabold mb-1">22 <span
-                                        class="text-sm font-medium text-muted-foreground">ng/mL</span></p>
-                                <p class="text-xs text-muted-foreground mb-4">Levels are slightly low. AI recommends
-                                    increased sun exposure and dietary supplements.</p>
-                                <div
-                                    class="mt-auto pt-4 border-t border-border flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                    <iconify-icon icon="lucide:minus" class="text-yellow-600"></iconify-icon>
-                                    <span class="text-yellow-600">Unchanged</span> from last checkup
-                                </div>
-                            </div>
-
-                            <!-- Insight Card 3 -->
-                            <div
-                                class="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                                        <iconify-icon icon="lucide:droplet" class="text-lg"></iconify-icon>
-                                    </div>
-                                    <span
-                                        class="px-2 py-1 rounded-md bg-tertiary/20 text-tertiary text-xs font-bold">Improved</span>
-                                </div>
-                                <h3 class="font-bold mb-1">Blood Sugar (Fasting)</h3>
-                                <p class="text-2xl font-heading font-extrabold mb-1">92 <span
-                                        class="text-sm font-medium text-muted-foreground">mg/dL</span></p>
-                                <p class="text-xs text-muted-foreground mb-4">Perfectly within the normal range. Great
-                                    job maintaining a balanced diet.</p>
-                                <div
-                                    class="mt-auto pt-4 border-t border-border flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                    <iconify-icon icon="lucide:arrow-down-right" class="text-tertiary"></iconify-icon>
-                                    <span class="text-tertiary">Down 12%</span> from last checkup
-                                </div>
-                            </div>
+                        <!-- Hero cards. Populated from report.key_insights when an upload completes;
+                             stay hidden until then so we never show stale mock numbers. -->
+                        <div id="hc-insights-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden"></div>
+                        <div id="hc-insights-empty" class="bg-card rounded-2xl p-6 border border-dashed border-border shadow-sm text-center text-sm text-muted-foreground">
+                            Upload a lab report to see your top three health insights here — cholesterol, blood sugar, and vitamin D.
                         </div>
 
                         <!-- Summary Column -->
@@ -509,25 +517,16 @@
         });
 
         // File upload functionality
+        // The drop-zone is a <label for="file-input"> so clicking it natively
+        // opens the file picker — no JS click handler needed. We only attach
+        // listeners for: file selection, and drag-and-drop.
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
-        const browseBtn = document.getElementById('browse-btn');
-
-        // Browse button click
-        browseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            fileInput.click();
-        });
-
-        // Drop zone click
-        dropZone.addEventListener('click', () => {
-            fileInput.click();
-        });
 
         // File input change
         fileInput.addEventListener('change', handleFileSelect);
 
-        // Drag and drop events
+        // Drag and drop events (label elements support these the same as divs).
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('border-primary');
@@ -554,23 +553,217 @@
             }
         }
 
-        function handleFile(file) {
-            // Validate file type
+        const HC_UPLOAD_URL = '/api/ai/health-checkup/upload';
+
+        const $idle = () => document.getElementById('drop-zone-idle');
+        const $busy = () => document.getElementById('drop-zone-busy');
+        const $err  = () => document.getElementById('hc-error');
+        const $res  = () => document.getElementById('hc-results');
+
+        function setBusy(title, detail) {
+            $idle().classList.add('hidden');
+            $busy().classList.remove('hidden');
+            $busy().classList.add('flex');
+            document.getElementById('hc-status-title').textContent = title;
+            document.getElementById('hc-status-detail').textContent = detail;
+            $err().classList.add('hidden');
+        }
+
+        function setIdle() {
+            $busy().classList.add('hidden');
+            $busy().classList.remove('flex');
+            $idle().classList.remove('hidden');
+        }
+
+        function showError(msg) {
+            setIdle();
+            $err().textContent = msg;
+            $err().classList.remove('hidden');
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function severityClasses(sev) {
+            return {
+                normal:     'bg-tertiary/20 text-tertiary',
+                borderline: 'bg-amber-100 text-amber-700',
+                abnormal:   'bg-orange-100 text-orange-700',
+                critical:   'bg-red-100 text-red-700',
+            }[sev] || 'bg-muted text-muted-foreground';
+        }
+
+        function renderFindingLi(f) {
+            const name = escapeHtml(String(f.biomarker || '').replace(/_/g, ' '));
+            const sev = escapeHtml(f.severity);
+            return `
+                <li class="p-3 flex flex-col gap-1">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <span class="font-semibold capitalize text-sm">${name}</span>
+                        <span class="text-xs">
+                            <span class="font-mono">${escapeHtml(f.value)} ${escapeHtml(f.unit)}</span>
+                            <span class="ml-2 px-2 py-0.5 rounded ${severityClasses(f.severity)} font-bold">${sev}</span>
+                        </span>
+                    </div>
+                    <div class="text-xs text-muted-foreground">${escapeHtml(f.label)} — ${escapeHtml(f.rationale)}</div>
+                    <div class="text-[11px] text-muted-foreground italic">${escapeHtml(f.source)}</div>
+                </li>`;
+        }
+
+        function fillList(elId, blockId, items, lineFn) {
+            const el = document.getElementById(elId);
+            const block = document.getElementById(blockId);
+            if (!items || items.length === 0) {
+                el.innerHTML = '';
+                block.classList.add('hidden');
+                return;
+            }
+            el.innerHTML = items.map(lineFn).join('');
+            block.classList.remove('hidden');
+        }
+
+        // Map a key_insights[].status to the visual style of the badge + icon
+        // colour ring on the hero cards. The keys mirror what the backend emits.
+        const INSIGHT_STATUS_STYLE = {
+            optimal:    { badge: 'bg-tertiary/20 text-tertiary',     ring: 'bg-tertiary/15 text-tertiary',     iconCls: 'text-tertiary',     label: 'Optimal' },
+            normal:     { badge: 'bg-tertiary/20 text-tertiary',     ring: 'bg-tertiary/15 text-tertiary',     iconCls: 'text-tertiary',     label: 'Normal' },
+            borderline: { badge: 'bg-amber-100 text-amber-700',      ring: 'bg-amber-100 text-amber-600',      iconCls: 'text-amber-600',    label: 'Borderline' },
+            high:       { badge: 'bg-orange-100 text-orange-700',    ring: 'bg-orange-100 text-orange-600',    iconCls: 'text-orange-600',   label: 'High' },
+            low:        { badge: 'bg-yellow-100 text-yellow-700',    ring: 'bg-yellow-100 text-yellow-600',    iconCls: 'text-yellow-600',   label: 'Low' },
+            critical:   { badge: 'bg-red-100 text-red-700',          ring: 'bg-red-100 text-red-600',          iconCls: 'text-red-600',      label: 'Critical' },
+        };
+
+        const INSIGHT_ICON = {
+            cholesterol: 'lucide:activity',
+            blood_sugar: 'lucide:droplet',
+            vitamin_d:   'lucide:sun',
+        };
+
+        function formatInsightValue(v) {
+            // Drop trailing .0 for whole numbers, keep one decimal otherwise.
+            if (v === null || v === undefined) return '';
+            return Number.isInteger(v) ? String(v) : (Math.round(v * 100) / 100).toString();
+        }
+
+        function renderInsightCard(insight) {
+            const style = INSIGHT_STATUS_STYLE[insight.status] || INSIGHT_STATUS_STYLE.normal;
+            const icon = INSIGHT_ICON[insight.key] || 'lucide:activity';
+            return `
+              <div class="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="w-10 h-10 rounded-full ${style.ring} flex items-center justify-center">
+                    <iconify-icon icon="${icon}" class="text-lg ${style.iconCls}"></iconify-icon>
+                  </div>
+                  <span class="px-2 py-1 rounded-md ${style.badge} text-xs font-bold">${escapeHtml(style.label)}</span>
+                </div>
+                <h3 class="font-bold mb-1">${escapeHtml(insight.label)}</h3>
+                <p class="text-2xl font-heading font-extrabold mb-1">
+                  ${escapeHtml(formatInsightValue(insight.value))}
+                  <span class="text-sm font-medium text-muted-foreground">${escapeHtml(insight.unit)}</span>
+                </p>
+                <p class="text-xs text-muted-foreground mb-4">${escapeHtml(insight.summary)}</p>
+              </div>`;
+        }
+
+        function renderInsightsGrid(insights) {
+            const grid = document.getElementById('hc-insights-grid');
+            const empty = document.getElementById('hc-insights-empty');
+            if (!insights || insights.length === 0) {
+                grid.innerHTML = '';
+                grid.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            grid.innerHTML = insights.map(renderInsightCard).join('');
+            grid.classList.remove('hidden');
+            empty.classList.add('hidden');
+        }
+
+        function renderReport(file, report) {
+            document.getElementById('hc-file-name').textContent = file.name + ' • ' + (file.size / 1024).toFixed(0) + ' KB';
+
+            const overall = report.overall_severity || 'normal';
+            const badge = document.getElementById('hc-overall-badge');
+            badge.textContent = 'Overall: ' + overall;
+            badge.className = 'px-2 py-1 rounded-md text-xs font-bold ' + severityClasses(overall);
+
+            document.getElementById('hc-summary').textContent = report.summary || '';
+
+            fillList('hc-critical', 'hc-critical-block', report.critical_findings || [],
+                f => `<li>• ${escapeHtml(String(f.biomarker).replace(/_/g, ' '))} — ${escapeHtml(f.label)} (${escapeHtml(f.value)} ${escapeHtml(f.unit)})</li>`);
+
+            fillList('hc-abnormal', 'hc-abnormal-block', report.abnormal_findings || [], renderFindingLi);
+
+            fillList('hc-diet', 'hc-diet-block', report.diet_advice || [],
+                d => `<li>${escapeHtml(d)}</li>`);
+            fillList('hc-exercise', 'hc-exercise-block', report.exercise_advice || [],
+                e => `<li>${escapeHtml(e)}</li>`);
+            fillList('hc-doctor', 'hc-doctor-block', report.when_to_see_doctor || [],
+                w => `<li>${escapeHtml(w)}</li>`);
+            fillList('hc-recheck', 'hc-recheck-block', report.recheck_advice || [],
+                r => `<li>${escapeHtml(r)}</li>`);
+
+            renderInsightsGrid(report.key_insights || []);
+
+            document.getElementById('hc-disclaimer').textContent = report.disclaimer || '';
+
+            $res().classList.remove('hidden');
+            $res().scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function handleFile(file) {
             const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
             if (!allowedTypes.includes(file.type)) {
-                alert('Please select a PDF, JPG, or PNG file.');
+                showError('Please select a PDF, JPG, or PNG file.');
                 return;
             }
-
-            // Validate file size (10MB)
             if (file.size > 10 * 1024 * 1024) {
-                alert('File size must be less than 10MB.');
+                showError('File size must be less than 10 MB.');
                 return;
             }
 
-            // Here you would typically upload the file to the server
-            console.log('File selected:', file.name);
-            alert(`File "${file.name}" selected successfully! Upload functionality would be implemented here.`);
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('use_llm', '1');
+            fd.append('use_rag', '1');
+
+            setBusy('Uploading…', `Sending ${file.name} to the AI gateway`);
+
+            // Switch the status copy after a short delay so users know
+            // the LLM step is the slow part (10–60s typical).
+            const slowMsg = setTimeout(() => {
+                document.getElementById('hc-status-title').textContent = 'Analyzing…';
+                document.getElementById('hc-status-detail').textContent =
+                    'AI is reading the report. This can take 30–90 seconds.';
+            }, 1500);
+
+            try {
+                const res = await fetch(HC_UPLOAD_URL, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'Accept': 'application/json' },
+                });
+                clearTimeout(slowMsg);
+
+                const text = await res.text();
+                let data;
+                try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
+
+                if (!res.ok) {
+                    const detail = data.error || data.message || ('HTTP ' + res.status);
+                    showError('Analysis failed: ' + detail);
+                    return;
+                }
+
+                setIdle();
+                renderReport(file, data);
+            } catch (e) {
+                clearTimeout(slowMsg);
+                showError('Network error: ' + (e && e.message ? e.message : e));
+            }
         }
 
         // Modal functions

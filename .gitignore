@@ -16,3 +16,29 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Python AI service
+ai-service/**/.venv/
+ai-service/**/__pycache__/
+ai-service/**/*.pyc
+ai-service/**/.pytest_cache/
+ai-service/**/*.egg-info/
+ai-service/**/build/
+ai-service/**/dist/
+ai-service/**/.env
+ai-service/**/data/chroma/
+ai-service/**/data/uploads/
+ai-service/**/.ruff_cache/
+ai-service/**/.mypy_cache/
+ai-service/**/.coverage
+
+# Lab-report PDFs are private by default. The synthetic ones in
+# samples/synthetic/ are regenerable from tools/generate_synthetic.py
+# — see ai-service/health-checkup-extraction/samples/README.md.
+ai-service/**/samples/private/
+ai-service/**/samples/online/
+ai-service/**/samples/synthetic/*.pdf
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

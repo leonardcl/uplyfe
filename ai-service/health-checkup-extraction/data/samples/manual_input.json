@@ -1,0 +1,28 @@
+{
+  "age": 26,
+  "sex": "male",
+  "height_cm": 175,
+  "weight_kg": 82,
+  "waist_cm": 95,
+  "fasting": true,
+  "values": [
+    { "biomarker": "glucose_fasting", "value": 110, "unit": "mg/dL" },
+    { "biomarker": "hba1c", "value": 6.0, "unit": "%" },
+    { "biomarker": "total_cholesterol", "value": 230, "unit": "mg/dL" },
+    { "biomarker": "ldl", "value": 160, "unit": "mg/dL" },
+    { "biomarker": "hdl", "value": 35, "unit": "mg/dL" },
+    { "biomarker": "triglycerides", "value": 210, "unit": "mg/dL" },
+    { "biomarker": "alt", "value": 55, "unit": "U/L" },
+    { "biomarker": "ast", "value": 40, "unit": "U/L" },
+    { "biomarker": "creatinine", "value": 1.0, "unit": "mg/dL" },
+    { "biomarker": "uric_acid", "value": 6.8, "unit": "mg/dL" },
+    { "biomarker": "hemoglobin", "value": 14.5, "unit": "g/dL" },
+    { "biomarker": "wbc", "value": 7.0, "unit": "10^3/uL" },
+    { "biomarker": "platelets", "value": 250, "unit": "10^3/uL" },
+    { "biomarker": "mcv", "value": 88, "unit": "fL" },
+    { "biomarker": "tsh", "value": 2.5, "unit": "mIU/L" },
+    { "biomarker": "vitamin_d_25oh", "value": 18, "unit": "ng/mL" },
+    { "biomarker": "bp_systolic", "value": 132, "unit": "mmHg" },
+    { "biomarker": "bp_diastolic", "value": 84, "unit": "mmHg" }
+  ]
+}

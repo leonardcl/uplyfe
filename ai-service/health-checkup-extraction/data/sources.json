@@ -1,0 +1,262 @@
+[
+  {
+    "path": "knowledge/medlineplus/glucose-fasting.md",
+    "topic": "glucose",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Blood Glucose Test",
+    "url": "https://medlineplus.gov/lab-tests/blood-glucose-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/hba1c.md",
+    "topic": "glucose",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Hemoglobin A1c (HbA1c) Test",
+    "url": "https://medlineplus.gov/lab-tests/hemoglobin-a1c-hba1c-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/ada/glucose-screening-2024.md",
+    "topic": "glucose",
+    "source": "ADA Standards of Care 2024",
+    "title": "ADA Standards of Care in Diabetes 2024 — glucose screening summary (paraphrased)",
+    "url": "https://diabetesjournals.org/care/issue/47/Supplement_1",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/lipid-panel.md",
+    "topic": "lipids",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Cholesterol Levels / Lipid Panel",
+    "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/aha-acc/cholesterol-2018.md",
+    "topic": "lipids",
+    "source": "AHA/ACC 2018 Cholesterol Guideline",
+    "title": "AHA/ACC 2018 Cholesterol Guideline — summary (paraphrased)",
+    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000625",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2018",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/ncep/atp-iii-lipids.md",
+    "topic": "lipids",
+    "source": "NCEP ATP III",
+    "title": "NCEP ATP III — lipid screening cutoffs (paraphrased)",
+    "url": "https://www.nhlbi.nih.gov/health-topics/all-publications-and-resources/atp-iii-guidelines",
+    "license": "Public-domain US government summary, paraphrased.",
+    "last_updated": "2002",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/liver-function-tests.md",
+    "topic": "liver",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Liver Function Tests",
+    "url": "https://medlineplus.gov/lab-tests/liver-function-tests/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/aasld/alt-elevation-2017.md",
+    "topic": "liver",
+    "source": "ACG/AASLD 2017 Liver Chemistries Guideline",
+    "title": "ACG Clinical Guideline — Evaluation of Abnormal Liver Chemistries (paraphrased)",
+    "url": "https://journals.lww.com/ajg/Fulltext/2017/01000/ACG_Clinical_Guideline__Evaluation_of_Abnormal.10.aspx",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2017",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/creatinine.md",
+    "topic": "kidney",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Creatinine Test",
+    "url": "https://medlineplus.gov/lab-tests/creatinine-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/kdigo/ckd-2024.md",
+    "topic": "kidney",
+    "source": "KDIGO 2024 CKD Guideline",
+    "title": "KDIGO 2024 — Evaluation and management of CKD (paraphrased)",
+    "url": "https://kdigo.org/guidelines/ckd-evaluation-and-management/",
+    "license": "Paraphrased summary; KDIGO open access with attribution.",
+    "last_updated": "2024",
+    "jurisdiction": "International"
+  },
+  {
+    "path": "knowledge/medlineplus/uric-acid.md",
+    "topic": "kidney",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Uric Acid Test (Blood Analysis)",
+    "url": "https://medlineplus.gov/lab-tests/uric-acid-test-blood-analysis/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/cbc.md",
+    "topic": "cbc",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Complete Blood Count (CBC)",
+    "url": "https://medlineplus.gov/lab-tests/complete-blood-count-cbc/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/tsh.md",
+    "topic": "thyroid",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — TSH (Thyroid-Stimulating Hormone) Test",
+    "url": "https://medlineplus.gov/lab-tests/tsh-thyroid-stimulating-hormone-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/ata/thyroid-disease.md",
+    "topic": "thyroid",
+    "source": "American Thyroid Association",
+    "title": "ATA — interpreting thyroid tests (paraphrased)",
+    "url": "https://www.thyroid.org/professionals/ata-professional-guidelines/",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2017",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/crp.md",
+    "topic": "inflammation",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — CRP and ESR",
+    "url": "https://medlineplus.gov/lab-tests/c-reactive-protein-crp-test/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/medlineplus/electrolyte-panel.md",
+    "topic": "electrolytes",
+    "source": "MedlinePlus (NLM/NIH)",
+    "title": "MedlinePlus — Electrolyte Panel",
+    "url": "https://medlineplus.gov/lab-tests/electrolyte-panel/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/nih-ods/vitamin-d.md",
+    "topic": "vitamins",
+    "source": "NIH Office of Dietary Supplements",
+    "title": "NIH ODS — Vitamin D Fact Sheet (paraphrased)",
+    "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2023",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/nih-ods/vitamin-b12.md",
+    "topic": "vitamins",
+    "source": "NIH Office of Dietary Supplements",
+    "title": "NIH ODS — Vitamin B12 Fact Sheet (paraphrased)",
+    "url": "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/cdc/bmi-adults.md",
+    "topic": "anthropometric",
+    "source": "CDC About Adult BMI",
+    "title": "CDC — Adult BMI",
+    "url": "https://www.cdc.gov/healthy-weight-growth/bmi/about-adult-bmi.html",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/aha-acc/hypertension-2017.md",
+    "topic": "anthropometric",
+    "source": "ACC/AHA 2017 Hypertension Guideline",
+    "title": "ACC/AHA 2017 Hypertension Guideline — summary (paraphrased)",
+    "url": "https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2017",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/cdc/high-blood-pressure.md",
+    "topic": "anthropometric",
+    "source": "CDC About High Blood Pressure",
+    "title": "CDC — High Blood Pressure overview",
+    "url": "https://www.cdc.gov/high-blood-pressure/about/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/usda-dga/dietary-guidelines-2020-2025.md",
+    "topic": "diet",
+    "source": "USDA / HHS Dietary Guidelines for Americans 2020-2025",
+    "title": "Dietary Guidelines for Americans 2020-2025 (paraphrased)",
+    "url": "https://www.dietaryguidelines.gov/",
+    "license": "Public domain (US government work).",
+    "last_updated": "2020",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/aha-diet/healthy-eating-pattern.md",
+    "topic": "diet",
+    "source": "AHA 2021 Dietary Guidance to Improve Cardiovascular Health",
+    "title": "AHA Healthy Eating Pattern (paraphrased)",
+    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001031",
+    "license": "Paraphrased summary; cite original for any redistribution.",
+    "last_updated": "2021",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/cdc/physical-activity-adults.md",
+    "topic": "exercise",
+    "source": "CDC Physical Activity Basics",
+    "title": "CDC — Adult Physical Activity Overview",
+    "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+    "license": "Public domain (US government work).",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/hhs-pag/physical-activity-guidelines.md",
+    "topic": "exercise",
+    "source": "HHS Physical Activity Guidelines for Americans, 2nd ed.",
+    "title": "HHS PAG 2nd ed. — adult and special population summaries (paraphrased)",
+    "url": "https://health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines",
+    "license": "Public domain (US government work).",
+    "last_updated": "2018",
+    "jurisdiction": "US"
+  },
+  {
+    "path": "knowledge/safety/urgent-symptoms.md",
+    "topic": "safety",
+    "source": "MedlinePlus / CDC / ACC-AHA 2017",
+    "title": "When to seek prompt or emergency care (paraphrased)",
+    "url": "https://medlineplus.gov/symptoms.html",
+    "license": "Public domain (US government work) + paraphrased ACC/AHA.",
+    "last_updated": "2024",
+    "jurisdiction": "US"
+  }
+]
