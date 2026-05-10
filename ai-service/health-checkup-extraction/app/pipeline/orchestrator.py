@@ -49,7 +49,12 @@ from app.parsers.pdf_parser import EmptyPDFTextError
 from app.parsers.regex_extractor import extract_blood_pressure
 from app.rag import KnowledgeStore, retrieve_for_clusters
 from app.rules import evaluate_panel
-from app.safety import build_disclaimer, summarize_emergencies, validate_text
+from app.safety import (
+    apply_fidelity_guards,
+    build_disclaimer,
+    summarize_emergencies,
+    validate_text,
+)
 
 
 @dataclass
@@ -334,6 +339,40 @@ def _guard_repetition(text: str) -> str:
 # ---------- assembly ----------
 
 
+_TOPIC_DISPLAY = {
+    "glucose": "blood sugar",
+    "lipids": "lipid panel",
+    "liver": "liver function",
+    "kidney": "kidney function",
+    "cbc": "complete blood count",
+    "thyroid": "thyroid function",
+    "inflammation": "inflammation markers",
+    "electrolytes": "electrolytes",
+    "vitamins": "vitamin levels",
+    "anthropometric": "blood pressure / BMI",
+}
+
+
+def _build_healthy_topics(clusters: list[FindingCluster]) -> list[str]:
+    """List the topic groups whose ALL findings came back normal — so the
+    report can say 'kidney function and thyroid both look healthy' rather
+    than just listing what's wrong."""
+    abnormal_topics: set[str] = set()
+    seen_topics: list[str] = []
+    for c in clusters:
+        if c.topic not in seen_topics:
+            seen_topics.append(c.topic)
+        for f in c.findings:
+            if f.severity != Severity.NORMAL:
+                abnormal_topics.add(c.topic)
+                break
+    return [
+        _TOPIC_DISPLAY.get(t, t)
+        for t in seen_topics
+        if t not in abnormal_topics
+    ]
+
+
 def _build_key_insights(
     panel: LabPanel,
     biomarker_findings: list[Finding],
@@ -435,6 +474,11 @@ def _assemble_report(
         f for f in biomarker_findings
         if f.severity in (Severity.ABNORMAL, Severity.BORDERLINE)
     ]
+    normal = [
+        f for f in biomarker_findings
+        if f.severity == Severity.NORMAL
+    ]
+    healthy_topics = _build_healthy_topics(clusters)
     # Critical pulls from both biomarker findings AND pattern findings, because a
     # CRITICAL pattern (rare but possible) should still surface in the urgent list.
     # Dedup on (biomarker, value, unit, label) — some rule families occasionally
@@ -470,7 +514,7 @@ def _assemble_report(
         "Progress gradually; pause and seek care for chest pain or severe shortness of breath.",
     ])
 
-    summary = _build_summary(canonical, biomarker_findings, pattern_findings)
+    summary = _build_summary(canonical, biomarker_findings, pattern_findings, healthy_topics)
     pattern_notes = [p.label for p in pattern_findings]
     recheck_advice = _build_recheck_advice(biomarker_findings)
     when_to_doctor = summarize_emergencies(biomarker_findings + pattern_findings) or [
@@ -480,9 +524,32 @@ def _assemble_report(
 
     sections: list[ReportSection] = []
     if llm_text:
+        # Anti-hallucination guards run BEFORE the safety validator:
+        # 1. numeric fidelity — drop any sentence whose clinical-unit number
+        #    isn't a real finding value or appears in a retrieved RAG passage
+        # 2. citation enforcement — drop diet/exercise bullets without [source]
+        rag_passages_text = "\n".join(
+            p.text for passages in rag_context.values() for p in passages
+        )
+        fidelity = apply_fidelity_guards(
+            llm_text,
+            biomarker_findings + pattern_findings,
+            rag_passages_text=rag_passages_text,
+        )
+        # Annotate validation_issues with anything we stripped, so it's auditable.
+        for fi in fidelity.issues:
+            issues.append(
+                ValidationIssue(
+                    kind="info",
+                    message=f"LLM output sanitized — {fi.kind}: {fi.detail}",
+                )
+            )
+
         # Disclaimer is appended ONCE, at the very end of the markdown report — not
         # per-section. So we tell the safety validator NOT to inject it here.
-        sr = validate_text(llm_text, biomarker_findings + pattern_findings, append_disclaimer=False)
+        sr = validate_text(
+            fidelity.text, biomarker_findings + pattern_findings, append_disclaimer=False
+        )
         if sr.text.strip():
             sections.append(ReportSection(title="Plain-language summary", body=sr.text))
 
@@ -496,6 +563,8 @@ def _assemble_report(
         key_insights=key_insights,
         abnormal_findings=abnormal,
         critical_findings=critical,
+        normal_findings=normal,
+        healthy_topics=healthy_topics,
         pattern_findings=pattern_findings,
         pattern_notes=pattern_notes,
         diet_advice=diet_advice,
@@ -610,7 +679,12 @@ def _bulletize(passages, *, default: list[str]) -> list[str]:
     return uniq or default
 
 
-def _build_summary(panel: LabPanel, findings: list[Finding], patterns: list[Finding]) -> str:
+def _build_summary(
+    panel: LabPanel,
+    findings: list[Finding],
+    patterns: list[Finding],
+    healthy_topics: list[str] | None = None,
+) -> str:
     sev_to_count: dict[Severity, int] = {s: 0 for s in Severity}
     for f in findings:
         sev_to_count[f.severity] = sev_to_count.get(f.severity, 0) + 1
@@ -618,6 +692,17 @@ def _build_summary(panel: LabPanel, findings: list[Finding], patterns: list[Find
     parts = [
         f"This report summarizes {len(findings)} biomarker findings across the panel."
     ]
+    # Lead with what's healthy — patients want to see this first.
+    if sev_to_count[Severity.NORMAL]:
+        parts.append(f"{sev_to_count[Severity.NORMAL]} are within their reference range.")
+    if healthy_topics:
+        if len(healthy_topics) == 1:
+            joined = healthy_topics[0]
+        elif len(healthy_topics) == 2:
+            joined = f"{healthy_topics[0]} and {healthy_topics[1]}"
+        else:
+            joined = ", ".join(healthy_topics[:-1]) + f", and {healthy_topics[-1]}"
+        parts.append(f"Whole-group healthy: {joined}.")
     if sev_to_count[Severity.CRITICAL]:
         parts.append(f"{sev_to_count[Severity.CRITICAL]} are critical and warrant prompt evaluation.")
     if sev_to_count[Severity.ABNORMAL]:

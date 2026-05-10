@@ -100,6 +100,8 @@ class FinalReport(BaseModel):
     key_insights: list[KeyInsight] = []         # cholesterol / blood sugar / vitamin D for hero cards
     abnormal_findings: list[Finding]            # biomarker findings only — never patterns
     critical_findings: list[Finding]
+    normal_findings: list[Finding] = []         # in-range findings, so the report shows what's healthy too
+    healthy_topics: list[str] = []              # short labels: ["kidney function", "liver enzymes", …]
     pattern_findings: list[Finding] = []        # cross-biomarker patterns, full detail
     pattern_notes: list[str] = []               # back-compat: just the labels
     diet_advice: list[str] = []

@@ -271,10 +271,42 @@
                             <ul id="hc-critical" class="space-y-1 text-sm text-red-800"></ul>
                         </div>
 
+                        <!-- "What's going well" — biomarker groups whose findings all came back normal. -->
+                        <div id="hc-healthy-block" class="hidden mb-6 p-4 rounded-xl border border-tertiary/30 bg-tertiary/5">
+                            <h3 class="font-bold text-sm mb-2 flex items-center gap-2 text-tertiary">
+                                <iconify-icon icon="lucide:check-circle-2"></iconify-icon>
+                                What's going well
+                            </h3>
+                            <ul id="hc-healthy" class="list-disc pl-5 space-y-1 text-sm"></ul>
+                        </div>
+
                         <div id="hc-abnormal-block" class="hidden mb-6">
                             <h3 class="font-bold text-sm mb-2">Findings outside reference ranges</h3>
                             <ul id="hc-abnormal" class="divide-y divide-border border border-border rounded-xl overflow-hidden"></ul>
                         </div>
+
+                        <!-- Complete table of every biomarker the system extracted, with status colour coding. -->
+                        <details id="hc-allvalues-block" class="hidden mb-6 group/all border border-border rounded-xl">
+                            <summary class="cursor-pointer p-4 flex items-center gap-2 text-sm font-bold hover:bg-muted/40 select-none">
+                                <iconify-icon icon="lucide:list" class="text-muted-foreground"></iconify-icon>
+                                All extracted values
+                                <span class="ml-auto text-xs font-normal text-muted-foreground" id="hc-allvalues-count"></span>
+                                <iconify-icon icon="lucide:chevron-down" class="ml-1 transition-transform group-open/all:rotate-180"></iconify-icon>
+                            </summary>
+                            <div class="overflow-x-auto border-t border-border">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-muted/40 text-xs text-muted-foreground">
+                                        <tr>
+                                            <th class="text-left px-4 py-2 font-semibold">Biomarker</th>
+                                            <th class="text-right px-4 py-2 font-semibold">Value</th>
+                                            <th class="text-left px-4 py-2 font-semibold">Reference</th>
+                                            <th class="text-left px-4 py-2 font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hc-allvalues"></tbody>
+                                </table>
+                            </div>
+                        </details>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div id="hc-diet-block" class="hidden">
@@ -682,6 +714,69 @@
             empty.classList.add('hidden');
         }
 
+        // "What's going well" — render the deterministic healthy_topics list
+        // (biomarker groups whose findings all came back within range).
+        function renderHealthyBlock(topics) {
+            const block = document.getElementById('hc-healthy-block');
+            const list = document.getElementById('hc-healthy');
+            if (!topics || topics.length === 0) {
+                list.innerHTML = '';
+                block.classList.add('hidden');
+                return;
+            }
+            list.innerHTML = topics.map(t => `<li>${escapeHtml(t)} — within reference range</li>`).join('');
+            block.classList.remove('hidden');
+        }
+
+        // Status pill for a single biomarker row in the all-values table.
+        function valueStatus(value, refLow, refHigh) {
+            if (refLow == null && refHigh == null) {
+                return { label: '—', cls: 'bg-muted text-muted-foreground' };
+            }
+            if (refLow != null && value < refLow) {
+                return { label: 'low', cls: 'bg-yellow-100 text-yellow-700' };
+            }
+            if (refHigh != null && value > refHigh) {
+                return { label: 'high', cls: 'bg-orange-100 text-orange-700' };
+            }
+            return { label: 'normal', cls: 'bg-tertiary/20 text-tertiary' };
+        }
+
+        function renderAllValuesTable(values) {
+            const block = document.getElementById('hc-allvalues-block');
+            const tbody = document.getElementById('hc-allvalues');
+            const count = document.getElementById('hc-allvalues-count');
+            if (!values || values.length === 0) {
+                tbody.innerHTML = '';
+                block.classList.add('hidden');
+                return;
+            }
+            count.textContent = `${values.length} biomarkers`;
+            tbody.innerHTML = values.map(v => {
+                const status = valueStatus(v.value, v.reference_low, v.reference_high);
+                const refStr = (v.reference_low != null || v.reference_high != null)
+                    ? `${v.reference_low ?? '—'} – ${v.reference_high ?? '—'} ${escapeHtml(v.unit || '')}`
+                    : '—';
+                const orig = (v.original_value != null)
+                    ? `<div class="text-[11px] text-muted-foreground italic">was ${escapeHtml(v.original_value)} ${escapeHtml(v.original_unit || '(no unit)')}</div>`
+                    : '';
+                const name = String(v.biomarker || '').replace(/_/g, ' ');
+                return `
+                    <tr class="border-t border-border">
+                      <td class="px-4 py-2 align-top">
+                        <div class="font-medium capitalize">${escapeHtml(name)}</div>
+                        ${orig}
+                      </td>
+                      <td class="px-4 py-2 text-right font-mono whitespace-nowrap">
+                        ${escapeHtml(v.value)} ${escapeHtml(v.unit || '')}
+                      </td>
+                      <td class="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">${refStr}</td>
+                      <td class="px-4 py-2"><span class="px-2 py-0.5 rounded text-xs font-bold ${status.cls}">${status.label}</span></td>
+                    </tr>`;
+            }).join('');
+            block.classList.remove('hidden');
+        }
+
         function renderReport(file, report) {
             document.getElementById('hc-file-name').textContent = file.name + ' • ' + (file.size / 1024).toFixed(0) + ' KB';
 
@@ -707,6 +802,8 @@
                 r => `<li>${escapeHtml(r)}</li>`);
 
             renderInsightsGrid(report.key_insights || []);
+            renderHealthyBlock(report.healthy_topics || []);
+            renderAllValuesTable(report.panel?.values || []);
 
             document.getElementById('hc-disclaimer').textContent = report.disclaimer || '';
 

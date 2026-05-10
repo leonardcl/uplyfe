@@ -68,14 +68,28 @@ Write a structured report for this person, in plain language, with EXACTLY these
 sections in this order. Each section appears at most once.
 
 1. Overall Health Summary — 3 to 5 sentences. Use only the findings above.
-2. Diet Suggestions — 3 to 5 short bullets, each grounded in a knowledge passage or finding.
-3. Exercise Suggestions — 3 to 5 short bullets, each grounded in a knowledge passage or finding.
-4. What to Recheck — 3 to 5 short bullets.
-5. When to See a Doctor — only items with severity=critical or escalate=true.
+   START by mentioning what is HEALTHY first (anything with severity=normal),
+   THEN explain what is borderline or abnormal. Patients deserve to see what's
+   working before what isn't. Use the actual values from the findings list.
+2. What's Going Well — 2 to 4 short bullets naming the biomarker groups
+   (kidney function, liver enzymes, thyroid, etc.) where ALL findings were
+   normal. No citation required for this section since it just mirrors the
+   deterministic findings.
+3. Diet Suggestions — 3 to 5 short bullets. EACH bullet MUST end with a citation
+   in the form `[source: <Source name from a passage above>]`. Bullets without
+   a citation will be DROPPED from the report.
+4. Exercise Suggestions — 3 to 5 short bullets. SAME citation rule as Diet.
+5. What to Recheck — 3 to 5 short bullets.
+6. When to See a Doctor — only items with severity=critical or escalate=true.
    If none, write a single line: "No urgent items in this panel."
 
-HARD RULES
-  * Use ONLY values from "DETERMINISTIC FINDINGS" above. Do NOT invent or substitute numbers.
+HARD RULES — these are enforced by post-processing; violations cause text to
+be silently stripped:
+  * Use ONLY values from "DETERMINISTIC FINDINGS" above. Do NOT invent or
+    substitute numbers. Any sentence with a clinical-unit number that isn't
+    in the findings or knowledge passages will be DROPPED.
+  * Every Diet and Exercise bullet must end with `[source: <name>]` — uncited
+    bullets get DROPPED.
   * Never say "you have X". Never recommend or name medications.
   * Use the exact severities and labels from the findings list.
   * If a section has nothing to write, output exactly: "No items in this category." once.

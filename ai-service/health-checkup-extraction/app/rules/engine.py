@@ -11,6 +11,7 @@ single hardcoded threshold.
 """
 from __future__ import annotations
 
+from app.models.biomarkers import Biomarker
 from app.models.findings import Finding, FindingCluster, Severity
 from app.models.lab import LabPanel
 
@@ -62,45 +63,70 @@ def _fmt_num(v: float) -> str:
 def _apply_printed_range_overrides(
     panel: LabPanel, clusters: list[FindingCluster]
 ) -> list[FindingCluster]:
-    """Override severity to NORMAL for any finding whose value is within the
-    lab's printed reference range. We trust the lab's interpretation of
-    'normal' over our built-in thresholds when both are available.
+    """Reconcile rule-engine findings with the lab's printed reference range.
 
-    We DON'T do the inverse (escalate normal → abnormal) here — if our rules
-    didn't flag it but the lab did, the printed range is informational; we
-    leave the user's report unchanged rather than risk false abnormals from
-    a misparsed range.
+    Two-way override when a printed range is present:
+
+      * Within range AND rule said abnormal/borderline → demote to NORMAL.
+        The lab's interpretation of "normal" is trusted over our built-in
+        thresholds (different populations, different assay methods).
+
+      * Outside range AND rule said normal (or rule was silent) → escalate to
+        BORDERLINE. The lab knows their own assay's reference window. If they
+        flagged it, we should too.
+
+    We don't promote past BORDERLINE on lab-range-only signals — only the
+    rule engine, with its source-cited thresholds, escalates to ABNORMAL or
+    CRITICAL. This keeps emergency escalation tied to authoritative guidelines.
     """
     panel_by_b = {v.biomarker: v for v in panel.values}
-
+    findings_by_b: dict[Biomarker, Finding] = {}
+    cluster_topic_for_b: dict[Biomarker, str] = {}
     new_clusters: list[FindingCluster] = []
+
     for c in clusters:
         new_findings: list[Finding] = []
         for f in c.findings:
+            findings_by_b[f.biomarker] = f
+            cluster_topic_for_b[f.biomarker] = c.topic
             lv = panel_by_b.get(f.biomarker)
             if lv is None or (lv.reference_low is None and lv.reference_high is None):
                 new_findings.append(f)
                 continue
 
             lo, hi = lv.reference_low, lv.reference_high
-            in_range = True
-            if lo is not None and lv.value < lo:
-                in_range = False
-            if hi is not None and lv.value > hi:
-                in_range = False
+            below = lo is not None and lv.value < lo
+            above = hi is not None and lv.value > hi
+            in_range = not (below or above)
 
             if in_range and f.severity in (Severity.ABNORMAL, Severity.BORDERLINE):
+                # Demote: rule flagged it, lab range says fine.
                 new_findings.append(Finding(
                     biomarker=f.biomarker,
                     value=f.value,
                     unit=f.unit,
                     severity=Severity.NORMAL,
-                    label=f"Within lab's printed reference range",
+                    label="Within lab's printed reference range",
                     rationale=(
                         f"{f.biomarker.value} {_fmt_num(lv.value)} {lv.unit} is within the "
-                        f"lab's printed reference range ({_fmt_range(lo, hi)}). "
-                        "(Note: a global guideline threshold would have flagged this — your "
-                        "lab's range was used because it's tuned to your local population/method.)"
+                        f"lab's printed reference range ({_fmt_range(lo, hi)})."
+                    ),
+                    source=f.source,
+                    related_topics=f.related_topics,
+                    escalate=False,
+                ))
+            elif (below or above) and f.severity == Severity.NORMAL:
+                # Escalate: rule said fine, lab range says out.
+                direction = "below" if below else "above"
+                new_findings.append(Finding(
+                    biomarker=f.biomarker,
+                    value=f.value,
+                    unit=f.unit,
+                    severity=Severity.BORDERLINE,
+                    label=f"Outside lab's printed reference range ({direction})",
+                    rationale=(
+                        f"{f.biomarker.value} {_fmt_num(lv.value)} {lv.unit} is {direction} the "
+                        f"lab's printed reference range ({_fmt_range(lo, hi)})."
                     ),
                     source=f.source,
                     related_topics=f.related_topics,
@@ -110,7 +136,47 @@ def _apply_printed_range_overrides(
                 new_findings.append(f)
         if new_findings:
             new_clusters.append(FindingCluster(topic=c.topic, findings=new_findings))
+
+    # Catch biomarkers the rule engine never produced a finding for, but whose
+    # printed range was violated. These wouldn't show up otherwise.
+    for v in panel.values:
+        if v.biomarker in findings_by_b:
+            continue
+        if v.reference_low is None and v.reference_high is None:
+            continue
+        below = v.reference_low is not None and v.value < v.reference_low
+        above = v.reference_high is not None and v.value > v.reference_high
+        if not (below or above):
+            continue
+        topic = _topic_for(v.biomarker)
+        direction = "below" if below else "above"
+        f = Finding(
+            biomarker=v.biomarker,
+            value=v.value,
+            unit=v.unit,
+            severity=Severity.BORDERLINE,
+            label=f"Outside lab's printed reference range ({direction})",
+            rationale=(
+                f"{v.biomarker.value} {_fmt_num(v.value)} {v.unit} is {direction} the "
+                f"lab's printed reference range "
+                f"({_fmt_range(v.reference_low, v.reference_high)})."
+            ),
+            source="Lab's printed reference range",
+            related_topics=[topic],
+            escalate=False,
+        )
+        # Append into the existing cluster for that topic, or make a new one.
+        existing = next((c for c in new_clusters if c.topic == topic), None)
+        if existing is not None:
+            existing.findings.append(f)
+        else:
+            new_clusters.append(FindingCluster(topic=topic, findings=[f]))
     return new_clusters
+
+
+def _topic_for(biomarker: Biomarker) -> str:
+    from app.models.biomarkers import topic_for
+    return topic_for(biomarker)
 
 
 def evaluate_panel(panel: LabPanel) -> tuple[list[FindingCluster], list[Finding]]:
