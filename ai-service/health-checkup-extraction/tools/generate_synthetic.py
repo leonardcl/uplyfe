@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -281,9 +280,11 @@ def sample_comma_decimals_and_thousand_seps():
                 # Indonesian comma decimal
                 ["Hemoglobin",     "13,8",  "g/dL",       "13,5 - 17,5",   "Normal"],
                 ["Hematokrit",     "41",    "%",          "41 - 53",       "Normal"],
-                # Thousand separators (US-style)
-                ["Leukosit",       "8.500", "/uL",        "4.500 - 11.000","Normal"],
+                # Multi-digit integer + 3-digit trailing → unambiguous thousand-sep.
                 ["Trombosit",      "245.000","/uL",       "150.000 - 450.000","Normal"],
+                # Modern lab convention: scaled 10^3/uL units instead of raw counts —
+                # avoids the "8.500" decimal-vs-thousand-sep ambiguity.
+                ["Leukosit",       "8,5",   "10^3/uL",    "4,5 - 11,0",    "Normal"],
                 ["Eritrosit",      "4,8",   "juta/uL",    "4,5 - 5,9",     "Normal"],
             ],
             ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Status"],
@@ -311,10 +312,9 @@ def sample_comma_decimals_and_thousand_seps():
         "biomarkers": {
             "hemoglobin": 13.8,
             "hematocrit": 41,
-            # Note: leukosit & trombosit listed in /uL with thousand-sep values.
-            # Without /10^3 unit conversion, the number we expect to parse is
-            # the raw thousand-sep string, decoded to its integer value.
-            "wbc": 8500,
+            # WBC reported as 8.5 ×10^3/uL (modern convention).
+            "wbc": 8.5,
+            # Platelets in raw /uL with multi-digit thousand-sep is unambiguous.
             "platelets": 245000,
             "rbc": 4.8,
             "glucose_fasting": 98,

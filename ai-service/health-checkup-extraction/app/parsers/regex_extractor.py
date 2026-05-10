@@ -149,17 +149,28 @@ _BARE_VALUE_RE = re.compile(
 def _parse_number(s: str) -> float:
     """Decode a number string with mixed thousand-sep / decimal conventions.
 
-    Heuristic: the LAST separator is the decimal point if and only if the
-    digits after it do NOT form a clean thousand-group of exactly 3. Otherwise
-    every separator is a thousand-separator.
+    Disambiguation:
+      * Multiple separators (e.g. "1.234.567", "1,234.56") → all but the last
+        are thousand-separators; the last is decimal iff its trailing digits
+        are 1–2 (otherwise it's a thousand-sep too).
+      * Single separator with 3-digit trailing AND 2+ digit integer part
+        (e.g. "245.000", "12,345") → thousand-separator. (245 mg/dL would be
+        cholesterol, 245000 fits platelet count.)
+      * Single separator with 3-digit trailing AND single-digit integer part
+        (e.g. "0.400", "4.200", "8.500") → DECIMAL (3 decimal places). This
+        is the common case for hematocrit fractions and 3-precision hormone
+        values like TSH 4.200 mIU/L. Mis-parsing these as thousand-separated
+        was the source of "TSH 4200" and "Hct 400%" classification errors.
+      * Otherwise the last separator is the decimal point.
 
     Examples:
-        "8.500"      → 8500     (3-digit trailing → thousand-sep)
-        "245.000"    → 245000
+        "0.400"      → 0.4      (1-digit int + 3-digit decimal)
+        "4.200"      → 4.2      (1-digit int + 3-digit decimal — TSH)
+        "245.000"    → 245000   (3-digit int + 3-digit thousand-sep — platelets)
         "1.05"       → 1.05     (2-digit trailing → decimal)
         "13,8"       → 13.8
         "5,40"       → 5.4
-        "1.234.567"  → 1234567
+        "1.234.567"  → 1234567  (multi-sep, last trailing 3 → thousand-sep)
         "1,234.56"   → 1234.56  (mixed: comma thousand-sep, period decimal)
     """
     s = s.strip().replace(" ", "")
@@ -170,26 +181,85 @@ def _parse_number(s: str) -> float:
         return float(s)
     last_pos, _last_char = seps[-1]
     after = s[last_pos + 1 :]
+    before = s[:seps[0][0]].lstrip("-")  # integer part before the FIRST separator
+
+    # Multi-separator → drop all but the last; last is thousand-sep iff trailing 3.
+    if len(seps) >= 2:
+        if len(after) == 3 and after.isdigit():
+            return float(re.sub(r"[.,]", "", s))
+        chars: list[str] = []
+        for i, ch in enumerate(s):
+            if ch in ".,":
+                if i == last_pos:
+                    chars.append(".")
+            else:
+                chars.append(ch)
+        return float("".join(chars))
+
+    # Single separator with 3-digit trailing.
     if len(after) == 3 and after.isdigit():
-        # All separators are thousand-separators.
+        # Single-digit integer → decimal (e.g. 0.400, 4.200, 8.500).
+        # 2+ digit integer → thousand-sep (e.g. 245.000, 12.345).
+        if len(before) <= 1:
+            return float("-" + before + "." + after if s.startswith("-") else before + "." + after)
         return float(re.sub(r"[.,]", "", s))
-    # Last separator is the decimal point; earlier separators are thousand-seps.
-    chars: list[str] = []
-    for i, ch in enumerate(s):
-        if ch in ".,":
-            if i == last_pos:
-                chars.append(".")
-            # else: drop thousand-sep
-        else:
-            chars.append(ch)
-    return float("".join(chars))
+
+    # Single separator with 1- or 2-digit trailing → decimal.
+    return float(s.replace(",", "."))
 
 # A reference-range line: "70-99", "<200", ">40", "150-400", "0.27-4.2", also "70 - 99"
 _RANGE_LINE_RE = re.compile(
-    r"^\s*(?:range|rujukan|nilai\s+rujukan)?\s*:?\s*"
+    r"^\s*(?:range|rujukan|nilai\s+rujukan|reference)?\s*:?\s*"
     r"(?:[<>]\s*\d|[-–]?\d+(?:[.,]\d+)?\s*[-–]\s*\d+(?:[.,]\d+)?)",
     re.IGNORECASE,
 )
+
+# Pull (low, high) out of a range expression. Handles three shapes:
+#   "70-99"          → (70, 99)
+#   "0.7 - 1.3"      → (0.7, 1.3)
+#   "<200"           → (None, 200)
+#   "<= 5.17"        → (None, 5.17)
+#   ">40"            → (40, None)
+#   "Range: 70-99"   → (70, 99)   (label prefix tolerated)
+_RANGE_PARSE_RE = re.compile(
+    r"(?:range|rujukan|nilai\s+rujukan|reference)?\s*:?\s*"
+    r"(?:"
+    r"(?P<op><=?|>=?)\s*(?P<bound>-?\d+(?:[.,]\d+)?)"
+    r"|"
+    r"(?P<low>-?\d+(?:[.,]\d+)?)\s*[-–]\s*(?P<high>-?\d+(?:[.,]\d+)?)"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _parse_reference_range(text: str) -> tuple[Optional[float], Optional[float]]:
+    """Parse a printed reference-range string into (low, high).
+
+    Either bound may be None (one-sided constraint). Whitespace and trailing
+    units after the range are tolerated.
+    """
+    if not text:
+        return None, None
+    m = _RANGE_PARSE_RE.search(text)
+    if not m:
+        return None, None
+    if m.group("low") is not None:
+        try:
+            low = _parse_number(m.group("low"))
+            high = _parse_number(m.group("high"))
+        except ValueError:
+            return None, None
+        return low, high
+    if m.group("op") is not None:
+        try:
+            bound = _parse_number(m.group("bound"))
+        except ValueError:
+            return None, None
+        op = m.group("op")
+        if op.startswith("<"):
+            return None, bound
+        return bound, None
+    return None, None
 
 # Page indicators like "19/26" — never a lab value.
 _PAGE_INDICATOR_RE = re.compile(r"^\s*\d{1,3}\s*/\s*\d{1,3}\s*$")
@@ -218,11 +288,14 @@ def _is_narrative(line: str) -> bool:
     return False
 
 
-def _find_value_after(line: str, after_pos: int) -> Optional[tuple[float, str]]:
-    """Pull (value, unit) starting AFTER `after_pos` in `line`.
+def _find_value_after(
+    line: str, after_pos: int
+) -> Optional[tuple[float, str, Optional[float], Optional[float]]]:
+    """Pull (value, unit, ref_low, ref_high) starting AFTER `after_pos` in `line`.
 
     Searching after the label match prevents grabbing digits that are *part of
-    the label itself* — e.g. "HbA1c" → 1, "FT4" → 4.
+    the label itself* — e.g. "HbA1c" → 1, "FT4" → 4. The reference-range tail
+    (e.g. "70-99" or "<200") is optional; if absent, ref bounds are None.
     """
     m = _VALUE_RE.search(line, pos=after_pos)
     if not m:
@@ -232,7 +305,8 @@ def _find_value_after(line: str, after_pos: int) -> Optional[tuple[float, str]]:
     except ValueError:
         return None
     unit = (m.group("unit") or "").strip()
-    return v, unit
+    ref_low, ref_high = _parse_reference_range(line[m.end():])
+    return v, unit, ref_low, ref_high
 
 
 def _next_nonempty(lines: list[str], start: int, limit: int = 6) -> list[tuple[int, str]]:
@@ -248,13 +322,18 @@ def _next_nonempty(lines: list[str], start: int, limit: int = 6) -> list[tuple[i
     return out
 
 
-def _find_column_value(lines: list[str], label_idx: int) -> Optional[tuple[float, str]]:
+def _find_column_value(
+    lines: list[str], label_idx: int
+) -> Optional[tuple[float, str, Optional[float], Optional[float]]]:
     """Handle column-layout PDFs: label / value / unit / range, each on its own line.
 
     To avoid false positives (e.g. a page indicator like "19/26" sitting under a
     label), we only accept the value when we see *corroborating context* nearby:
     a recognized unit token on the next line, or a value preceded by
     "Value:"/"Result:", or a reference-range line in the next few lines.
+
+    Returns (value, unit, ref_low, ref_high). Refs may be None when no range
+    line is found in the column block.
     """
     nxt = _next_nonempty(lines, label_idx, limit=4)
     if not nxt:
@@ -266,6 +345,8 @@ def _find_column_value(lines: list[str], label_idx: int) -> Optional[tuple[float
 
     value: Optional[float] = None
     unit: str = ""
+    ref_low: Optional[float] = None
+    ref_high: Optional[float] = None
     saw_corroboration = False
 
     for offset, (_, ln) in enumerate(nxt):
@@ -284,8 +365,13 @@ def _find_column_value(lines: list[str], label_idx: int) -> Optional[tuple[float
             unit = ln.strip()
             saw_corroboration = True
             continue
-        # Pattern C: reference-range line — also corroborating.
+        # Pattern C: reference-range line — also corroborating, AND we capture
+        # the printed range so the rules engine can use it instead of our
+        # built-in defaults.
         if _RANGE_LINE_RE.match(ln):
+            lo, hi = _parse_reference_range(ln)
+            if lo is not None or hi is not None:
+                ref_low, ref_high = lo, hi
             saw_corroboration = True
             continue
         # Anything else: stop scanning — we've left the value block.
@@ -293,7 +379,7 @@ def _find_column_value(lines: list[str], label_idx: int) -> Optional[tuple[float
 
     if value is None or not saw_corroboration:
         return None
-    return value, unit
+    return value, unit, ref_low, ref_high
 
 
 def _select_alias_tables(language: Language) -> list[tuple[Biomarker, list[str]]]:
@@ -342,11 +428,17 @@ def regex_extract_panel(text: str, language: Language = "auto") -> list[LabValue
                     parsed = _find_column_value(lines, i)
                 if parsed is None:
                     break
-                value, unit = parsed
+                value, unit, ref_low, ref_high = parsed
                 # Reject standalone year-like values with no unit (e.g. "2024").
                 if 1900 < value < 2100 and not unit:
                     break
-                found[biomarker] = LabValue(biomarker=biomarker, value=value, unit=unit)
+                found[biomarker] = LabValue(
+                    biomarker=biomarker,
+                    value=value,
+                    unit=unit,
+                    reference_low=ref_low,
+                    reference_high=ref_high,
+                )
                 break
     return list(found.values())
 

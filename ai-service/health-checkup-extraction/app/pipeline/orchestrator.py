@@ -39,6 +39,7 @@ from app.normalize import to_canonical, validate_panel
 from app.parsers import (
     chunk_text_by_page,
     detect_language,
+    extract_age_sex,
     extract_lab_panel,
     extract_text_from_image,
     extract_text_from_pdf,
@@ -135,6 +136,9 @@ def _coerce_panel(
     # property, not a per-page one.
     language = detect_language(text)
 
+    # Patient demographics from the header. Either may be None.
+    age_detected, sex_detected = extract_age_sex(text)
+
     # Page-level chunking. For short text and manual JSON paths this returns
     # [text]; for multi-page PDFs it returns one chunk per page.
     chunks = chunk_text_by_page(text)
@@ -163,7 +167,11 @@ def _coerce_panel(
         )
 
     if merged:
-        return LabPanel(age=0, sex="unknown", values=list(merged.values()))
+        return LabPanel(
+            age=age_detected if age_detected is not None else 0,
+            sex=sex_detected if sex_detected is not None else "unknown",
+            values=list(merged.values()),
+        )
 
     # Fallback: regex found nothing across all chunks. Try the LLM extractor on
     # the longest single chunk (usually the page with the most content) so we
@@ -176,6 +184,11 @@ def _coerce_panel(
             "Could not extract any biomarker values from the input. "
             "Try the manual JSON input path, or check that the report text was readable."
         )
+    # Overlay the header-detected demographics if the LLM didn't fill them in.
+    if age_detected is not None and llm_panel.age == 0:
+        llm_panel = llm_panel.model_copy(update={"age": age_detected})
+    if sex_detected is not None and llm_panel.sex == "unknown":
+        llm_panel = llm_panel.model_copy(update={"sex": sex_detected})
     return llm_panel
 
 
@@ -424,10 +437,19 @@ def _assemble_report(
     ]
     # Critical pulls from both biomarker findings AND pattern findings, because a
     # CRITICAL pattern (rare but possible) should still surface in the urgent list.
-    critical = [
-        f for f in biomarker_findings + pattern_findings
-        if f.severity == Severity.CRITICAL or f.escalate
-    ]
+    # Dedup on (biomarker, value, unit, label) — some rule families occasionally
+    # emit the same biomarker finding twice when both a critical-level rule and
+    # a same-direction abnormal rule fire.
+    seen_keys: set[tuple] = set()
+    critical: list[Finding] = []
+    for f in biomarker_findings + pattern_findings:
+        if not (f.severity == Severity.CRITICAL or f.escalate):
+            continue
+        key = (f.biomarker, f.value, f.unit, f.label)
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        critical.append(f)
 
     overall = Severity.NORMAL
     from app.models.findings import SEVERITY_RANK

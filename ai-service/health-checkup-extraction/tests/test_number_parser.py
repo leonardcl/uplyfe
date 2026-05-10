@@ -25,14 +25,26 @@ def test_simple_numbers_unchanged(raw, expected):
 
 
 @pytest.mark.parametrize("raw, expected", [
-    ("8.500", 8500.0),
+    # Multi-digit integer part with 3-digit trailing → thousand-sep.
     ("245.000", 245000.0),
-    ("8,500", 8500.0),
     ("245,000", 245000.0),
+    ("12.345", 12345.0),
     ("1.234.567", 1234567.0),
     ("1,234,567", 1234567.0),
 ])
-def test_thousand_separators(raw, expected):
+def test_thousand_separators_multi_digit_integer(raw, expected):
+    assert _parse_number(raw) == expected
+
+
+@pytest.mark.parametrize("raw, expected", [
+    # Single-digit integer + 3-digit trailing → 3-decimal-place value, NOT
+    # thousand-separator. Real world: TSH 4.200 mIU/L, hematocrit 0.400, etc.
+    ("0.400", 0.4),
+    ("4.200", 4.2),
+    ("8.500", 8.5),
+    ("9.999", 9.999),
+])
+def test_single_digit_int_with_3_decimal_is_decimal(raw, expected):
     assert _parse_number(raw) == expected
 
 
@@ -52,7 +64,11 @@ def test_negative_values():
 
 def test_whitespace_tolerance():
     assert _parse_number("  110  ") == 110.0
-    assert _parse_number(" 8.500 ") == 8500.0
+    # Single-digit int + 3-digit trailing → decimal interpretation, not
+    # thousand-sep. "8.500" reads as 8.5 (3 decimal places).
+    assert _parse_number(" 8.500 ") == 8.5
+    # Multi-digit int + 3-digit trailing remains thousand-sep.
+    assert _parse_number(" 245.000 ") == 245000.0
 
 
 def test_empty_raises():
@@ -62,10 +78,13 @@ def test_empty_raises():
         _parse_number("   ")
 
 
-def test_three_decimal_places_treated_as_thousand_sep():
-    """Pragmatic: lab values almost never have 3 decimal places, so
-    `1.500` is decoded as 1500 (thousand-sep) rather than 1.5 (decimal).
-    Documenting this behavior explicitly."""
-    # This trade-off would be wrong for `1.500 mg/dL creatinine` — but real
-    # creatinine values are reported to 2 decimals, never 3.
-    assert _parse_number("1.500") == 1500.0
+def test_single_digit_int_with_3_decimal_real_world_cases():
+    """Single-digit-int + 3-decimal cases that appear in real lab reports —
+    must be parsed as decimals, not thousand-separators. These were producing
+    "TSH 4200" and "Hematocrit 400%" in the live system before this fix."""
+    # TSH 3-decimal precision (mIU/L typical 0.1–10):
+    assert _parse_number("4.200") == 4.2
+    assert _parse_number("0.275") == 0.275
+    # Hematocrit fraction (0.0–0.6):
+    assert _parse_number("0.400") == 0.4
+    assert _parse_number("0.338") == 0.338

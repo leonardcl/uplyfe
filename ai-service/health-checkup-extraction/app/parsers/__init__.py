@@ -4,6 +4,7 @@ from .llm_extractor import extract_lab_panel
 from .regex_extractor import regex_extract_panel
 from .language import detect_language
 from .page_chunker import chunk_text_by_page
+from .header import extract_age_sex
 
 __all__ = [
     "extract_text_from_pdf",
@@ -12,4 +13,5 @@ __all__ = [
     "regex_extract_panel",
     "detect_language",
     "chunk_text_by_page",
+    "extract_age_sex",
 ]
