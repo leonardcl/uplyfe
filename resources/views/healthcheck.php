@@ -206,13 +206,14 @@
                                 <div id="hc-error" class="hidden mt-4 p-4 rounded-xl border border-red-300 bg-red-50 text-sm text-red-700"></div>
                             </div>
 
-                            <!-- Analysis Status Card (Simulating processing) -->
-                            <div
-                                class="w-full md:w-80 bg-background rounded-2xl p-6 border border-border shadow-sm flex flex-col gap-4">
+                            <!-- Last upload card. Loads from /api/health-reports on page render
+                                 and updates after every fresh upload. Hidden until we have real data. -->
+                            <div id="hc-last-upload-card"
+                                class="w-full md:w-80 bg-background rounded-2xl p-6 border border-border shadow-sm flex flex-col gap-4 hidden">
                                 <div class="flex items-center justify-between">
                                     <h3 class="font-bold text-sm">Last Upload Status</h3>
-                                    <span
-                                        class="px-2 py-1 rounded-md bg-tertiary/20 text-tertiary text-xs font-bold">Analyzed</span>
+                                    <span id="hc-last-overall-badge"
+                                        class="px-2 py-1 rounded-md text-xs font-bold"></span>
                                 </div>
 
                                 <div class="flex items-center gap-4 p-3 rounded-xl bg-card border border-border">
@@ -221,29 +222,28 @@
                                         <iconify-icon icon="lucide:file-type-pdf" class="text-xl"></iconify-icon>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold truncate">Blood_Work_2023.pdf</p>
-                                        <p class="text-xs text-muted-foreground">Oct 24, 2023 • 2.4 MB</p>
+                                        <p id="hc-last-filename" class="text-sm font-semibold truncate"></p>
+                                        <p id="hc-last-meta" class="text-xs text-muted-foreground"></p>
                                     </div>
                                     <iconify-icon icon="lucide:check-circle-2"
                                         class="text-tertiary text-xl"></iconify-icon>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-xs font-medium">
-                                        <span class="text-muted-foreground">AI Translation</span>
-                                        <span class="text-tertiary">100%</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-full rounded-full"></div>
-                                    </div>
+                                <div class="space-y-1 text-xs">
+                                    <div class="flex justify-between"><span class="text-muted-foreground">Biomarkers extracted</span><span id="hc-last-biocount" class="font-semibold"></span></div>
+                                    <div class="flex justify-between"><span class="text-muted-foreground">Outside reference range</span><span id="hc-last-abncount" class="font-semibold"></span></div>
                                 </div>
 
-                                <button
-                                    class="w-full py-2 bg-primary/10 text-primary-foreground bg-primary rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
-                                    <a href="/full-analysis"
-                                        class="block w-full h-full flex items-center justify-center">View Full
-                                        Analysis</a>
+                                <button id="hc-last-view-btn" type="button"
+                                    class="w-full py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+                                    View this report
                                 </button>
+                            </div>
+
+                            <!-- Empty-state card when there are no past uploads. -->
+                            <div id="hc-no-history-card"
+                                class="w-full md:w-80 bg-background rounded-2xl p-6 border border-dashed border-border text-center text-sm text-muted-foreground flex items-center justify-center min-h-[150px]">
+                                Your past uploads will appear here once you analyze your first lab report.
                             </div>
                         </div>
                     </section>
@@ -586,6 +586,84 @@
         }
 
         const HC_UPLOAD_URL = '/api/ai/health-checkup/upload';
+        const HC_HISTORY_URL = '/api/health-reports';
+
+        // --- Last-upload card state (replaces the old hardcoded mock) ---
+
+        function fmtDateAgo(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const now = Date.now();
+            const days = Math.floor((now - d.getTime()) / (1000 * 60 * 60 * 24));
+            if (days < 1) return 'today';
+            if (days === 1) return 'yesterday';
+            if (days < 30) return `${days} days ago`;
+            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function showLastUploadCard(report) {
+            // report shape: { id, original_filename, original_size_bytes,
+            //   overall_severity, biomarker_count, abnormal_count,
+            //   critical_count, summary, created_at }
+            const card = document.getElementById('hc-last-upload-card');
+            const empty = document.getElementById('hc-no-history-card');
+            if (!report) {
+                card.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            card.classList.remove('hidden');
+
+            document.getElementById('hc-last-filename').textContent = report.original_filename || '—';
+            const sizeKb = report.original_size_bytes ? (report.original_size_bytes / 1024).toFixed(0) + ' KB' : '';
+            const ago = fmtDateAgo(report.created_at);
+            document.getElementById('hc-last-meta').textContent = [ago, sizeKb].filter(Boolean).join(' • ');
+
+            const overall = report.overall_severity || 'normal';
+            const badge = document.getElementById('hc-last-overall-badge');
+            badge.textContent = overall;
+            badge.className = 'px-2 py-1 rounded-md text-xs font-bold ' + severityClasses(overall);
+
+            document.getElementById('hc-last-biocount').textContent = report.biomarker_count ?? 0;
+            document.getElementById('hc-last-abncount').textContent =
+                (report.abnormal_count ?? 0) + (report.critical_count ? ` (+${report.critical_count} critical)` : '');
+
+            const btn = document.getElementById('hc-last-view-btn');
+            btn.onclick = async () => {
+                // Reload the full report and re-render the result section.
+                try {
+                    const r = await fetch(`${HC_HISTORY_URL}/${report.id}`, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    const data = await r.json();
+                    renderReport(
+                        { name: report.original_filename || 'report', size: report.original_size_bytes || 0 },
+                        data,
+                    );
+                } catch (e) {
+                    showError('Could not load past report: ' + (e?.message || e));
+                }
+            };
+        }
+
+        async function loadLatestReportFromHistory() {
+            try {
+                const r = await fetch(HC_HISTORY_URL, { headers: { 'Accept': 'application/json' } });
+                if (!r.ok) {
+                    showLastUploadCard(null);
+                    return;
+                }
+                const data = await r.json();
+                showLastUploadCard((data.reports || [])[0] || null);
+            } catch (e) {
+                showLastUploadCard(null);
+            }
+        }
+
+        // Run once on page load
+        loadLatestReportFromHistory();
 
         const $idle = () => document.getElementById('drop-zone-idle');
         const $busy = () => document.getElementById('drop-zone-busy');
@@ -857,6 +935,9 @@
 
                 setIdle();
                 renderReport(file, data);
+                // Refresh the last-upload card now that the report has been
+                // persisted server-side.
+                loadLatestReportFromHistory();
             } catch (e) {
                 clearTimeout(slowMsg);
                 showError('Network error: ' + (e && e.message ? e.message : e));

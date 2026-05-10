@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Ai;
 
 use App\Http\Controllers\Controller;
+use App\Models\HealthReport;
+use App\Models\User;
 use App\Services\Ai\AiClient;
 use App\Services\Ai\AiServiceException;
 use App\Services\Ai\ExerciseService;
@@ -72,12 +74,93 @@ class AiController extends Controller
 
         $upload = $data['file'];
 
-        return $this->call(fn () => $this->healthCheckup->analyzeUpload(
-            absolutePath: $upload->getRealPath(),
-            filename: $upload->getClientOriginalName(),
-            useLlm: $data['use_llm'] ?? true,
-            useRag: $data['use_rag'] ?? true,
-        ));
+        // Cap PHP execution for AI calls (LLM step takes 30–90s).
+        @set_time_limit(180);
+
+        try {
+            $payload = $this->healthCheckup->analyzeUpload(
+                absolutePath: $upload->getRealPath(),
+                filename: $upload->getClientOriginalName(),
+                useLlm: $data['use_llm'] ?? true,
+                useRag: $data['use_rag'] ?? true,
+            );
+        } catch (AiServiceException $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode() ?: 502);
+        }
+
+        // Persist the report so the user can see their history later. user_id
+        // is null for anonymous uploads — saves don't fail when the session
+        // isn't carrying a user.
+        $userId = $this->sessionUserId($request);
+        try {
+            $report = HealthReport::fromGatewayResponse(
+                userId: $userId,
+                filename: $upload->getClientOriginalName() ?? 'upload.pdf',
+                sizeBytes: (int) ($upload->getSize() ?? 0),
+                payload: $payload,
+            );
+            $report->save();
+            // Surface the new id back so the frontend can link to /health-reports/{id}.
+            $payload['_report_id'] = $report->id;
+        } catch (\Throwable $e) {
+            // Persistence failures must NOT block the analysis from being
+            // shown to the user. Log via Laravel and continue.
+            \Log::warning('HealthReport save failed: ' . $e->getMessage());
+        }
+
+        return response()->json($payload);
+    }
+
+    public function listReports(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['reports' => []]);
+        }
+        $reports = HealthReport::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get([
+                'id', 'original_filename', 'original_size_bytes',
+                'overall_severity', 'biomarker_count', 'abnormal_count',
+                'critical_count', 'summary', 'created_at',
+            ]);
+        return response()->json(['reports' => $reports]);
+    }
+
+    public function showReport(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $report = HealthReport::find($id);
+        if (!$report) {
+            return response()->json(['error' => 'Report not found'], 404);
+        }
+        // Only the report's owner can view it. Anonymous reports (user_id null)
+        // are visible to no one — they exist only as orphaned audit records.
+        if ($report->user_id === null || $report->user_id !== $userId) {
+            return response()->json(['error' => 'Not authorized to view this report'], 403);
+        }
+        return response()->json($report->payload + ['_report_id' => $report->id]);
+    }
+
+    /**
+     * Pull the logged-in user's id out of the session, if any.
+     * Returns null when the session has no user (anonymous request).
+     */
+    protected function sessionUserId(Request $request): ?int
+    {
+        try {
+            $user = $request->session()->get('user');
+        } catch (\Throwable $e) {
+            return null;
+        }
+        if ($user instanceof User) {
+            return $user->id;
+        }
+        if (is_array($user) && isset($user['id'])) {
+            return (int) $user['id'];
+        }
+        return null;
     }
 
     public function exerciseGenerate(Request $request): JsonResponse

@@ -26,14 +26,25 @@ Route::prefix('ai')->group(function () {
     Route::get('/health-checkup/sample', [AiController::class, 'healthCheckupSample']);
     Route::get('/health-checkup/schema', [AiController::class, 'healthCheckupSchema']);
     Route::get('/health-checkup/probe', [AiController::class, 'healthCheckupProbe']);
-    // Upload is open during development so the healthcheck page works without
-    // sanctum being fully wired. Move this back into the sanctum group below
-    // once auth is in place.
-    Route::post('/health-checkup/upload', [AiController::class, 'healthCheckupUpload']);
+
+    // Upload uses 'api.session' so the controller can read the session user
+    // (set by AuthController) and persist the report under their account.
+    // No CSRF — the JS uploads multipart without a token.
+    Route::middleware('api.session')->post(
+        '/health-checkup/upload',
+        [AiController::class, 'healthCheckupUpload'],
+    );
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/health-checkup/manual', [AiController::class, 'healthCheckupManual']);
         Route::post('/exercise/generate', [AiController::class, 'exerciseGenerate']);
         Route::post('/recipe/daily-menu', [AiController::class, 'recipeDailyMenu']);
     });
+});
+
+// Health-report history — list and detail. Session-aware so the user gets
+// only their own reports.
+Route::middleware('api.session')->prefix('health-reports')->group(function () {
+    Route::get('/', [AiController::class, 'listReports']);
+    Route::get('/{id}', [AiController::class, 'showReport'])->where('id', '[0-9]+');
 });

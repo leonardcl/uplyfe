@@ -157,16 +157,28 @@
 
         <form action="{{ route('users.store') }}" method="POST" class="flex flex-col gap-5">
           @csrf
+
+          @if ($errors->any())
+            <div class="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+              <p class="font-bold mb-1">Please fix the following:</p>
+              <ul class="list-disc pl-5 space-y-0.5">
+                @foreach ($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
           <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-foreground ml-1">First Name</label>
-              <input type="text" name="first_name" placeholder="John" required
-                class="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+              <input type="text" name="first_name" placeholder="John" required value="{{ old('first_name') }}"
+                class="w-full px-4 py-3 rounded-xl border @error('first_name') border-red-400 @else border-input @enderror bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-foreground ml-1">Last Name</label>
-              <input type="text" name="last_name" placeholder="Doe" required
-                class="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+              <input type="text" name="last_name" placeholder="Doe" required value="{{ old('last_name') }}"
+                class="w-full px-4 py-3 rounded-xl border @error('last_name') border-red-400 @else border-input @enderror bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
           </div>
 
@@ -176,9 +188,12 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <iconify-icon icon="lucide:mail" class="text-muted-foreground"></iconify-icon>
               </div>
-              <input type="email" name="email" placeholder="you@example.com" required
-                class="w-full pl-11 pr-4 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+              <input type="email" name="email" placeholder="you@example.com" required value="{{ old('email') }}"
+                class="w-full pl-11 pr-4 py-3 rounded-xl border @error('email') border-red-400 @else border-input @enderror bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
             </div>
+            @error('email')
+              <p class="text-xs text-red-600 ml-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div class="flex flex-col gap-1.5">
@@ -188,12 +203,15 @@
                 <iconify-icon icon="lucide:lock" class="text-muted-foreground"></iconify-icon>
               </div>
               <input type="password" name="password" placeholder="••••••••" required
-                class="w-full pl-11 pr-11 py-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+                class="w-full pl-11 pr-11 py-3 rounded-xl border @error('password') border-red-400 @else border-input @enderror bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
               <button type="button"
                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground transition-colors">
                 <iconify-icon icon="lucide:eye"></iconify-icon>
               </button>
             </div>
+            @error('password')
+              <p class="text-xs text-red-600 ml-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div class="flex flex-col gap-1.5">

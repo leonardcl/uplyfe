@@ -43,6 +43,19 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+
+        // Same as 'api' but loads the encrypted-cookie + session middleware so
+        // controllers can read the logged-in user via session('user'). Used by
+        // AI endpoints that POST without a CSRF token but still need to know
+        // who's uploading. CSRF is intentionally skipped — the upload uses
+        // multipart from JS without a token; session reading is read-only.
+        'api.session' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
     ];
 
     /**

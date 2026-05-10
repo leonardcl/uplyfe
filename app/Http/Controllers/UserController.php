@@ -29,14 +29,27 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        // Validate up-front so we redirect back to the form with friendly
+        // errors instead of letting a DB UNIQUE constraint blow up the page.
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name'  => ['required', 'string', 'max:100'],
+            'email'      => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'   => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'email.unique' => 'An account with this email already exists. Try logging in instead.',
+            'password.confirmed' => 'Password and confirmation do not match.',
+            'password.min' => 'Password must be at least 6 characters.',
         ]);
 
-        return redirect('/login')->with('success', 'Account created!');
+        User::create([
+            'first_name' => $validated['first_name'],
+            'last_name'  => $validated['last_name'],
+            'email'      => $validated['email'],
+            'password'   => Hash::make($validated['password']),
+        ]);
+
+        return redirect('/login')->with('success', 'Account created! You can now log in.');
     }
 
     /**
