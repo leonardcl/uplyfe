@@ -22,9 +22,14 @@ class User extends Authenticatable
         'last_name',
         'email',
         'password',
-        'weight',
+        'phone_number',
+        'date_of_birth',
+        'gender',
         'height',
-        'age',
+        'weight',
+        'profile_photo',
+        'dietary_preferences',
+        'notification_preferences',
     ];
 
     /**
@@ -44,5 +49,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'dietary_preferences' => 'array',
+        'notification_preferences' => 'array',
     ];
 }

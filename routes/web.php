@@ -26,6 +26,13 @@ Route::get('/login', function () {
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 
+Route::get('/logout', function () {
+    session()->forget('user');
+    session()->flush();
+
+    return redirect('/login');
+});
+
 Route::get('/signup', function () {
     return view('signup');
 });
@@ -76,8 +83,13 @@ Route::middleware(['checklogin'])->group(function () {
     });
     
     Route::get('/profile', function () {
-        return view('profile');
+        $user = User::find(session('user')->id);
+        session(['user' => $user]);
+    
+        return view('profile', ['user' => $user]);
     });
+
+    Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/favorite-recipes', function () {
         return view('favoriterecipes');

@@ -17,9 +17,15 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->decimal('weight', 5, 2)->nullable()->default(null);
-            $table->decimal('height', 5, 2)->nullable()->default(null);
-            $table->integer('age')->nullable()->default(null);
+            $table->string('phone_number')->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->string('gender')->nullable();
+            $table->decimal('height', 5, 2)->nullable();
+            $table->decimal('weight', 5, 2)->nullable();
+            $table->json('dietary_preferences')->nullable();
+            $table->json('notification_preferences')->nullable();
+            $table->string('profile_photo')->nullable();
+            $table->timestamp('password_changed_at')->nullable();
             $table->timestamps();
         });
     }

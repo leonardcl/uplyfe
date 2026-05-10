@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Uplyfe - Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -101,7 +102,7 @@
                     <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                        <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
@@ -141,8 +142,8 @@
                                     <div class="flex items-center gap-4">
                                         <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                                         <div>
-                                            <h2 id="profile-display-name" class="text-2xl font-heading font-bold">Sarah Jenkins</h2>
-                                            <p class="text-sm text-muted-foreground mt-1">Member since January 2025</p>
+                                            <h2 id="profile-display-name" class="text-2xl font-heading font-bold">{{ $user->first_name }} {{ $user->last_name }}</h2>
+                                            <p class="text-sm text-muted-foreground mt-1">Member since {{ \Carbon\Carbon::parse($user->created_at)->format('F Y') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -162,11 +163,11 @@
                                     <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
                                         <h3 class="text-lg font-semibold">Personal Information</h3>
                                         <div class="grid gap-3 text-sm text-muted-foreground">
-                                            <div class="flex justify-between"><span>Name</span><span id="profile-card-name" class="text-foreground font-medium">Sarah Jenkins</span></div>
-                                            <div class="flex justify-between"><span>Email</span><span id="profile-card-email" class="text-foreground font-medium">sarah@uplyfe.com</span></div>
-                                            <div class="flex justify-between"><span>Phone</span><span id="profile-card-phone" class="text-foreground font-medium">+1 555 123 4567</span></div>
-                                            <div class="flex justify-between"><span>Height</span><span id="profile-card-height" class="text-foreground font-medium">165</span></div>
-                                            <div class="flex justify-between"><span>Weight</span><span id="profile-card-weight" class="text-foreground font-medium">68,5</span></div>
+                                            <div class="flex justify-between"><span>Name</span><span id="profile-card-name" class="text-foreground font-medium">{{ $user->first_name }} {{ $user->last_name }}</span></div>
+                                            <div class="flex justify-between"><span>Email</span><span id="profile-card-email" class="text-foreground font-medium">{{ $user->email ?? 'Email not set' }}</span></div>
+                                            <div class="flex justify-between"><span>Phone</span><span id="profile-card-phone" class="text-foreground font-medium">{{ $user->phone_number ?? 'Phone not set' }}</span></div>
+                                            <div class="flex justify-between"><span>Height</span><span id="profile-card-height" class="text-foreground font-medium">{{ $user->height ?? 'Height not set' }}</span></div>
+                                            <div class="flex justify-between"><span>Weight</span><span id="profile-card-weight" class="text-foreground font-medium">{{ $user->weight ?? 'Weight not set' }}</span></div>
                                         </div>
                                     </div>
                                     <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
@@ -195,18 +196,44 @@
                                     <div class="space-y-4 text-sm text-muted-foreground">
                                         <div class="rounded-3xl border border-border bg-background p-4">
                                             <p class="font-semibold text-foreground mb-1">Password</p>
-                                            <p>Last changed 8 weeks ago</p>
+                                            <p id="password-changed-text">
+                                                @if($user->password_changed_at)
+                                                    Last changed {{ \Carbon\Carbon::parse($user->password_changed_at)->diffForHumans() }}
+                                                @else
+                                                    Password never changed
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                 </section>
 
                                 <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
                                     <h3 class="text-lg font-semibold mb-4">Preferences</h3>
+                                    @php
+                                        $dietPrefs = $user->dietary_preferences ?? [];
+
+                                        $formatPreferenceLabel = function ($value) {
+                                            return collect(explode('-', $value))
+                                                ->map(fn ($word) => ucfirst($word))
+                                                ->join(' ');
+                                        };
+                                    @endphp
                                     <div id="profile-preferences-list" class="flex flex-wrap gap-2">
-                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Balanced</span>
+                                        @if(count($dietPrefs))
+                                            @foreach($dietPrefs as $pref)
+                                                <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">
+                                                    {{ $formatPreferenceLabel($pref) }}
+                                                </span>
+                                            @endforeach
+                                        @else
+                                            <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">
+                                                No preferences set
+                                            </span>
+                                        @endif
+                                        <!-- <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Balanced</span>
                                         <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">High Protein</span>
                                         <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Low Glycemic</span>
-                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Gluten Free</span>
+                                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">Gluten Free</span> -->
                                     </div>
                                 </section>
 
@@ -257,25 +284,25 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2">First Name</label>
-                                <input id="profile-first-name" type="text" value="Sarah" placeholder="Enter your first name"
+                                <input id="profile-first-name" type="text" value="{{ $user->first_name }}" placeholder="Enter your first name"
                                     class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Last Name</label>
-                                <input id="profile-last-name" type="text" value="Jenkins" placeholder="Enter your last name"
+                                <input id="profile-last-name" type="text" value="{{ $user->last_name }}" placeholder="Enter your last name"
                                     class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium mb-2">Email Address</label>
-                            <input id="profile-email" type="email" value="sarah.jenkins@email.com" placeholder="Enter your email"
+                            <input id="profile-email" type="email" value="{{ $user->email }}" placeholder="Enter your email"
                                 class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium mb-2">Phone Number</label>
-                            <input id="profile-phone" type="tel" value="+1 (555) 123-4567" placeholder="Enter your phone number"
+                            <input id="profile-phone" type="tel" value="{{ $user->phone_number }}" placeholder="Enter your phone number"
                                 class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                         </div>
 
@@ -286,16 +313,16 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Date of Birth</label>
-                                    <input id="profile-dob" type="date" value="1995-06-15"
+                                    <input id="profile-dob" type="date" value="{{ $user->date_of_birth }}"
                                         class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Gender</label>
                                     <select id="profile-gender"
                                         class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary">
-                                        <option value="female" selected>Female</option>
-                                        <option value="male">Male</option>
-                                        <option value="prefer-not-to-say">Prefer not to say</option>
+                                        <option value="female" @selected($user->gender === 'female')>Female</option>
+                                        <option value="male" @selected($user->gender === 'male')>Male</option>
+                                        <option value="prefer-not-to-say" @selected($user->gender === 'prefer-not-to-say')>Prefer not to say</option>
                                     </select>
                                 </div>
                             </div>
@@ -303,12 +330,12 @@
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Height (cm)</label>
-                                    <input id="profile-height" type="number" value="165" placeholder="165"
+                                    <input id="profile-height" type="number" value="{{ $user->height }}" placeholder="165"
                                         class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Weight (kg)</label>
-                                    <input id="profile-weight" type="number" step="0.1" value="68.5" placeholder="68.5"
+                                    <input id="profile-weight" type="number" step="0.1" value="{{ $user->weight }}" placeholder="68.5"
                                         class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                                 </div>
                             </div>
@@ -317,33 +344,36 @@
                         <!-- Preferences -->
                         <div class="border-t border-border pt-6">
                             <h4 class="text-lg font-semibold mb-4">Dietary Preferences</h4>
+                            @php
+                                $dietPrefs = $user->dietary_preferences ?? [];
+                            @endphp
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="balanced" checked class="text-primary">
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="balanced" @checked(in_array('balanced', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Balanced</span>
                                 </label>
-                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="high-protein" checked class="text-primary">
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="high-protein" @checked(in_array('high-protein', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">High Protein</span>
                                 </label>
-                                <label class="flex items-center gap-2 p-3 border border-primary bg-primary/10 rounded-xl cursor-pointer hover:bg-primary/20 transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="low-glycemic" checked class="text-primary">
+                                <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
+                                    <input type="checkbox" name="diet-preferences" value="low-glycemic" @checked(in_array('low-glycemic', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Low Glycemic</span>
                                 </label>
                                 <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="vegan" class="text-primary">
+                                    <input type="checkbox" name="diet-preferences" value="vegan" @checked(in_array('vegan', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Vegan</span>
                                 </label>
                                 <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="keto" class="text-primary">
+                                    <input type="checkbox" name="diet-preferences" value="keto" @checked(in_array('keto', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Keto</span>
                                 </label>
                                 <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="paleo" class="text-primary">
+                                    <input type="checkbox" name="diet-preferences" value="paleo" @checked(in_array('paleo', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Paleo</span>
                                 </label>
                                 <label class="flex items-center gap-2 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
-                                    <input type="checkbox" name="diet-preferences" value="mediterranean" class="text-primary">
+                                    <input type="checkbox" name="diet-preferences" value="mediterranean" @checked(in_array('mediterranean', $dietPrefs)) class="text-primary">
                                     <span class="text-sm">Mediterranean</span>
                                 </label>
                             </div>
@@ -352,21 +382,24 @@
                         <!-- Notifications -->
                         <div class="border-t border-border pt-6">
                             <h4 class="text-lg font-semibold mb-4">Notification Preferences</h4>
+                            @php
+                                $notifPrefs = $user->notification_preferences ?? [];
+                            @endphp
                             <div class="space-y-3">
                                 <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked class="text-primary">
+                                    <input type="checkbox" name="notification-preferences" value="health-reports" @checked(in_array('health-reports', $notifPrefs)) class="text-primary">
                                     <span class="text-sm">Email notifications for health reports</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked class="text-primary">
+                                    <input type="checkbox" name="notification-preferences" value="weekly-progress" @checked(in_array('weekly-progress', $notifPrefs)) class="text-primary">
                                     <span class="text-sm">Weekly progress summaries</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" class="text-primary">
+                                    <input type="checkbox" name="notification-preferences" value="medication-reminders" @checked(in_array('medication-reminders', $notifPrefs)) class="text-primary">
                                     <span class="text-sm">Medication reminders</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked class="text-primary">
+                                    <input type="checkbox" name="notification-preferences" value="appointment-reminders" @checked(in_array('appointment-reminders', $notifPrefs)) class="text-primary">
                                     <span class="text-sm">Appointment reminders</span>
                                 </label>
                             </div>
@@ -452,11 +485,47 @@
             }
         }
 
+        function resetEditProfileModal() {
+            document.getElementById('profile-first-name').value = currentUserData.first_name ?? '';
+            document.getElementById('profile-last-name').value = currentUserData.last_name ?? '';
+            document.getElementById('profile-email').value = currentUserData.email ?? '';
+            document.getElementById('profile-phone').value = currentUserData.phone_number ?? '';
+            document.getElementById('profile-dob').value = currentUserData.date_of_birth ?? '';
+            document.getElementById('profile-gender').value = currentUserData.gender ?? '';
+            document.getElementById('profile-height').value = currentUserData.height ?? '';
+            document.getElementById('profile-weight').value = currentUserData.weight ?? '';
+
+            const dietaryPrefs = currentUserData.dietary_preferences || [];
+            const notifPrefs = currentUserData.notification_preferences || [];
+
+            document.querySelectorAll('input[name="diet-preferences"]').forEach(cb => {
+                cb.checked = dietaryPrefs.includes(cb.value);
+
+                cb.closest('label').classList.toggle('border-primary', cb.checked);
+                cb.closest('label').classList.toggle('bg-primary/10', cb.checked);
+                cb.closest('label').classList.toggle('border-border', !cb.checked);
+                cb.closest('label').classList.toggle('bg-background', !cb.checked);
+            });
+
+            document.querySelectorAll('input[name="notification-preferences"]').forEach(cb => {
+                cb.checked = notifPrefs.includes(cb.value);
+            });
+        }
+
         // Edit Profile Modal Functions
         function openEditProfileModal() {
+            resetEditProfileModal();
+
             const editModal = document.getElementById('edit-profile-modal');
             editModal.classList.remove('hidden');
             editModal.style.display = 'block';
+
+            const scrollContainer = editModal.querySelector('.overflow-y-auto');
+
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+            }
+
             // Initialize form styling for checkboxes
             initializeProfileFormStyling();
         }
@@ -474,6 +543,10 @@
         }
 
         function closeSecurityModal() {
+            document.getElementById('security-current-password').value = '';
+            document.getElementById('security-new-password').value = '';
+            document.getElementById('security-confirm-password').value = '';
+
             const securityModal = document.getElementById('security-modal');
             securityModal.classList.add('hidden');
             securityModal.style.display = 'none';
@@ -502,15 +575,11 @@
             feedback.classList.remove('border-destructive', 'bg-destructive/10', 'text-destructive', 'border-primary', 'bg-primary/10', 'text-foreground');
         }
 
-        function updatePassword() {
+        async function updatePassword() {
             const currentPasswordInput = document.getElementById('security-current-password');
             const newPasswordInput = document.getElementById('security-new-password');
             const confirmPasswordInput = document.getElementById('security-confirm-password');
             const updateButton = document.getElementById('security-update-password-btn');
-
-            if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
-                return;
-            }
 
             clearSecurityPasswordFeedback();
 
@@ -538,70 +607,140 @@
                 return;
             }
 
-            if (updateButton) {
-                updateButton.disabled = true;
-                updateButton.classList.add('opacity-60', 'cursor-not-allowed');
+            updateButton.disabled = true;
+            updateButton.classList.add('opacity-60', 'cursor-not-allowed');
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const response = await fetch('/profile/password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                    new_password_confirmation: confirmPassword,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                showSecurityPasswordFeedback(result.message || 'Failed to update password.', 'error');
+                updateButton.disabled = false;
+                updateButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                return;
             }
 
-            setTimeout(() => {
-                showSecurityPasswordFeedback('Password updated successfully.', 'success');
-                currentPasswordInput.value = '';
-                newPasswordInput.value = '';
-                confirmPasswordInput.value = '';
+            showSecurityPasswordFeedback(result.message || 'Password updated successfully.', 'success');
+            document.getElementById('password-changed-text').textContent = 'Last changed just now';
 
-                if (updateButton) {
-                    updateButton.disabled = false;
-                    updateButton.classList.remove('opacity-60', 'cursor-not-allowed');
-                }
-            }, 500);
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            updateButton.disabled = false;
+            updateButton.classList.remove('opacity-60', 'cursor-not-allowed');            
         }
 
-        function saveProfileChanges() {
+        let currentUserData = @json($user);
+        async function saveProfileChanges() {
+            const userId = {{ $user->id }};
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
             // Collect form data
             const profileData = {
-                firstName: document.getElementById('profile-first-name').value,
-                lastName: document.getElementById('profile-last-name').value,
+                first_name: document.getElementById('profile-first-name').value,
+                last_name: document.getElementById('profile-last-name').value,
                 email: document.getElementById('profile-email').value,
-                phone: document.getElementById('profile-phone').value,
-                dob: document.getElementById('profile-dob').value,
+                phone_number: document.getElementById('profile-phone').value,
+                date_of_birth: document.getElementById('profile-dob').value,
                 gender: document.getElementById('profile-gender').value,
                 height: document.getElementById('profile-height').value,
                 weight: document.getElementById('profile-weight').value,
-                dietPreferences: Array.from(document.querySelectorAll('input[name="diet-preferences"]:checked')).map(cb => cb.value)
+                dietary_preferences: Array.from(document.querySelectorAll('input[name="diet-preferences"]:checked')).map(cb => cb.value),
+                notification_preferences: Array.from(document.querySelectorAll('input[name="notification-preferences"]:checked')).map(cb => cb.value),
             };
 
+            const response = await fetch(`/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(profileData),
+            });
+
+            if (!response.ok) {
+                alert('Failed to update profile.');
+                return;
+            }
+
+            const result = await response.json();
+            const saved = result.data;
+            const fullName = `${saved.first_name} ${saved.last_name}`;
+
+            currentUserData = saved;
+            document.getElementById('profile-first-name').value = saved.first_name ?? '';
+            document.getElementById('profile-last-name').value = saved.last_name ?? '';
+            document.getElementById('profile-email').value = saved.email ?? '';
+            document.getElementById('profile-phone').value = saved.phone_number ?? '';
+            document.getElementById('profile-dob').value = saved.date_of_birth ?? '';
+            document.getElementById('profile-gender').value = saved.gender ?? '';
+            document.getElementById('profile-height').value = saved.height ?? '';
+            document.getElementById('profile-weight').value = saved.weight ?? '';
+
+            const dietaryPrefs = currentUserData.dietary_preferences || [];
+            const notifPrefs = currentUserData.notification_preferences || [];
+
+            document.querySelectorAll('input[name="diet-preferences"]').forEach(cb => {
+                cb.checked = dietaryPrefs.includes(cb.value);
+
+                cb.closest('label').classList.toggle('border-primary', cb.checked);
+                cb.closest('label').classList.toggle('bg-primary/10', cb.checked);
+                cb.closest('label').classList.toggle('border-border', !cb.checked);
+                cb.closest('label').classList.toggle('bg-background', !cb.checked);
+            });
+
+            document.querySelectorAll('input[name="notification-preferences"]').forEach(cb => {
+                cb.checked = notifPrefs.includes(cb.value);
+            });
+            
+            document.getElementById('profile-display-name').textContent = fullName;
+            document.getElementById('profile-card-name').textContent = fullName;
+            document.getElementById('profile-card-email').textContent = saved.email ?? 'Email not set';
+            document.getElementById('profile-card-phone').textContent = saved.phone_number ?? 'Phone not set';
+            document.getElementById('profile-card-height').textContent = saved.height ?? 'Height not set';
+            document.getElementById('profile-card-weight').textContent = saved.weight ?? 'Weight not set';
+            
             const formatPreferenceLabel = (value) => value
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
 
-            const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
-            const updateText = (id, text) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = text;
-                }
-            };
-            const updatePreferenceChips = (preferences) => {
-                const container = document.getElementById('profile-preferences-list');
-                if (!container) return;
+            const preferencesContainer = document.getElementById('profile-preferences-list');
 
-                const safePreferences = preferences.length ? preferences : ['balanced'];
-                container.innerHTML = safePreferences
-                    .map((preference) => `<span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">${formatPreferenceLabel(preference)}</span>`)
-                    .join('');
-            };
+            if (preferencesContainer) {
+                const dietaryPrefs = saved.dietary_preferences || [];
 
-            updateText('profile-display-name', fullName || 'Your Name');
-            updateText('profile-card-name', fullName || 'Your Name');
-            updateText('profile-card-email', profileData.email || 'Email not set');
-            updateText('profile-card-phone', profileData.phone || 'Phone not set');
-            updateText('profile-card-height', profileData.height || 'Height not set');
-            updateText('profile-card-weight', profileData.weight || 'Weight not set');
-            updateText('profile-card-diet', profileData.dietPreferences.length ? profileData.dietPreferences.map(formatPreferenceLabel).join(', ') : 'Balanced');
-            updatePreferenceChips(profileData.dietPreferences);
+                preferencesContainer.innerHTML = dietaryPrefs.length
+                    ? dietaryPrefs.map(pref => `
+                        <span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">
+                            ${formatPreferenceLabel(pref)}
+                        </span>
+                    `).join('')
+                    : '<span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">No preferences set</span>';
+            }
 
-            console.log('Profile updated:', profileData);
+            const sidebarName = document.getElementById('sidebar-user-name');
+
+            if (sidebarName) {
+                sidebarName.textContent = fullName;
+            }
+
             alert('Profile updated successfully!');
             closeEditProfileModal();
         }

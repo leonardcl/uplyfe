@@ -74,34 +74,58 @@ class UserController extends Controller
     public function update(Request $request, string $id)
     {
         $sessionUser = $request->session()->get('user');
+
         if (!$sessionUser || !isset($sessionUser->id)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $validated = $request->validate([
-            'weight' => ['required', 'numeric'],
-            'height' => ['required', 'numeric'],
-            'age' => ['required', 'integer'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'unique:users,email,' . $sessionUser->id],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'date_of_birth' => ['nullable', 'date'],
+            'gender' => ['nullable', 'string'],
+            'height' => ['nullable', 'numeric'],
+            'weight' => ['nullable', 'numeric'],
+            'dietary_preferences' => ['nullable', 'array'],
+            'notification_preferences' => ['nullable', 'array'],
         ]);
 
         $user = User::find($sessionUser->id);
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $user->weight = $validated['weight'];
-        $user->height = $validated['height'];
-        $user->age = $validated['age'];
+        $user->first_name = $validated['first_name'] ?? $user->first_name;
+        $user->last_name = $validated['last_name'] ?? $user->last_name;
+        $user->email = $validated['email'] ?? $user->email;
+        $user->phone_number = $validated['phone_number'] ?? $user->phone_number;
+        $user->date_of_birth = $validated['date_of_birth'] ?? $user->date_of_birth;
+        $user->gender = $validated['gender'] ?? $user->gender;
+        $user->height = $validated['height'] ?? $user->height;
+        $user->weight = $validated['weight'] ?? $user->weight;
+        $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;
+        $user->notification_preferences = $validated['notification_preferences'] ?? $user->notification_preferences;
+
         $user->save();
 
         $request->session()->put('user', $user);
 
         return response()->json([
-            'message' => 'Activity profile updated successfully!',
+            'message' => 'Profile updated successfully!',
             'data' => [
-                'weight' => $user->weight,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'date_of_birth' => $user->date_of_birth,
+                'gender' => $user->gender,
                 'height' => $user->height,
-                'age' => $user->age,
+                'weight' => $user->weight,
+                'dietary_preferences' => $user->dietary_preferences,
+                'notification_preferences' => $user->notification_preferences,
             ],
         ]);
     }
@@ -112,5 +136,39 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $sessionUser = $request->session()->get('user');
+
+        if (!$sessionUser || !isset($sessionUser->id)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::find($sessionUser->id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->password_changed_at = now();
+        $user->save();
+
+        $request->session()->put('user', $user);
+
+        return response()->json([
+            'message' => 'Password updated successfully.',
+        ]);
     }
 }

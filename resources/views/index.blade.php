@@ -94,12 +94,15 @@
                 </nav>
 
                 <div class="flex items-center gap-4">
-                    <a href="#"
+                    @if (session('user'))                
+                    <a href="/logout"
                         class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                         Out</a>
+                    @else
                     <a href="/login"
                         class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                         In</a>
+                    @endif
                     <a href="/health-check"
                         class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
                         Get Started
