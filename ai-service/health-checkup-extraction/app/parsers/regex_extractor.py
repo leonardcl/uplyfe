@@ -114,9 +114,15 @@ _UNIT_PATTERN = (
     r"ng/?m[Ll]|pg/?m[Ll]|mIU/?L|µ?IU/?m[Ll]|m[mE]q/?L|nmol/?L|"
     r"pmol/?L|fL|10\^[369]/[uµ]?[Ll]|10\^9/L|K/[uµ][Ll]|M/[uµ][Ll]|"
     r"juta/?[uµ]?[Ll]|/[uµ][Ll]|"
-    r"mm/?hr?|mm/?jam|mmHg|mg/?L|mmol/?mol|kg/?m\^?2|cm"
+    r"mm/?hr?|mm/?jam|mmHg|mg/?L|mmol/?mol|kg/?m\^?2|cm|"
+    # eGFR unit (KDIGO standard); the trailing "1.73 m^2" or "1.73 m2" is body
+    # surface area, not a separate unit. Match either spelling.
+    r"mL/?min/?1\.73\s*m\^?2"
 )
 _UNIT_LINE_RE = re.compile(rf"^\s*({_UNIT_PATTERN})\s*$", re.IGNORECASE)
+# Same as _UNIT_LINE_RE but allows trailing text (range, status note, etc.)
+# e.g. "mL/min/1.73 m^2 >= 90 : Normal" — unit at start, range at end.
+_UNIT_PREFIX_RE = re.compile(rf"^\s*({_UNIT_PATTERN})\b", re.IGNORECASE)
 
 # Number pattern. Matches:
 #   * Plain integers/decimals: 110, 5.4, 13,8
@@ -335,7 +341,10 @@ def _find_column_value(
     Returns (value, unit, ref_low, ref_high). Refs may be None when no range
     line is found in the column block.
     """
-    nxt = _next_nonempty(lines, label_idx, limit=4)
+    # Look further ahead than the default — Indonesian lab reports often
+    # interleave a flag line ("L"/"H"), the value, the unit, then a multi-line
+    # reference range with explanatory text. 8 lines covers the common cases.
+    nxt = _next_nonempty(lines, label_idx, limit=8)
     if not nxt:
         return None
 
@@ -350,6 +359,11 @@ def _find_column_value(
     saw_corroboration = False
 
     for offset, (_, ln) in enumerate(nxt):
+        # Pattern 0: standalone abnormality flag line ("L", "H", "*", "[H]",
+        # "[L]"). Common in Medifarma/Kimia Farma reports — sits between the
+        # label and the value. Skip without breaking the scan.
+        if _STANDALONE_FLAG_RE.match(ln):
+            continue
         # Pattern A: "Value: 5.40" or "Result: 300" — strong signal.
         m = _BARE_VALUE_RE.match(ln)
         if m and value is None:
@@ -365,13 +379,28 @@ def _find_column_value(
             unit = ln.strip()
             saw_corroboration = True
             continue
+        # Pattern B': unit at line start, with a trailing range on the same line.
+        # Example: "mL/min/1.73 m^2 >= 90 : Normal" — common for eGFR.
+        m_uprefix = _UNIT_PREFIX_RE.match(ln)
+        if m_uprefix:
+            unit = m_uprefix.group(1).strip()
+            tail = ln[m_uprefix.end():].strip()
+            if tail and ref_low is None and ref_high is None:
+                lo, hi = _parse_reference_range(tail)
+                if lo is not None or hi is not None:
+                    ref_low, ref_high = lo, hi
+            saw_corroboration = True
+            continue
         # Pattern C: reference-range line — also corroborating, AND we capture
         # the printed range so the rules engine can use it instead of our
-        # built-in defaults.
+        # built-in defaults. Take only the FIRST range we see — Indonesian
+        # reports often list the "normal" range first, then risk-tier ranges
+        # ("100-125: at-risk") that we mustn't conflate with the normal cutoff.
         if _RANGE_LINE_RE.match(ln):
-            lo, hi = _parse_reference_range(ln)
-            if lo is not None or hi is not None:
-                ref_low, ref_high = lo, hi
+            if ref_low is None and ref_high is None:
+                lo, hi = _parse_reference_range(ln)
+                if lo is not None or hi is not None:
+                    ref_low, ref_high = lo, hi
             saw_corroboration = True
             continue
         # Anything else: stop scanning — we've left the value block.
@@ -380,6 +409,13 @@ def _find_column_value(
     if value is None or not saw_corroboration:
         return None
     return value, unit, ref_low, ref_high
+
+
+# Standalone abnormality-flag line: "L", "H", "*", "[L]", "[H]", "h", "l".
+# Used inside the column scanner so a flag wedged between the label and the
+# value doesn't terminate the scan. Multi-character "Tinggi"/"Rendah" word
+# flags are NOT included here — they're too risky to unconditionally skip.
+_STANDALONE_FLAG_RE = re.compile(r"^\s*(?:\[?\s*[HhLl*↑↓]\s*\]?)\s*$")
 
 
 def _select_alias_tables(language: Language) -> list[tuple[Biomarker, list[str]]]:

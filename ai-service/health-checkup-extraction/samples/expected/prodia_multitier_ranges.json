@@ -1,0 +1,20 @@
+{
+  "biomarkers": {
+    "hemoglobin": 13.5,
+    "hematocrit": 41,
+    "wbc": 8.2,
+    "platelets": 260,
+    "glucose_fasting": 115,
+    "hba1c": 5.9,
+    "total_cholesterol": 220,
+    "hdl": 48,
+    "ldl": 140,
+    "triglycerides": 165,
+    "ast": 28,
+    "alt": 42,
+    "bun": 32,
+    "creatinine": 1.0,
+    "egfr": 85,
+    "uric_acid": 5.5
+  }
+}

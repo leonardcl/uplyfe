@@ -466,6 +466,272 @@ def sample_english_baseline():
     return "english_quest_style", story, expected
 
 
+def sample_prodia_multitier_ranges():
+    """Prodia-style with multi-tier explanatory reference ranges — the real
+    Medifarma format we saw, where the printed range column lists multiple
+    tiers ("70-99 : Normal", "100-125 : Berisiko", ">=126 : Diabetes")."""
+    s = _styles()
+    story = [
+        Paragraph("LABORATORIUM KLINIK PRODIA", s["title"]),
+        Paragraph("HASIL PEMERIKSAAN LABORATORIUM", s["title"]),
+        Spacer(1, 6),
+        _patient_block("Pasien Demo", 48, "Laki-laki", "PR-26050908", "08-05-2026", "dr. Demo"),
+        Spacer(1, 8),
+        Paragraph("HEMATOLOGI", s["section"]),
+        _result_table(
+            [
+                ["Hemoglobin",   "13.5",  "g/dL",       "13.0 - 17.0",   "Normal"],
+                ["Hematokrit",   "41",    "%",          "40 - 50",       "Normal"],
+                ["Leukosit",     "8.2",   "10^3/uL",    "4.5 - 11.0",    "Normal"],
+                ["Trombosit",    "260",   "10^3/uL",    "150 - 450",     "Normal"],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Status"],
+        ),
+        Paragraph("KARBOHIDRAT (Multi-tier reference)", s["section"]),
+        # The crucial "Normal" tier first, then risk-tier text underneath that
+        # the column scanner must NOT use as the active range.
+        _result_table(
+            [
+                ["Glukosa Puasa", "115", "mg/dL", "70 - 99 : Normal", "[H]"],
+                ["", "", "", "100 - 125 : Berisiko Diabetes", ""],
+                ["", "", "", ">=126 : Diabetes mellitus", ""],
+                ["HbA1c", "5.9", "%", "<5.7 : Normal", "[H]"],
+                ["", "", "", "5.7-6.4 : Prediabetes", ""],
+                ["", "", "", ">=6.5 : Diabetes", ""],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("LEMAK DARAH", s["section"]),
+        _result_table(
+            [
+                ["Kolesterol Total", "220", "mg/dL", "< 200", "[H]"],
+                ["HDL",             "48",  "mg/dL", ">= 40", ""],
+                ["LDL",             "140", "mg/dL", "< 100", "[H]"],
+                ["Trigliserida",    "165", "mg/dL", "< 150", "[H]"],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("FUNGSI HATI", s["section"]),
+        _result_table(
+            [
+                ["SGOT (AST)", "28", "U/L", "<= 35", ""],
+                ["SGPT (ALT)", "42", "U/L", "<= 35", "[H]"],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("FUNGSI GINJAL", s["section"]),
+        _result_table(
+            [
+                ["Ureum",      "32",  "mg/dL",            "13 - 43",   ""],
+                ["Kreatinin",  "1.0", "mg/dL",            "0.7 - 1.3", ""],
+                ["eGFR",       "85",  "mL/min/1.73 m^2",  ">= 90 : Normal", ""],
+                ["Asam Urat",  "5.5", "mg/dL",            "2.6 - 7.0", ""],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Spacer(1, 12),
+        _disclaimer(),
+    ]
+    expected = {
+        "biomarkers": {
+            "hemoglobin": 13.5,
+            "hematocrit": 41,
+            "wbc": 8.2,
+            "platelets": 260,
+            "glucose_fasting": 115,
+            "hba1c": 5.9,
+            "total_cholesterol": 220,
+            "hdl": 48,
+            "ldl": 140,
+            "triglycerides": 165,
+            "ast": 28,
+            "alt": 42,
+            "bun": 32,
+            "creatinine": 1.0,
+            "egfr": 85,
+            "uric_acid": 5.5,
+        }
+    }
+    return "prodia_multitier_ranges", story, expected
+
+
+def sample_si_units_international():
+    """International SI-units style (Indian/EU lab) — every value in SI
+    (mmol/L for cholesterol, µmol/L for creatinine, g/L for hemoglobin) with
+    the unit string PRESENT (so we don't rely on inference) and printed
+    ranges in SI."""
+    s = _styles()
+    story = [
+        Paragraph("INTERNATIONAL CLINICAL LAB", s["title"]),
+        Paragraph("Health Profile — SI Units", s["subtitle"]),
+        Spacer(1, 8),
+        _patient_block("Demo Patient", 41, "female", "INT-26050911", "09-05-2026", "dr. Demo"),
+        Spacer(1, 8),
+        Paragraph("Lipid Profile", s["section"]),
+        _result_table(
+            [
+                ["Total Cholesterol", "5.50", "mmol/L", "< 5.17",      "H"],
+                ["LDL Cholesterol",   "3.40", "mmol/L", "< 2.59",      "H"],
+                ["HDL Cholesterol",   "1.50", "mmol/L", "> 1.03",      ""],
+                ["Triglycerides",     "1.20", "mmol/L", "< 1.71",      ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Paragraph("Glucose / Diabetes", s["section"]),
+        _result_table(
+            [
+                ["Fasting Glucose", "5.10", "mmol/L", "3.9 - 5.5", ""],
+                ["HbA1c",           "5.6",  "%",      "< 5.7",     ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Paragraph("Kidney Function", s["section"]),
+        _result_table(
+            [
+                ["Creatinine", "65",  "umol/L",  "45 - 84",      ""],
+                ["Urea",       "4.8", "mmol/L",  "3.5 - 7.2",    ""],
+                ["Uric Acid",  "320", "umol/L",  "143 - 339",    ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Paragraph("Liver Function", s["section"]),
+        _result_table(
+            [
+                ["AST",            "22",   "U/L",     "0 - 32",   ""],
+                ["ALT",            "18",   "U/L",     "0 - 33",   ""],
+                ["Bilirubin Total","12.5", "umol/L",  "0 - 15",   ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Paragraph("Hematology", s["section"]),
+        _result_table(
+            [
+                ["Hemoglobin", "138", "g/L",      "112 - 154",   ""],
+                ["Platelets",  "285", "10^9/L",   "150 - 400",   ""],
+                ["WBC",        "6.5", "10^9/L",   "3.0 - 10.0",  ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Paragraph("Thyroid", s["section"]),
+        _result_table(
+            [
+                ["TSH",     "2.10",  "mIU/L",  "0.27 - 4.2",  ""],
+                ["Free T4", "13.5",  "pmol/L", "11.5 - 19.6", ""],
+            ],
+            ["Test", "Result", "Units", "Reference", "Flag"],
+        ),
+        Spacer(1, 12),
+        _disclaimer(),
+    ]
+    # All expected values are CANONICAL units after conversion.
+    expected = {
+        "biomarkers": {
+            "total_cholesterol": 212.7,    # 5.50 * 38.67
+            "ldl": 131.5,                  # 3.40 * 38.67
+            "hdl": 58.0,                   # 1.50 * 38.67
+            "triglycerides": 106.3,        # 1.20 * 88.57
+            "glucose_fasting": 91.9,       # 5.10 * 18.0182
+            "hba1c": 5.6,
+            "creatinine": 0.74,            # 65 / 88.4
+            "bun": 13.5,                   # 4.8 mmol/L urea → BUN mg/dL
+            "uric_acid": 5.38,             # 320 / 59.48
+            "ast": 22,
+            "alt": 18,
+            "bilirubin_total": 0.73,       # 12.5 / 17.1
+            "hemoglobin": 13.8,            # 138 / 10
+            "platelets": 285,              # 10^9/L → 10^3/uL same
+            "wbc": 6.5,
+            "tsh": 2.1,
+            "free_t4": 1.05,               # 13.5 * 0.07764
+        }
+    }
+    return "si_units_international", story, expected
+
+
+def sample_kimia_farma_with_h_l_flags():
+    """Kimia Farma-style report where abnormal values get a textual flag in
+    the rightmost column (H, L, *) — exercises the inline flag handling AND
+    the value-vs-flag separation."""
+    s = _styles()
+    story = [
+        Paragraph("KIMIA FARMA DIAGNOSTIKA", s["title"]),
+        Paragraph("Hasil Pemeriksaan Laboratorium", s["title"]),
+        Spacer(1, 6),
+        _patient_block("Demo KF", 55, "Laki-laki", "KF-26051012", "10-05-2026", "dr. Demo"),
+        Spacer(1, 8),
+        Paragraph("HEMATOLOGI", s["section"]),
+        _result_table(
+            [
+                ["Hemoglobin",   "11.5", "g/dL",      "13.0 - 17.0",  "L"],
+                ["Hematokrit",   "35",   "%",         "40 - 50",      "L"],
+                ["Eritrosit",    "4.0",  "10^6/uL",   "4.5 - 5.9",    "L"],
+                ["Leukosit",     "9.0",  "10^3/uL",   "4.5 - 11.0",   ""],
+                ["Trombosit",    "330",  "10^3/uL",   "150 - 450",    ""],
+                ["MCV",          "80",   "fL",        "80 - 100",     ""],
+                ["LED (ESR)",    "35",   "mm/jam",    "< 20",         "H"],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("KIMIA DARAH", s["section"]),
+        _result_table(
+            [
+                ["Glukosa Puasa",      "108",  "mg/dL",   "70 - 99",     "H"],
+                ["HbA1c",              "5.6",  "%",       "< 5.7",       ""],
+                ["Kolesterol Total",   "245",  "mg/dL",   "< 200",       "H"],
+                ["LDL",                "168",  "mg/dL",   "< 100",       "H"],
+                ["HDL",                "38",   "mg/dL",   "> 40",        "L"],
+                ["Trigliserida",       "260",  "mg/dL",   "< 150",       "H"],
+                ["SGOT",               "32",   "U/L",     "< 35",        ""],
+                ["SGPT",               "48",   "U/L",     "< 35",        "H"],
+                ["Ureum",              "22",   "mg/dL",   "13 - 43",     ""],
+                ["Kreatinin",          "0.95", "mg/dL",   "0.7 - 1.3",   ""],
+                ["Asam Urat",          "8.2",  "mg/dL",   "2.6 - 7.0",   "H"],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("ELEKTROLIT", s["section"]),
+        _result_table(
+            [
+                ["Natrium",   "138", "mmol/L", "136 - 145", ""],
+                ["Kalium",    "4.0", "mmol/L", "3.5 - 5.1", ""],
+                ["Klorida",   "102", "mmol/L", "98 - 107",  ""],
+            ],
+            ["Pemeriksaan", "Hasil", "Satuan", "Nilai Rujukan", "Flag"],
+        ),
+        Paragraph("Vital signs: Tekanan Darah 145/95 mmHg", s["small"]),
+        Spacer(1, 12),
+        _disclaimer(),
+    ]
+    expected = {
+        "biomarkers": {
+            "hemoglobin": 11.5,
+            "hematocrit": 35,
+            "rbc": 4.0,
+            "wbc": 9.0,
+            "platelets": 330,
+            "mcv": 80,
+            "esr": 35,
+            "glucose_fasting": 108,
+            "hba1c": 5.6,
+            "total_cholesterol": 245,
+            "ldl": 168,
+            "hdl": 38,
+            "triglycerides": 260,
+            "ast": 32,
+            "alt": 48,
+            "bun": 22,
+            "creatinine": 0.95,
+            "uric_acid": 8.2,
+            "sodium": 138,
+            "potassium": 4.0,
+            "chloride": 102,
+            "bp_systolic": 145,
+            "bp_diastolic": 95,
+        }
+    }
+    return "kimia_farma_with_h_l_flags", story, expected
+
+
 def main():
     SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
@@ -476,6 +742,9 @@ def main():
         sample_comma_decimals_and_thousand_seps,
         sample_multipage_long,
         sample_english_baseline,
+        sample_prodia_multitier_ranges,
+        sample_si_units_international,
+        sample_kimia_farma_with_h_l_flags,
     ]
     for gen in generators:
         name, story, expected = gen()

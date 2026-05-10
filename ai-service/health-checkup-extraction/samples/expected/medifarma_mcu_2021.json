@@ -1,0 +1,21 @@
+{
+  "_note": "Real Indonesian Medifarma Laboratories MCU report (Dec 2021), publicly accessible. PDF is gitignored (samples/online/); only the expected biomarker map is committed.",
+  "biomarkers": {
+    "hemoglobin": 13.8,
+    "hematocrit": 40,
+    "rbc": 4.44,
+    "wbc": 7.6,
+    "platelets": 286,
+    "glucose_fasting": 71,
+    "total_cholesterol": 184,
+    "hdl": 51,
+    "ldl": 124,
+    "triglycerides": 43,
+    "ast": 20,
+    "alt": 23,
+    "bun": 10,
+    "creatinine": 0.58,
+    "egfr": 111,
+    "uric_acid": 3.4
+  }
+}

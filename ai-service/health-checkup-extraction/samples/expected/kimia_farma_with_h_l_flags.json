@@ -1,0 +1,27 @@
+{
+  "biomarkers": {
+    "hemoglobin": 11.5,
+    "hematocrit": 35,
+    "rbc": 4.0,
+    "wbc": 9.0,
+    "platelets": 330,
+    "mcv": 80,
+    "esr": 35,
+    "glucose_fasting": 108,
+    "hba1c": 5.6,
+    "total_cholesterol": 245,
+    "ldl": 168,
+    "hdl": 38,
+    "triglycerides": 260,
+    "ast": 32,
+    "alt": 48,
+    "bun": 22,
+    "creatinine": 0.95,
+    "uric_acid": 8.2,
+    "sodium": 138,
+    "potassium": 4.0,
+    "chloride": 102,
+    "bp_systolic": 145,
+    "bp_diastolic": 95
+  }
+}
