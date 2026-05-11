@@ -86,6 +86,10 @@ class UserController extends Controller
             'phone_number' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string'],
+            // `age` is what the activity-profile modal posts (separate column from
+            // date_of_birth). Validate it explicitly so the value isn't silently
+            // dropped by Laravel's allow-list validator.
+            'age' => ['nullable', 'integer', 'min:0', 'max:130'],
             'height' => ['nullable', 'numeric'],
             'weight' => ['nullable', 'numeric'],
             'dietary_preferences' => ['nullable', 'array'],
@@ -104,6 +108,7 @@ class UserController extends Controller
         $user->phone_number = $validated['phone_number'] ?? $user->phone_number;
         $user->date_of_birth = $validated['date_of_birth'] ?? $user->date_of_birth;
         $user->gender = $validated['gender'] ?? $user->gender;
+        $user->age = $validated['age'] ?? $user->age;
         $user->height = $validated['height'] ?? $user->height;
         $user->weight = $validated['weight'] ?? $user->weight;
         $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;

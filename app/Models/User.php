@@ -25,11 +25,13 @@ class User extends Authenticatable
         'phone_number',
         'date_of_birth',
         'gender',
+        'age',
         'height',
         'weight',
         'profile_photo',
         'dietary_preferences',
         'notification_preferences',
+        'password_changed_at',
     ];
 
     /**
