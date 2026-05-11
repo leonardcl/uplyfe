@@ -144,6 +144,39 @@ class AiController extends Controller
     }
 
     /**
+     * Serve an exercise image or animated demo from the local dataset.
+     *
+     * Files are named `<id>-<hash>.<ext>` under
+     *   ai-service/exercise-routine-generator/rag_sources/exercises-dataset/{images|videos}/
+     * where IDs are 4-digit zero-padded strings. We glob on the prefix because
+     * the random hash suffix isn't predictable from the id alone.
+     *
+     * The `videos/` folder confusingly contains `.gif` files (animated
+     * demos), while `images/` has the static `.jpg`. Endpoint serves the
+     * GIF by default since it's much more useful for "how do I do this?".
+     */
+    public function exerciseImage(string $id, string $kind = 'gif'): \Symfony\Component\HttpFoundation\Response
+    {
+        $id = preg_replace('/[^0-9]/', '', $id);
+        if ($id === '' || strlen($id) > 6) {
+            abort(404);
+        }
+        $padded = str_pad($id, 4, '0', STR_PAD_LEFT);
+        $base = base_path('ai-service/exercise-routine-generator/rag_sources/exercises-dataset');
+        $folder = $kind === 'jpg' ? '/images' : '/videos';
+        $ext = $kind === 'jpg' ? 'jpg' : 'gif';
+        // Glob with the id prefix; pick the first match (there should only be one).
+        $matches = glob("{$base}{$folder}/{$padded}-*.{$ext}");
+        if (!$matches) {
+            abort(404);
+        }
+        return response()->file($matches[0], [
+            'Content-Type' => $ext === 'gif' ? 'image/gif' : 'image/jpeg',
+            'Cache-Control' => 'public, max-age=86400, immutable',
+        ]);
+    }
+
+    /**
      * Pull the logged-in user's id out of the session, if any.
      * Returns null when the session has no user (anonymous request).
      */

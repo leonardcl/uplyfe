@@ -47,3 +47,10 @@ Route::middleware('api.session')->prefix('health-reports')->group(function () {
     Route::get('/', [AiController::class, 'listReports']);
     Route::get('/{id}', [AiController::class, 'showReport'])->where('id', '[0-9]+');
 });
+
+// Exercise dataset images — serves the animated GIF for an exercise_id
+// (or the still JPG via ?kind=jpg). No auth — these are reference images
+// that can be cached aggressively on the client.
+Route::get('/exercises/{id}/image', function (string $id, \Illuminate\Http\Request $request) {
+    return app(AiController::class)->exerciseImage($id, $request->query('kind', 'gif'));
+})->where('id', '[0-9]+');

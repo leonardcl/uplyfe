@@ -720,7 +720,10 @@
         }
         document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
 
-        const weeklyWorkoutPlans = [
+        // `let` (not `const`) so the AI-generated plan can replace this in-place.
+        // The initial value below is the static placeholder shown before the user
+        // clicks Generate.
+        let weeklyWorkoutPlans = [
             {
                 dayLabel: "Today's Workout",
                 heading: "Full Body Flow",
@@ -864,6 +867,33 @@
         };
 
         function buildExerciseDetail(exercise) {
+            // When the AI-generated exercise has a real dataset id, prefer the
+            // animated GIF from /api/exercises/{id}/image and use the dataset's
+            // metadata (body_part / equipment / target). Falls through to the
+            // hardcoded `exerciseDetailMap` and finally to a generic stock photo
+            // when there's no id.
+            if (exercise.exercise_id) {
+                const stepsSource = (exercise.description || '').trim();
+                // Split the dataset's instruction text into bite-sized "steps"
+                // — most instructions are one paragraph of run-on sentences.
+                const steps = stepsSource
+                    ? stepsSource.split(/(?<=[.!?])\s+(?=[A-Z])/).filter(s => s.length > 0).slice(0, 8)
+                    : [
+                        "Set up your posture and stabilize your core before starting.",
+                        `Perform ${(exercise.name || 'this exercise').toLowerCase()} with controlled tempo.`,
+                        "Stop if form breaks and rest before the next set."
+                    ];
+                return {
+                    bodyPart: exercise.body_part || exercise.target || "Target area based on routine focus",
+                    equipment: exercise.equipment || "Bodyweight or basic home equipment",
+                    image: `/api/exercises/${exercise.exercise_id}/image`,
+                    steps,
+                    instructions: exercise.detail
+                        ? `${exercise.detail}. ${stepsSource}`
+                        : stepsSource || "Follow the steps to the right; keep movement controlled and breathing steady."
+                };
+            }
+
             const mapped = exerciseDetailMap[exercise.name];
             if (mapped) {
                 return mapped;
@@ -902,10 +932,19 @@
             exercisesTitle.textContent = `Exercises (${plan.exercises.length})`;
 
             exerciseList.innerHTML = plan.exercises
-                .map((exercise, idx) => `
+                .map((exercise, idx) => {
+                    // When the exercise has a dataset id, show a small animated
+                    // GIF thumbnail in place of the numbered badge — much more
+                    // useful for "what does this exercise look like?".
+                    const badge = exercise.exercise_id
+                        ? `<img src="/api/exercises/${exercise.exercise_id}/image" alt=""
+                                loading="lazy"
+                                class="w-12 h-12 shrink-0 rounded-lg object-cover bg-muted">`
+                        : `<div class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">${idx + 1}</div>`;
+                    return `
                     <div data-exercise-index="${idx}" class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
                         <div class="flex items-start gap-4 flex-1 min-w-0">
-                            <div class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">${idx + 1}</div>
+                            ${badge}
                             <div class="min-w-0">
                                 <p class="font-bold text-sm">${exercise.name}</p>
                                 <p class="text-xs text-muted-foreground">${exercise.detail}</p>
@@ -913,8 +952,8 @@
                             </div>
                         </div>
                         <div class="text-sm font-semibold whitespace-nowrap shrink-0">${exercise.duration}</div>
-                    </div>
-                `)
+                    </div>`;
+                })
                 .join('');
         }
 
@@ -1041,11 +1080,27 @@
             });
         }
 
+        // Read a display element's textContent, trim whitespace, drop the
+        // "Not set" placeholder, and strip an optional unit suffix. Returns
+        // either a clean numeric string or "" (which is a valid value for a
+        // number input — it shows the placeholder instead of NaN).
+        function readNumericDisplay(elId, unitSuffix) {
+            const raw = (document.getElementById(elId)?.textContent || '').trim();
+            if (!raw || /not set/i.test(raw)) return '';
+            const stripped = unitSuffix ? raw.replace(unitSuffix, '').trim() : raw;
+            // Keep only digits, decimal, and minus — the rest is junk like "kg".
+            const numeric = stripped.replace(/[^\d.\-]/g, '');
+            return numeric || '';
+        }
+
         function loadProfileData() {
-            // Load data from profile display elements into modal inputs
-            document.getElementById('profile-weight-input').value = document.getElementById('profile-weight').textContent.replace(' kg', '');
-            document.getElementById('profile-height-input').value = document.getElementById('profile-height').textContent.replace(' cm', '');
-            document.getElementById('profile-age-input').value = document.getElementById('profile-age').textContent;
+            // Load data from profile display elements into modal inputs.
+            // Robust to placeholder text ("Not set") and surrounding whitespace —
+            // the previous version dumped the raw textContent into a number
+            // input, which the browser then warned was unparseable.
+            document.getElementById('profile-weight-input').value = readNumericDisplay('profile-weight', ' kg');
+            document.getElementById('profile-height-input').value = readNumericDisplay('profile-height', ' cm');
+            document.getElementById('profile-age-input').value = readNumericDisplay('profile-age', null);
 
             // Set radio buttons based on current values
             const exercisePref = document.getElementById('profile-exercise-pref').textContent.toLowerCase().replace(' & ', '-');
@@ -1111,27 +1166,43 @@
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            const response = await fetch(`/users/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ weight, height, age }),
-            });
-
-            if (!response.ok) {
-                alert('Failed to save profile.');
+            let response;
+            try {
+                response = await fetch(`/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ weight, height, age }),
+                });
+            } catch (e) {
+                alert('Network error: ' + (e?.message || e));
                 return;
             }
 
-            const result = await response.json();
-            const saved = result.data;
+            // Surface the real error message instead of a generic "Failed to save".
+            const text = await response.text();
+            let body;
+            try { body = text ? JSON.parse(text) : {}; } catch { body = { error: text }; }
 
-            document.getElementById('profile-weight').textContent = `${saved.weight} kg`;
-            document.getElementById('profile-height').textContent = `${saved.height} cm`;
-            document.getElementById('profile-age').textContent = saved.age;
+            if (!response.ok) {
+                let msg = body.message || body.error || ('HTTP ' + response.status);
+                if (body.errors) {
+                    msg += '\n' + Object.values(body.errors).flat().join('\n');
+                }
+                alert('Failed to save profile:\n' + msg);
+                return;
+            }
+
+            const saved = body.data || {};
+            // Each display element gets its updated value, falling back to the
+            // pre-existing text when the server omits a field (defensive — the
+            // backend now returns all profile fields including `age`).
+            if (saved.weight != null) document.getElementById('profile-weight').textContent = `${saved.weight} kg`;
+            if (saved.height != null) document.getElementById('profile-height').textContent = `${saved.height} cm`;
+            if (saved.age != null)    document.getElementById('profile-age').textContent = String(saved.age);
 
             alert('Activity profile updated successfully!');
             closeEditActivityModal();
@@ -1169,7 +1240,7 @@
                 'exercise-preference': collectRadio('exercise-preference'),
             };
 
-            renderRoutineBusy();
+            setGenerateButtonBusy(true);
 
             try {
                 const res = await fetch('/api/ai/exercise/generate', {
@@ -1184,52 +1255,18 @@
                 let data;
                 try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
                 if (!res.ok) {
-                    renderRoutineError(data.error || data.message || ('HTTP ' + res.status));
+                    alert('Could not generate routine: ' + (data.error || data.message || ('HTTP ' + res.status)));
                     return;
                 }
-                renderRoutine(data);
+                applyAiPlanToExistingUi(data);
             } catch (e) {
-                renderRoutineError('Network error: ' + (e?.message || e));
+                alert('Network error: ' + (e?.message || e));
+            } finally {
+                setGenerateButtonBusy(false);
             }
         }
 
-        // --- Routine rendering ------------------------------------------------
-
-        function ensureRoutineSection() {
-            let section = document.getElementById('routine-results');
-            if (!section) {
-                section = document.createElement('section');
-                section.id = 'routine-results';
-                section.className = 'bg-card rounded-3xl border border-border p-8 shadow-sm mt-6';
-                // Insert near the top of the main content area.
-                const main = document.querySelector('main .flex-1.overflow-y-auto > div')
-                    || document.querySelector('main');
-                if (main) main.insertBefore(section, main.firstChild);
-            }
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            return section;
-        }
-
-        function renderRoutineBusy() {
-            const s = ensureRoutineSection();
-            s.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <iconify-icon icon="lucide:loader-2" class="text-2xl animate-spin text-primary"></iconify-icon>
-                    <div>
-                        <p class="font-bold text-base">Generating your weekly routine…</p>
-                        <p class="text-xs text-muted-foreground">AI is consulting the exercise database (this can take 30–90 seconds).</p>
-                    </div>
-                </div>`;
-        }
-
-        function renderRoutineError(msg) {
-            const s = ensureRoutineSection();
-            s.innerHTML = `
-                <div class="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-                    <p class="font-bold mb-1">Could not generate routine</p>
-                    <p>${escapeHtml(msg)}</p>
-                </div>`;
-        }
+        // --- Map AI response into the EXISTING weeklyWorkoutPlans / day cards ---
 
         function escapeHtml(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -1237,54 +1274,118 @@
             }[c]));
         }
 
-        function renderRoutine(plan) {
-            const s = ensureRoutineSection();
-            const equip = (plan.equipment_resolved || []).join(', ') || '—';
-            const days = plan.weekly_workout_plan || [];
+        function setGenerateButtonBusy(busy) {
+            // Find any button calling generateNewRoutine() and swap its label
+            // to indicate progress. Catches both the floating button and the
+            // modal "Generate" CTA.
+            document.querySelectorAll('button').forEach(btn => {
+                if (!btn.getAttribute('onclick')?.includes('generateNewRoutine')) return;
+                if (busy) {
+                    if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating… (30-90s)`;
+                } else {
+                    if (btn.dataset.origLabel) btn.innerHTML = btn.dataset.origLabel;
+                    btn.disabled = false;
+                }
+            });
+        }
 
-            const daysHtml = days.length === 0
-                ? `<p class="text-sm text-muted-foreground">No exercises selected. Try adjusting your profile or equipment.</p>`
-                : days.map(d => `
-                    <div class="border border-border rounded-2xl p-5 mb-4">
-                        <div class="flex items-baseline justify-between flex-wrap gap-2 mb-3">
-                            <h3 class="font-bold text-lg">${escapeHtml(d.day_label || '')}</h3>
-                            <span class="text-xs text-muted-foreground">${escapeHtml(d.duration || '')}</span>
-                        </div>
-                        ${d.heading ? `<p class="text-sm font-semibold text-primary mb-1">${escapeHtml(d.heading)}</p>` : ''}
-                        ${d.title ? `<p class="text-sm mb-2">${escapeHtml(d.title)}</p>` : ''}
-                        ${d.description ? `<p class="text-xs text-muted-foreground mb-3">${escapeHtml(d.description)}</p>` : ''}
-                        <ul class="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                            ${(d.exercises || []).map(ex => `
-                                <li class="p-3">
-                                    <div class="flex items-baseline justify-between flex-wrap gap-2">
-                                        <p class="font-medium text-sm">
-                                            ${escapeHtml(ex.name || '')}
-                                            ${ex.exercise_id ? `<span class="text-[11px] text-muted-foreground font-mono ml-1">#${escapeHtml(ex.exercise_id)}</span>` : ''}
-                                        </p>
-                                        <span class="text-xs text-muted-foreground">${escapeHtml(ex.detail || ex.duration || '')}</span>
-                                    </div>
-                                    ${ex.description ? `<p class="text-xs text-muted-foreground mt-1">${escapeHtml(ex.description)}</p>` : ''}
-                                </li>`).join('')}
-                        </ul>
-                    </div>
-                `).join('');
+        // AI plan → existing-UI plan shape.
+        function applyAiPlanToExistingUi(aiPlan) {
+            const aiDays = aiPlan.weekly_workout_plan || [];
+            if (aiDays.length === 0) {
+                alert('The AI returned no workout days. Try adjusting your profile or equipment selection.');
+                return;
+            }
 
-            s.innerHTML = `
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <h2 class="text-xl font-heading font-bold flex items-center gap-2">
-                        <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
-                        Your AI Weekly Routine
-                    </h2>
-                    <span class="text-xs text-muted-foreground">Equipment used: ${escapeHtml(equip)}</span>
-                </div>
-                ${plan.assessment ? `
-                    <details class="mb-4 rounded-xl border border-border p-4">
-                        <summary class="font-semibold text-sm cursor-pointer">Coach's assessment</summary>
-                        <div class="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">${escapeHtml(plan.assessment)}</div>
-                    </details>` : ''}
-                ${daysHtml}
-                ${plan.disclaimer ? `<p class="text-xs text-muted-foreground border-t border-border pt-4 mt-4">${escapeHtml(plan.disclaimer)}</p>` : ''}
-            `;
+            // Build the new weeklyWorkoutPlans array using the SAME shape the
+            // page already renders from. exercise_id is preserved on each
+            // exercise so the detail modal can fetch the right GIF.
+            weeklyWorkoutPlans = aiDays.map(d => ({
+                dayLabel: d.day_label || 'Day',
+                heading: d.heading || (d.title || 'Workout'),
+                title: d.title || d.heading || 'Workout',
+                duration: d.duration || '',
+                description: d.description || '',
+                exercises: (d.exercises || []).map(ex => ({
+                    exercise_id: ex.exercise_id || null,
+                    name: ex.name || '',
+                    detail: ex.detail || '',
+                    description: ex.description || '',
+                    duration: ex.duration || '',
+                    body_part: ex.body_part || null,
+                    equipment: ex.equipment || null,
+                    target: ex.target || null,
+                })),
+            }));
+
+            currentWorkoutDayIndex = 0;
+
+            // Update the 7-day weekly-view cards (only the ones that map to a
+            // generated day; leave the rest as "Rest day" stubs).
+            updateWeeklyViewCards();
+
+            // Re-render the daily view with the first day of the new plan.
+            renderWorkoutDay(currentWorkoutDayIndex);
+
+            // Stash the assessment + disclaimer so the user can see them.
+            if (aiPlan.assessment) {
+                stashCoachAssessment(aiPlan.assessment, aiPlan.equipment_resolved || []);
+            }
+
+            // Scroll the user to the freshly-rendered routine.
+            document.getElementById('daily-view-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // The page ships with 7 hardcoded day cards in #weekly-view-panel
+        // (data-workout-day="0"..."6"). Update each one's text so the
+        // weekly view reflects the new plan instead of the placeholder.
+        function updateWeeklyViewCards() {
+            document.querySelectorAll('[data-workout-day]').forEach(card => {
+                const idx = Number(card.dataset.workoutDay);
+                const day = weeklyWorkoutPlans[idx];
+                // Each card has its own internal layout — find the title / focus
+                // text nodes and update them. We use a simple heuristic: rewrite
+                // the first <h3> (or strong/p.font-bold) inside the card.
+                const titleEl = card.querySelector('h3, .font-bold, p strong');
+                const subEl = card.querySelectorAll('p')[1] || card.querySelector('p.text-muted-foreground');
+                if (!day) {
+                    if (titleEl) titleEl.textContent = 'Rest day';
+                    if (subEl)   subEl.textContent = '—';
+                    card.classList.add('opacity-60');
+                    return;
+                }
+                card.classList.remove('opacity-60');
+                if (titleEl) titleEl.textContent = day.dayLabel;
+                if (subEl)   subEl.textContent = day.title || day.heading;
+            });
+        }
+
+        // Surface the coach's assessment + equipment list above the daily-view
+        // content. Re-uses an existing container if available; otherwise
+        // creates a small notice and inserts above #daily-view-content.
+        function stashCoachAssessment(text, equipmentResolved) {
+            let box = document.getElementById('ai-coach-assessment');
+            if (!box) {
+                box = document.createElement('section');
+                box.id = 'ai-coach-assessment';
+                box.className = 'bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6';
+                const target = document.getElementById('daily-view-content');
+                target?.parentNode?.insertBefore(box, target);
+            }
+            const equip = (equipmentResolved || []).join(', ') || '—';
+            box.innerHTML = `
+                <details>
+                    <summary class="cursor-pointer flex items-center justify-between gap-3 font-semibold text-sm">
+                        <span class="flex items-center gap-2">
+                            <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
+                            Coach's assessment
+                        </span>
+                        <span class="text-xs text-muted-foreground">Equipment used: ${escapeHtml(equip)}</span>
+                    </summary>
+                    <div class="text-sm text-muted-foreground mt-3 whitespace-pre-wrap">${escapeHtml(text)}</div>
+                </details>`;
         }
     </script>
 </body>
