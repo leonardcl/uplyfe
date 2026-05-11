@@ -1,0 +1,23 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# --- Local config ---
+.env
+
+# --- Generated data ---
+data/chroma/            # rebuild with `erg-ingest exercises`
+data/prompt_debug.jsonl # optional debug log
+
+# --- Big binary RAG sources (kept locally, not committed) ---
+rag_sources/*.pdf
+rag_sources/exercises-dataset/images/
+rag_sources/exercises-dataset/videos/
+
+# --- Test cache ---
+.pytest_cache/
+
+# --- OS / editor ---
+.DS_Store

@@ -165,18 +165,75 @@ class AiController extends Controller
 
     public function exerciseGenerate(Request $request): JsonResponse
     {
+        // Accept the kebab-case names the frontend form posts, plus their
+        // snake_case equivalents for direct API callers. All fields optional;
+        // we fall back to the session user's profile (weight/height/age) when
+        // the form doesn't supply them.
         $data = $request->validate([
-            'goal' => 'sometimes|in:lose_weight,build_muscle,improve_endurance,general_fitness',
-            'level' => 'sometimes|in:beginner,intermediate,advanced',
-            'days_per_week' => 'sometimes|integer|min:1|max:7',
-            'minutes_per_session' => 'sometimes|integer|min:10|max:180',
-            'equipment' => 'sometimes|array',
-            'equipment.*' => 'string',
-            'limitations' => 'sometimes|array',
-            'limitations.*' => 'string',
+            'equipment'           => 'sometimes',           // array OR free-text string
+            'equipment_available' => 'sometimes|string',
+            'fitness_goals'       => 'sometimes|string',
+            'fitness-goals'       => 'sometimes|string',
+            'body_part_focus'     => 'sometimes',
+            'body-focus'          => 'sometimes',           // array OR string from checkboxes
+            'available_days'      => 'sometimes|string',
+            'available-days'      => 'sometimes|string',
+            'time_available'      => 'sometimes|string',
+            'time-available'      => 'sometimes|string',
+            'exercise_preference' => 'sometimes|string',
+            'exercise-preference' => 'sometimes|string',
+            'limitations'         => 'sometimes',           // array OR string
+            'query'               => 'sometimes|string',
         ]);
 
-        return $this->call(fn () => $this->exercise->generatePlan($data));
+        // Pull profile fields from the session user (set by AuthController)
+        // so we always have body_weight/height/age/sex without asking the
+        // frontend to re-send them.
+        $sessionUser = $request->session()->get('user');
+        $bodyWeight = $sessionUser?->weight !== null ? (string) $sessionUser->weight : null;
+        $height = $sessionUser?->height !== null ? (string) $sessionUser->height : null;
+        $age = $sessionUser?->age !== null ? (string) $sessionUser->age : null;
+        $sex = $sessionUser?->gender ?? null;
+
+        $profile = [
+            'body_weight'         => $bodyWeight,
+            'height'              => $height,
+            'age'                 => $age,
+            'sex'                 => $sex,
+            'fitness_goals'       => $data['fitness_goals'] ?? $data['fitness-goals'] ?? null,
+            'exercise_preference' => $data['exercise_preference'] ?? $data['exercise-preference'] ?? null,
+            'time_available'      => $data['time_available'] ?? $data['time-available'] ?? null,
+            'available_days'      => $data['available_days'] ?? $data['available-days'] ?? null,
+            'equipment_available' => $this->coerceList($data['equipment_available'] ?? $data['equipment'] ?? null),
+            'body_part_focus'     => $this->coerceList($data['body_part_focus'] ?? $data['body-focus'] ?? null),
+            'limitations'         => $this->coerceList($data['limitations'] ?? null),
+        ];
+
+        $payload = [
+            'profile' => $profile,
+            'query'   => $data['query'] ?? 'Create a weekly exercise routine',
+        ];
+
+        // Lift PHP timeout — LLM stage 3 can take 30-90s.
+        @set_time_limit(300);
+
+        return $this->call(fn () => $this->exercise->generatePlan($payload));
+    }
+
+    /**
+     * The gateway accepts free-text equipment / body-focus / limitations.
+     * Convert arrays (from form checkboxes) into a comma-separated string
+     * so a single call signature works for both.
+     */
+    protected function coerceList($v): ?string
+    {
+        if ($v === null || $v === '') {
+            return null;
+        }
+        if (is_array($v)) {
+            return implode(', ', array_filter(array_map('strval', $v), fn ($s) => $s !== ''));
+        }
+        return (string) $v;
     }
 
     public function recipeDailyMenu(Request $request): JsonResponse

@@ -27,17 +27,16 @@ Route::prefix('ai')->group(function () {
     Route::get('/health-checkup/schema', [AiController::class, 'healthCheckupSchema']);
     Route::get('/health-checkup/probe', [AiController::class, 'healthCheckupProbe']);
 
-    // Upload uses 'api.session' so the controller can read the session user
-    // (set by AuthController) and persist the report under their account.
-    // No CSRF — the JS uploads multipart without a token.
-    Route::middleware('api.session')->post(
-        '/health-checkup/upload',
-        [AiController::class, 'healthCheckupUpload'],
-    );
+    // Upload + exercise generate use 'api.session' so the controller can read
+    // the session user (set by AuthController) and persist / personalize.
+    // No CSRF — they're JSON / multipart POSTs from authenticated pages.
+    Route::middleware('api.session')->group(function () {
+        Route::post('/health-checkup/upload', [AiController::class, 'healthCheckupUpload']);
+        Route::post('/exercise/generate', [AiController::class, 'exerciseGenerate']);
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/health-checkup/manual', [AiController::class, 'healthCheckupManual']);
-        Route::post('/exercise/generate', [AiController::class, 'exerciseGenerate']);
         Route::post('/recipe/daily-menu', [AiController::class, 'recipeDailyMenu']);
     });
 });

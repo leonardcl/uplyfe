@@ -17,10 +17,18 @@ class Settings(BaseSettings):
     ollama_timeout_seconds: int = 120
 
     health_checkup_path: str = "../health-checkup-extraction"
+    exercise_routine_path: str = "../exercise-routine-generator"
 
     @property
     def health_checkup_abs_path(self) -> Path:
         p = Path(self.health_checkup_path)
+        if not p.is_absolute():
+            p = (Path(__file__).parent / p).resolve()
+        return p
+
+    @property
+    def exercise_routine_abs_path(self) -> Path:
+        p = Path(self.exercise_routine_path)
         if not p.is_absolute():
             p = (Path(__file__).parent / p).resolve()
         return p

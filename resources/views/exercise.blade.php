@@ -1137,15 +1137,154 @@
             closeEditActivityModal();
         }
 
-        function generateNewRoutine() {
+        // --- Real routine generation: POST to /api/ai/exercise/generate -----
+
+        function collectChecked(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
+                .map(el => el.value);
+        }
+
+        function collectRadio(name) {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        }
+
+        async function generateNewRoutine() {
             const weight = document.getElementById('profile-weight').textContent.replace(' kg', '').trim();
             const height = document.getElementById('profile-height').textContent.replace(' cm', '').trim();
             const age = document.getElementById('profile-age').textContent.trim();
 
             if (!weight || !height || !age || weight === 'Not set' || height === 'Not set' || age === 'Not set') {
-                alert('Please complete your profile first.');
+                alert('Please complete your profile first (weight, height, age).');
                 return;
             }
+
+            // Pull the activity-form selections.
+            const payload = {
+                equipment:           collectChecked('equipment'),
+                'fitness-goals':     collectRadio('fitness-goals'),
+                'body-focus':        collectChecked('body-focus'),
+                'available-days':    collectRadio('available-days'),
+                'time-available':    collectRadio('time-available'),
+                'exercise-preference': collectRadio('exercise-preference'),
+            };
+
+            renderRoutineBusy();
+
+            try {
+                const res = await fetch('/api/ai/exercise/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                const text = await res.text();
+                let data;
+                try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
+                if (!res.ok) {
+                    renderRoutineError(data.error || data.message || ('HTTP ' + res.status));
+                    return;
+                }
+                renderRoutine(data);
+            } catch (e) {
+                renderRoutineError('Network error: ' + (e?.message || e));
+            }
+        }
+
+        // --- Routine rendering ------------------------------------------------
+
+        function ensureRoutineSection() {
+            let section = document.getElementById('routine-results');
+            if (!section) {
+                section = document.createElement('section');
+                section.id = 'routine-results';
+                section.className = 'bg-card rounded-3xl border border-border p-8 shadow-sm mt-6';
+                // Insert near the top of the main content area.
+                const main = document.querySelector('main .flex-1.overflow-y-auto > div')
+                    || document.querySelector('main');
+                if (main) main.insertBefore(section, main.firstChild);
+            }
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return section;
+        }
+
+        function renderRoutineBusy() {
+            const s = ensureRoutineSection();
+            s.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <iconify-icon icon="lucide:loader-2" class="text-2xl animate-spin text-primary"></iconify-icon>
+                    <div>
+                        <p class="font-bold text-base">Generating your weekly routine…</p>
+                        <p class="text-xs text-muted-foreground">AI is consulting the exercise database (this can take 30–90 seconds).</p>
+                    </div>
+                </div>`;
+        }
+
+        function renderRoutineError(msg) {
+            const s = ensureRoutineSection();
+            s.innerHTML = `
+                <div class="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+                    <p class="font-bold mb-1">Could not generate routine</p>
+                    <p>${escapeHtml(msg)}</p>
+                </div>`;
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function renderRoutine(plan) {
+            const s = ensureRoutineSection();
+            const equip = (plan.equipment_resolved || []).join(', ') || '—';
+            const days = plan.weekly_workout_plan || [];
+
+            const daysHtml = days.length === 0
+                ? `<p class="text-sm text-muted-foreground">No exercises selected. Try adjusting your profile or equipment.</p>`
+                : days.map(d => `
+                    <div class="border border-border rounded-2xl p-5 mb-4">
+                        <div class="flex items-baseline justify-between flex-wrap gap-2 mb-3">
+                            <h3 class="font-bold text-lg">${escapeHtml(d.day_label || '')}</h3>
+                            <span class="text-xs text-muted-foreground">${escapeHtml(d.duration || '')}</span>
+                        </div>
+                        ${d.heading ? `<p class="text-sm font-semibold text-primary mb-1">${escapeHtml(d.heading)}</p>` : ''}
+                        ${d.title ? `<p class="text-sm mb-2">${escapeHtml(d.title)}</p>` : ''}
+                        ${d.description ? `<p class="text-xs text-muted-foreground mb-3">${escapeHtml(d.description)}</p>` : ''}
+                        <ul class="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                            ${(d.exercises || []).map(ex => `
+                                <li class="p-3">
+                                    <div class="flex items-baseline justify-between flex-wrap gap-2">
+                                        <p class="font-medium text-sm">
+                                            ${escapeHtml(ex.name || '')}
+                                            ${ex.exercise_id ? `<span class="text-[11px] text-muted-foreground font-mono ml-1">#${escapeHtml(ex.exercise_id)}</span>` : ''}
+                                        </p>
+                                        <span class="text-xs text-muted-foreground">${escapeHtml(ex.detail || ex.duration || '')}</span>
+                                    </div>
+                                    ${ex.description ? `<p class="text-xs text-muted-foreground mt-1">${escapeHtml(ex.description)}</p>` : ''}
+                                </li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+
+            s.innerHTML = `
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <h2 class="text-xl font-heading font-bold flex items-center gap-2">
+                        <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
+                        Your AI Weekly Routine
+                    </h2>
+                    <span class="text-xs text-muted-foreground">Equipment used: ${escapeHtml(equip)}</span>
+                </div>
+                ${plan.assessment ? `
+                    <details class="mb-4 rounded-xl border border-border p-4">
+                        <summary class="font-semibold text-sm cursor-pointer">Coach's assessment</summary>
+                        <div class="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">${escapeHtml(plan.assessment)}</div>
+                    </details>` : ''}
+                ${daysHtml}
+                ${plan.disclaimer ? `<p class="text-xs text-muted-foreground border-t border-border pt-4 mt-4">${escapeHtml(plan.disclaimer)}</p>` : ''}
+            `;
         }
     </script>
 </body>
