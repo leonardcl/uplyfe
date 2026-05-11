@@ -11,10 +11,13 @@ __pycache__/
 data/chroma/            # rebuild with `erg-ingest exercises`
 data/prompt_debug.jsonl # optional debug log
 
-# --- Big binary RAG sources (kept locally, not committed) ---
+# --- Big binary RAG sources ---
+# Textbook PDFs stay ignored — they're commercially published works
+# (ACSM via Wolters Kluwer, NSCA via Human Kinetics) so distributing
+# them on a public repo would be copyright infringement.
 rag_sources/*.pdf
-rag_sources/exercises-dataset/images/
-rag_sources/exercises-dataset/videos/
+# The free-exercise-db dataset is MIT-licensed and committed.
+# (Images: ~11 MB / 1324 JPGs. Videos: ~125 MB / 1324 GIFs.)
 
 # --- Test cache ---
 .pytest_cache/
