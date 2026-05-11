@@ -1,0 +1,14 @@
+{
+  "body_weight": "10 ton",
+  "height": "180 cm",
+  "age": "100",
+  "exercise_preference": "strength",
+  "time_available": "4 hours",
+  "available_days": "mon",
+  "equipment_available": "gym",
+  "fitness_goals": "increased IQ",
+  "body_part_focus": "liver",
+  "equipment_labels": [
+    "body weight"
+  ]
+}

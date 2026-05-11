@@ -1,0 +1,81 @@
+[
+  {
+    "day_label": "Monday",
+    "heading": "Neuro-Metabolic Structural Maintenance",
+    "title": "Single Session High-Intensity Stability Protocol",
+    "duration": "4 Hours",
+    "description": "A high-duration, high-intensity session designed for structural stabilization of the 10-ton frame and neuro-metabolic stimulation for IQ and hepatic support.",
+    "exercises": [
+      {
+        "exercise_ID": "1362",
+        "name": "sphinx",
+        "detail": "4 sets, 60 second hold, Intensity: High-Threshold Isometric",
+        "description": "Lie face down on the ground with your forearms flat on the floor, elbows directly under your shoulders. Engage your core and lift your chest off the ground, keeping your forearms and toes on the floor. Hold this position for a few seconds, making sure to keep your neck in a neutral position. Slowly lower your chest back down to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "15 minutes"
+      },
+      {
+        "exercise_ID": "2135",
+        "name": "weighted front plank",
+        "detail": "5 sets, 90 second hold, Intensity: High-Threshold Isometric",
+        "description": "Start by lying face down on the floor. Place your forearms on the ground, with your elbows directly under your shoulders. Extend your legs straight out behind you, with your toes on the ground. Engage your core and lift your body off the ground, balancing on your forearms and toes. Keep your body in a straight line from your head to your heels. Hold this position for the desired amount of time. Lower your body back down to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0276",
+        "name": "dead bug",
+        "detail": "4 sets, 12 reps per side, Intensity: Low-Velocity Neural Coordination",
+        "description": "Lie flat on your back with your arms extended towards the ceiling. Bend your knees and lift your legs off the ground, creating a 9/0-degree angle at your hips and knees. Engage your core and lower back to press your lower back into the ground. Slowly lower your right arm and left leg towards the ground, keeping them straight and hovering just above the floor. Pause for a moment, then return to the starting position. Repeat the movement with your left arm and right leg. Continue alternating sides for the desired number of repetitions.",
+        "duration": "30 minutes"
+      },
+      {
+        "exercise_ID": "3663",
+        "name": "reverse plank with leg lift",
+        "detail": "4 sets, 10 reps per leg, Intensity: High-Threshold/Core Compression",
+        "description": "Sit on the ground with your legs extended in front of you and your hands resting on the ground behind you, fingers pointing towards your feet. Press through your hands and lift your hips off the ground, coming into a reverse plank position. Engage your core and lift one leg off the ground, extending it straight up towards the ceiling. Hold for a moment, then lower your leg back down. Repeat with the other leg. Continue alternating legs for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0583",
+        "name": "lever kneeling twist",
+        "detail": "4 sets, 15 reps per side, Intensity: Metabolic/Oblique Compression",
+        "description": "Adjust the seat height and position yourself on the machine with your knees resting on the pads and your upper body facing forward. Grasp the handles or the sides of the machine for stability. Keeping your core engaged, twist your torso to one side as far as comfortably possible. Pause for a moment, then slowly return to the starting position. Repeat the twist to the opposite side. Continue alternating sides for the desired number of repetitions.",
+        "duration": "30 minutes"
+      },
+      {
+        "exercise_ID": "1452",
+        "name": "lever seated crunch",
+        "detail": "4 sets, 12 reps, Intensity: High-Threshold Core",
+        "description": "Sit on the leverage machine with your back against the pad and your feet flat on the floor. Grasp the handles or place your hands on the side pads for support. Engage your abs and slowly lean back, allowing the pad to move with you. Once your upper body is at a 45-degree angle, contract your abs and crunch forward, bringing your chest towards your knees. Pause for a moment at the top, then slowly release and return to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0840",
+        "name": "weighted overhead crunch (on stability ball)",
+        "detail": "4 sets, 15 reps, Intensity: Metabolic/Core",
+        "description": "Sit on a stability ball with your feet flat on the ground and your knees bent at a 90-degree angle. Hold a weight plate or dumbbell with both hands and extend your arms overhead. Engage your abs and slowly curl your torso forward, bringing your chest towards your knees. Pause for a moment at the top, then slowly lower your torso back to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0593",
+        "name": "lever reverse hyperextension",
+        "detail": "4 sets, 10 reps, Intensity: Structural Stability",
+        "description": "Adjust the leverage machine to fit your body and secure your feet in the foot pads. Lie face down on the machine with your upper body hanging off the edge and your hips resting on the pad. Cross your arms over your chest or place them behind your head. Engage your glutes and hamstrings to lift your legs upward until they are parallel to the ground. Pause for a moment at the top, then slowly lower your legs back down to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0581",
+        "name": "lever high row",
+        "detail": "4 sets, 12 reps, Intensity: Structural/Upper Back",
+        "description": "Adjust the seat height and foot platform to a comfortable position. Sit on the machine with your chest against the pad and your feet flat on the foot platform. Grasp the handles with an overhand grip, slightly wider than shoulder-width apart. Keep your back straight and engage your core. Pull the handles towards your body, squeezing your shoulder blades together. Pause for a moment at the peak of the movement, then slowly release the handles back to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_ID": "0835",
+        "name": "weighted hyperextension (on stability ball)",
+        "detail": "4 sets, 10 reps, Intensity: Spinal Structural Support",
+        "description": "Position yourself face down on a stability ball with your hips resting on the ball and your feet against a wall for stability. Place your hands behind your head or cross them over your chest. Engage your core and slowly lift your upper body off the ball, extending your back until your body forms a straight line. Pause for a moment at the top, then slowly lower your upper body back down to the starting position. Repeat for the desired number of repetitions.",
+        "duration": "20 minutes"
+      }
+    ]
+  }
+]

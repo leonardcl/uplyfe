@@ -1,0 +1,87 @@
+{
+  "weekly_workout_plan": [
+    {
+      "day_label": "Monday",
+      "heading": "Full Body - Strength Foundation",
+      "title": "Strength & Force Production",
+      "duration": "30 Minutes",
+      "description": "Heavy compound movements using harder bodyweight progressions to build raw strength.",
+      "exercises": [
+        {
+          "exercise_id": "3327",
+          "name": "full planche push-up",
+          "detail": "3 Sets, 5-8 Reps, RPE 9",
+          "description": "Start in a push-up position with your hands placed slightly wider than shoulder-width apart. Engage your core and lower your body down towards the ground, keeping your elbows close to your sides. As you lower yourself, lean your body forward and lift your feet off the ground, balancing on your hands. Continue to lower your body until your chest is just above the ground. Push through your hands and extend your arms to lift your body back up to the starting position. Maintain a straight line from your head to your heels throughout the movement. Repeat for the desired number of repetitions.",
+          "duration": "10 Minutes"
+        },
+        {
+          "exercise_id": "3582",
+          "name": "lunge with jump",
+          "detail": "3 Sets, 6-8 Reps, RPE 8",
+          "description": "Start by standing with your feet shoulder-width apart. Take a step forward with your right foot, lowering your body into a lunge position. Push off with your right foot and jump into the air, switching the position of your feet mid-air. Land softly with your left foot forward and immediately lower your body into a lunge position. Continue alternating between lunges and jumps for the desired number of repetitions.",
+          "duration": "10 Minutes"
+        },
+        {
+          "exercise_id": "3291",
+          "name": "stalder press",
+          "detail": "3 Sets, 5-8 Reps, RPE 9",
+          "description": "Start by standing with your feet shoulder-width apart and your arms extended overhead. Bend your knees slightly and engage your core. Lower your body down into a squat position while keeping your arms extended overhead. As you squat down, press your arms down towards the ground, engaging your triceps. Pause for a moment at the bottom of the squat, then push through your heels to stand back up while simultaneously raising your arms back overhead. Repeat for the current number of repetitions.",
+          "duration": "10 Minutes"
+        }
+      ]
+    },
+    {
+      "day_label": "Wednesday",
+      "heading": "Full Body - Unilateral & Stability",
+      "title": "Stability, Balance, and Unilateral Strength",
+      "duration": "30 Minutes",
+      "description": "Single-limb movements to address muscle imbalances and improve core stability/control.",
+      "exercises": [
+        {
+          "exercise_id": "1685",
+          "name": "squat to overhead reach",
+          "detail": "3 Sets, 10-12 Reps, RPE 7",
+          "description": "Stand with your feet shoulder-width apart and toes slightly turned out. Lower your body down into a squat position by bending your knees and pushing your hips back. As you come up from the squat, extend your arms overhead, reaching towards the ceiling. Return to the starting position by lowering your arms and bending your knees to squat down again. Repeat for the desired number of repetitions.",
+          "duration": "10 Minutes"
+        },
+        {
+          "exercise_id": "3299",
+          "name": "full planche",
+          "detail": "3 Sets, Max Hold, RPE 8",
+          "description": "Start in a push-up position with your hands shoulder-width apart and your fingers pointing forward. Engage your core and slowly shift your weight forward, lifting your feet off the ground. Continue shifting your weight forward until your body is parallel to the ground, balancing on your hands. Hold this position for as long as you can, maintaining a straight body line. Slowly lower your feet back to the ground and return to the starting position. Repeat for the desired number of repetitions.",
+          "duration": "10 Minutes"
+        },
+        {
+          "exercise_id": "1771",
+          "name": "bodyweight kneeling triceps extension",
+          "detail": "3 Sets, 10-12 Reps, RPE 7",
+          "description": "Kneel down on the ground with your knees hip-width apart. Place your hands on the ground in front of you, shoulder-width apart, fingers pointing forward. Extend your legs straight behind you, balancing on your toes and hands, forming a straight line from head to heels. Bend your elbows and lower your upper body towards the ground, keeping your elbows close to your ke sides. Pause for a moment at the bottom, then push through your hands to straighten your arms and return to the starting position. Repeat for the desired number of repetitions.",
+          "duration": "10 Minutes"
+        }
+      ]
+    },
+    {
+      "day_label": "Saturday",
+      "heading": "Full Body - Hypertrophy & Volume",
+      "title": "Hypertrophy and Muscular Endurance",
+      "duration": "30 Minutes",
+      "description": "Higher repetitions and shorter rest periods to maximize metabolic stress and muscle pump.",
+      "exercises": [
+        {
+          "exercise_id": "3533",
+          "name": "quads",
+          "detail": "3 Sets, 12-15 Reps, RPE 8",
+          "description": "Stand with your feet shoulder-width apart. Lower your body by bending your knees and pushing your hips back as if sitting on a chair. Keep your chest up and your back straight. Lower yourself until your thighs are parallel to the ground. Push through your heels to return to the starting position. Repeat for the desired number of repetitions.",
+          "duration": "15 Minutes"
+        },
+        {
+          "exercise_id": "0816",
+          "name": "triceps press",
+          "detail": "3 Sets, 12-15 Reps, RPE 8",
+          "description": "Stand with your feet shoulder-width apart and your knees slightly bent. Extend your arms straight out in front of you, parallel to the ground. Bend your elbows and lower your body towards the ground, keeping your upper arms close to your sides. Pause for a moment at the bottom, then push yourself back up to the starting position. Repeat for the desired number of repetitions.",
+          "duration": "15 Minutes"
+        }
+      ]
+    }
+  ]
+}

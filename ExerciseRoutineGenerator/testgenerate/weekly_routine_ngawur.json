@@ -1,0 +1,89 @@
+[
+  {
+    "day_label": "Monday",
+    "heading": "Neuro-Aerobic Foundation",
+    "title": "Aerobic Capacity & Cognitive Patterns",
+    "duration": "100 Minutes",
+    "description": "60 mins movement / 40 mins intelligence. Focus on cardiovascular endurance and mental pattern recognition.",
+    "exercises": [
+      {
+        "exercise_id": "0630",
+        "name": "mountain climber",
+        "detail": "4 sets of 15 minutes at a low, controlled intensity.",
+        "description": "Start in a high plank position with your hands directly under your shoulders and your body in a straight line. Engage your core and bring your right knee towards your chest, then quickly switch and bring your left knee towards your chest. Continue alternating legs in a running motion, keeping your hips low and your core engaged. Maintain a steady pace and breathe evenly throughout the exercise.",
+        "duration": "60 minutes"
+      }
+    ]
+  },
+  {
+    "day_label": "Tuesday",
+    "heading": "Strength & Spiritual Discipline",
+    "title": "Hypertrophy & Meditative Focus",
+    "duration": "100 Minutes",
+    "description": "50 mins resistance / 50 mins faith-based meditation. Focus on muscular growth and meditative focus.",
+    "exercises": [
+      {
+        "exercise_id": "3013",
+        "name": "low glute bridge on floor",
+        "detail": "3 sets of 20 repetitions at high intensity.",
+        "description": "Lie flat on your back with your knees bent and feet flat on the ground. Place your arms by your sides, palms facing down. Engage your glutes and core, then lift your hips off the ground until your body forms a straight line from your knees to your shoulders. Pause for a moment at the top, squeezing your glutes. Slowly lower your hips back down to the starting position.",
+        "duration": "25 minutes"
+      },
+      {
+        "exercise_id": "1775",
+        "name": "side plank hip adduction",
+        "detail": "3 sets of 15 repetitions per side at high intensity.",
+        "description": "Start by lying on your side with your legs extended and stacked on top of each other. Prop yourself up on your forearm, keeping your elbow directly below your shoulder. Engage your core and lift your hips off the ground, creating a straight line from your head to your feet. While maintaining the side plank position, lift your top leg towards the ceiling, keeping it straight. Slowly lower your leg back down to the starting position.",
+        "duration": "25 minutes"
+      }
+    ]
+  },
+  {
+    "day_label": "Wednesday",
+    "heading": "Neuroplasticity & Skill Acquisition",
+    "title": "Coordination & Complex Learning",
+    "duration": "100 Minutes",
+    "description": "40 mins coordination / 60 mins intelligence. Focus on creating new neural pathways through unfamiliarity.",
+    "exercises": [
+      {
+        "exercise_id": "1687",
+        "name": "posterior step to overhead reach",
+        "detail": "4 sets of 10 minutes at moderate intensity.",
+        "description": "Stand with your feet hip-width apart and your arms by your sides. Take a step back with your right foot, landing on the ball of your foot. Bend your left knee and lower your body into a lunge position. As you lower into the lunge, simultaneously reach your arms overhead. Pause for a moment at the bottom of the lunge, then return to the starting position by pushing through your left heel and bringing your right foot forward. Continue alternating sides.",
+        "duration": "40 minutes"
+      }
+    ]
+  },
+  {
+    "day_label": "Thursday",
+    "heading": "Strength & Endurance",
+    "title": "HIIT & Devotional Study",
+    "duration": "100 Minutes",
+    "description": "30 mins HIIT / 70 mins intelligence/faith. Boosting BDNF levels through metabolic stress and deep textual analysis.",
+    "exercises": [
+      {
+        "exercise_id": "3582",
+        "name": "lunge with jump",
+        "detail": "10 sets of 1 minute bursts at very high intensity.",
+        "description": "Start by standing with your feet shoulder-width apart. Take a step forward with your right foot, lowering your body into a lunge position. Push off with your right foot and jump into the air, switching the position of your feet mid-air. Land softly with your left foot forward and immediately lower your body into a lunge position. Continue alternating between lunges and jumps.",
+        "duration": "30 minutes"
+      }
+    ]
+  },
+  {
+    "day_label": "Friday",
+    "heading": "Integration & Recovery",
+    "title": "Flexibility & Mental Synthesis",
+    "duration": "100 Minutes",
+    "description": "50 mins mobility / 50 mins reflection. Focus on flexibility, mobility, and mental synthesis.",
+    "exercises": [
+      {
+        "exercise_id": "1362",
+        "name": "sphinx",
+        "detail": "5 sets of 10-minute holds at low intensity.",
+        "description": "Lie face down on the ground with your forearms flat on the floor, elbows directly under your shoulders. Engage your core and lift your chest off the ground, keeping your forearms and toes on the floor. Hold this position for a few seconds, making sure to keep your neck in a neutral position. Slowly lower your chest back down to the starting position.",
+        "duration": "50 minutes"
+      }
+    ]
+  }
+]

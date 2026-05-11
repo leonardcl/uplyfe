@@ -1,0 +1,11 @@
+{
+  "body_weight": "60",
+  "height": "176",
+  "age": "22",
+  "exercise_preference": "strength",
+  "time_available": "30",
+  "available_days": "mon wed sat",
+  "equipment_available": "none",
+  "fitness_goals": "muscle",
+  "body_part_focus": "full"
+}

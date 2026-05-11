@@ -1,0 +1,14 @@
+{
+  "body_weight": "100",
+  "height": "180",
+  "age": "26",
+  "exercise_preference": "faith and intelligence exercises",
+  "time_available": "100 minutes",
+  "available_days": "mon thrus fri",
+  "equipment_available": "faith",
+  "fitness_goals": "increased brain mass",
+  "body_part_focus": "brain",
+  "equipment_labels": [
+    "body weight"
+  ]
+}

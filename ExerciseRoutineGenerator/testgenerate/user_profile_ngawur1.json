@@ -1,0 +1,23 @@
+{
+  "body_weight": "50000",
+  "height": "1 mm",
+  "age": "100000",
+  "exercise_preference": "soul exercises",
+  "time_available": "24 hours",
+  "available_days": "all",
+  "equipment_available": "all",
+  "fitness_goals": "ascension to godhood and immortality",
+  "body_part_focus": "soul",
+  "equipment_labels": [
+    "medicine ball",
+    "stability ball",
+    "pull-up bar",
+    "stationary bike",
+    "body weight",
+    "cable",
+    "kettlebell",
+    "resistance band",
+    "dumbbell",
+    "barbell"
+  ]
+}
