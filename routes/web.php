@@ -51,13 +51,35 @@ Route::get('/testimonials', function () {
 
 Route::resource('users', UserController::class)->only(['store']);
 
-Route::middleware(['checklogin'])->group(function () {
+Route::middleware(['checklogin'])->group(function () {    
     Route::get('/health-check', function () {
-        return view('healthcheck');
+        $sessionUser = session('user');
+        $user = null;
+
+        if ($sessionUser && isset($sessionUser->id)) {
+            $user = User::find($sessionUser->id);
+
+            if ($user !== null) {
+                session(['user' => $user]);
+            }
+        }
+
+        return view('healthcheck', ['user' => $user]);
     });
 
     Route::get('/recipe', function () {
-        return view('recipe');
+        $sessionUser = session('user');
+        $user = null;
+
+        if ($sessionUser && isset($sessionUser->id)) {
+            $user = User::find($sessionUser->id);
+
+            if ($user !== null) {
+                session(['user' => $user]);
+            }
+        }
+
+        return view('recipe', ['user' => $user]);
     });
     
     Route::get('/exercise', function () {
@@ -75,7 +97,17 @@ Route::middleware(['checklogin'])->group(function () {
     });
     
     Route::get('/chat', function () {
-        return view('chat');
+        $sessionUser = session('user');
+        $user = null;
+    
+        if ($sessionUser && isset($sessionUser->id)) {
+            $user = User::find($sessionUser->id);
+            if ($user !== null) {
+                session(['user' => $user]);
+            }
+        }
+
+        return view('chat', ['user' => $user]);
     });
 
     Route::get('/full-analysis', function () {

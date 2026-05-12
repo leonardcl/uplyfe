@@ -111,10 +111,10 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                        <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
@@ -143,7 +143,7 @@
                         <iconify-icon icon="lucide:flame" class="text-orange-500"></iconify-icon>
                         <span>2,150 kcal / day</span>
                     </div>
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
                         class="w-8 h-8 rounded-full border border-border cursor-pointer">
                 </div>
             </header>

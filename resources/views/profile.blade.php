@@ -99,7 +99,7 @@
             </div>
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -132,7 +132,11 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <button id="edit-profile-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Edit Profile</button>
-                                <button id="log-out-btn" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Log Out</button>
+                                <a href="/logout"
+                                    id="log-out-btn"
+                                    class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">
+                                    Log Out
+                                </a>
                             </div>
                         </div>
 
@@ -140,7 +144,7 @@
                             <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6 space-y-6">
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                                     <div class="flex items-center gap-4">
-                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                        <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                                         <div>
                                             <h2 id="profile-display-name" class="text-2xl font-heading font-bold">{{ $user->first_name }} {{ $user->last_name }}</h2>
                                             <p class="text-sm text-muted-foreground mt-1">Member since {{ \Carbon\Carbon::parse($user->created_at)->format('F Y') }}</p>
@@ -271,7 +275,7 @@
                         <!-- Profile Picture -->
                         <div class="flex flex-col items-center space-y-4">
                             <div class="relative">
-                                <img id="profile-picture-preview" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                <img id="profile-picture-preview" src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                                 <button id="profile-picture-change-btn" type="button" class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-sm hover:bg-primary/80 transition-colors">
                                     <iconify-icon icon="lucide:camera" class="text-sm"></iconify-icon>
                                 </button>
@@ -646,32 +650,65 @@
         }
 
         let currentUserData = @json($user);
+
         async function saveProfileChanges() {
-            const userId = {{ $user->id }};
+            const userId = @json($user->id);
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
-            // Collect form data
-            const profileData = {
-                first_name: document.getElementById('profile-first-name').value,
-                last_name: document.getElementById('profile-last-name').value,
-                email: document.getElementById('profile-email').value,
-                phone_number: document.getElementById('profile-phone').value,
-                date_of_birth: document.getElementById('profile-dob').value,
-                gender: document.getElementById('profile-gender').value,
-                height: document.getElementById('profile-height').value,
-                weight: document.getElementById('profile-weight').value,
-                dietary_preferences: Array.from(document.querySelectorAll('input[name="diet-preferences"]:checked')).map(cb => cb.value),
-                notification_preferences: Array.from(document.querySelectorAll('input[name="notification-preferences"]:checked')).map(cb => cb.value),
-            };
+            const dob = document.getElementById('profile-dob').value;
+            let age = null;
 
-            const response = await fetch(`/users/${userId}`, {
-                method: 'PUT',
+            if (dob) {
+                const birthDate = new Date(dob);
+                const today = new Date();
+
+                age = today.getFullYear() - birthDate.getFullYear();
+
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                const dayDiff = today.getDate() - birthDate.getDate();
+
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                    age--;
+                }
+            }
+
+            const formData = new FormData();
+
+            formData.append('first_name', document.getElementById('profile-first-name').value);
+            formData.append('last_name', document.getElementById('profile-last-name').value);
+            formData.append('email', document.getElementById('profile-email').value);
+            formData.append('phone_number', document.getElementById('profile-phone').value);
+            formData.append('date_of_birth', dob ?? '');
+            formData.append('age', age ?? '');
+            formData.append('gender', document.getElementById('profile-gender').value);
+            formData.append('height', document.getElementById('profile-height').value);
+            formData.append('weight', document.getElementById('profile-weight').value);
+
+            const dietaryPreferences = Array.from(
+                document.querySelectorAll('input[name="diet-preferences"]:checked')
+            ).map(cb => cb.value);
+
+            const notificationPreferences = Array.from(
+                document.querySelectorAll('input[name="notification-preferences"]:checked')
+            ).map(cb => cb.value);
+
+            formData.append('dietary_preferences', JSON.stringify(dietaryPreferences));
+            formData.append('notification_preferences', JSON.stringify(notificationPreferences));
+
+            const photoInput = document.getElementById('profile-picture-input');
+
+            if (photoInput.files.length > 0) {
+                formData.append('profile_photo', photoInput.files[0]);
+            }
+            
+            formData.append('_method', 'PUT');
+            const response = await fetch(@json(url('/users/' . $user->id)), {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify(profileData),
+                body: formData,
             });
 
             if (!response.ok) {

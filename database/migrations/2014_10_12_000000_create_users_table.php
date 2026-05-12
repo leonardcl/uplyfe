@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone_number')->nullable();
             $table->date('date_of_birth')->nullable();
+            $table->integer('age')->nullable();
             $table->string('gender')->nullable();
             $table->decimal('height', 5, 2)->nullable();
             $table->decimal('weight', 5, 2)->nullable();

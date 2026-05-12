@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File;
 
 class UserController extends Controller
 {
@@ -79,6 +80,18 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        if ($request->has('dietary_preferences') && is_string($request->dietary_preferences)) {
+            $request->merge([
+                'dietary_preferences' => json_decode($request->dietary_preferences, true)
+            ]);
+        }
+        
+        if ($request->has('notification_preferences') && is_string($request->notification_preferences)) {
+            $request->merge([
+                'notification_preferences' => json_decode($request->notification_preferences, true)
+            ]);
+        }
+        
         $validated = $request->validate([
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
@@ -86,14 +99,12 @@ class UserController extends Controller
             'phone_number' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string'],
-            // `age` is what the activity-profile modal posts (separate column from
-            // date_of_birth). Validate it explicitly so the value isn't silently
-            // dropped by Laravel's allow-list validator.
             'age' => ['nullable', 'integer', 'min:0', 'max:130'],
             'height' => ['nullable', 'numeric'],
             'weight' => ['nullable', 'numeric'],
             'dietary_preferences' => ['nullable', 'array'],
             'notification_preferences' => ['nullable', 'array'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
         $user = User::find($sessionUser->id);
@@ -114,6 +125,17 @@ class UserController extends Controller
         $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;
         $user->notification_preferences = $validated['notification_preferences'] ?? $user->notification_preferences;
 
+        if ($request->hasFile('profile_photo')) {
+            $directory = public_path('profile/');
+            if (!File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }        
+            $extension = $request->file('profile_photo')->getClientOriginalExtension();
+            $fileName = $user->id . '.' . $extension;
+            $request->file('profile_photo')->move($directory, $fileName);
+            $user->profile_photo = '/profile/' . $fileName;
+        }
+
         $user->save();
 
         $request->session()->put('user', $user);
@@ -132,6 +154,7 @@ class UserController extends Controller
                 'weight' => $user->weight,
                 'dietary_preferences' => $user->dietary_preferences,
                 'notification_preferences' => $user->notification_preferences,
+                'profile_photo' => $user->profile_photo,
             ],
         ]);
     }
