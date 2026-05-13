@@ -258,6 +258,60 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // Tiny safe markdown renderer for chat replies. Escapes HTML FIRST
+        // so the LLM can't inject tags, then converts a small subset of
+        // markdown back into formatted HTML.
+        //   **text**   → <strong>
+        //   *text* / _text_ → <em>   (only when not surrounded by other *)
+        //   `code`     → <code>
+        //   leading `- ` or `* ` → bullet
+        //   leading `N. ` → numbered list item
+        //   blank line → paragraph break
+        function renderMarkdown(text) {
+            if (text == null) return '';
+            const escaped = escapeHtml(text);
+
+            // Code spans first so subsequent formatting doesn't touch them.
+            let s = escaped.replace(/`([^`\n]+)`/g, '<code class="px-1 py-0.5 rounded bg-muted text-[12px]">$1</code>');
+
+            // Bold (** … **). Run before italic so single-* inside isn't matched.
+            s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+            // Italic with *…* (not part of a **) or _…_.
+            s = s.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
+            s = s.replace(/(^|[^_])_([^_\n]+?)_(?!_)/g, '$1<em>$2</em>');
+
+            // Lists + paragraphs, line by line.
+            const lines = s.split('\n');
+            const out = [];
+            let inUl = false, inOl = false;
+            const closeLists = () => {
+                if (inUl) { out.push('</ul>'); inUl = false; }
+                if (inOl) { out.push('</ol>'); inOl = false; }
+            };
+            for (const raw of lines) {
+                const line = raw.trimEnd();
+                if (line === '') { closeLists(); out.push(''); continue; }
+                const mUl = /^\s*[-*]\s+(.*)$/.exec(line);
+                const mOl = /^\s*\d+\.\s+(.*)$/.exec(line);
+                if (mUl) {
+                    if (!inUl) { closeLists(); out.push('<ul class="list-disc ml-5 space-y-1">'); inUl = true; }
+                    out.push(`<li>${mUl[1]}</li>`);
+                } else if (mOl) {
+                    if (!inOl) { closeLists(); out.push('<ol class="list-decimal ml-5 space-y-1">'); inOl = true; }
+                    out.push(`<li>${mOl[1]}</li>`);
+                } else {
+                    closeLists();
+                    out.push(line);
+                }
+            }
+            closeLists();
+
+            // Collapse consecutive empties into a paragraph break.
+            return out.join('\n')
+                .replace(/\n{2,}/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+        }
+
         function renderUserMessage(message) {
             return `
                 <div class="flex gap-4 max-w-3xl ml-auto flex-row-reverse animate-[fadeIn_0.3s_ease-out]">
@@ -274,21 +328,274 @@
 
         function renderBotMessage(content, opts = {}) {
             const id = opts.id ? `id="${opts.id}"` : '';
-            const body = opts.isHtml ? content : escapeHtml(content).replace(/\n/g, '<br>');
+            const body = opts.isHtml ? content : renderMarkdown(content);
+            const cardsHtml = Array.isArray(opts.cards) && opts.cards.length
+                ? `<div class="mt-3 grid gap-3">${opts.cards.map(renderCard).join('')}</div>`
+                : '';
             return `
                 <div ${id} class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
                     <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
                         <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
                     </div>
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1 flex-1 min-w-0">
                         <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
                         <div class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
                             ${body}
                         </div>
+                        ${cardsHtml}
                     </div>
                 </div>
             `;
         }
+
+        // ---------- Liked-meals cache ----------
+        // Keyed by `${planId|none}:${dayKey|none}:${mealType}` so we can
+        // mark hearts on recipe cards as filled when the user already
+        // liked that exact slot. Re-fetched on page load + after every
+        // like/unlike so the chat stays in sync with /favorite-recipes.
+        const likedByKey = new Map();
+        function likeKeyFor(card) {
+            const pid = card?.meal_plan_id ?? 'none';
+            const day = card?.day_key ?? 'none';
+            const slot = card?.meal_type ?? '';
+            return `${pid}:${day}:${slot}`;
+        }
+        async function refreshLikedSet() {
+            try {
+                const res = await fetch('/api/meal-likes', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                likedByKey.clear();
+                for (const like of data.likes || []) {
+                    const k = `${like.meal_plan_id ?? 'none'}:${like.day_key ?? 'none'}:${like.meal_type ?? ''}`;
+                    likedByKey.set(k, like.id);
+                }
+                // Repaint every recipe card already in the DOM so their
+                // hearts reflect the freshly-loaded state.
+                document.querySelectorAll('button[data-action="like-recipe"]').forEach(btn => {
+                    try {
+                        const card = JSON.parse(decodeURIComponent(btn.dataset.card || ''));
+                        markHeart(btn, likedByKey.get(likeKeyFor(card)) ?? null);
+                    } catch (_) {}
+                });
+            } catch (_) {}
+        }
+        function markHeart(btn, likeId) {
+            if (!btn) return;
+            const icon = btn.querySelector('iconify-icon');
+            if (likeId) {
+                btn.classList.remove('text-muted-foreground');
+                btn.classList.add('text-red-500');
+                if (icon) icon.setAttribute('style', 'fill: currentColor;');
+                btn.dataset.likeId = String(likeId);
+                btn.title = 'Tap to remove from favorites';
+            } else {
+                btn.classList.remove('text-red-500');
+                btn.classList.add('text-muted-foreground');
+                if (icon) icon.removeAttribute('style');
+                delete btn.dataset.likeId;
+                btn.title = 'Save to favorites';
+            }
+        }
+
+        // ---------- Functional cards (recipe / exercise) ----------
+        function renderCard(card) {
+            if (!card || typeof card !== 'object') return '';
+            if (card.type === 'recipe') return renderRecipeCard(card);
+            if (card.type === 'exercise') return renderExerciseCard(card);
+            if (card.type === 'dietary_update') return renderDietaryUpdateCard(card);
+            return '';
+        }
+
+        function renderDietaryUpdateCard(card) {
+            const added = Array.isArray(card.added) ? card.added : [];
+            const removed = Array.isArray(card.removed) ? card.removed : [];
+            const now = Array.isArray(card.exclusions_now) ? card.exclusions_now : [];
+            const chips = (arr, cls) => arr.map(t =>
+                `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${cls}">${escapeHtml(t)}</span>`
+            ).join(' ');
+            const addedLine = added.length
+                ? `<div class="flex items-center gap-2 text-xs"><span class="text-muted-foreground">Added:</span>${chips(added, 'bg-red-100 text-red-700')}</div>`
+                : '';
+            const removedLine = removed.length
+                ? `<div class="flex items-center gap-2 text-xs"><span class="text-muted-foreground">Removed:</span>${chips(removed, 'bg-tertiary/20 text-tertiary')}</div>`
+                : '';
+            const nowLine = now.length
+                ? `<div class="flex items-start gap-2 text-xs"><span class="text-muted-foreground mt-0.5">You avoid:</span><div class="flex flex-wrap gap-1">${chips(now, 'bg-muted text-foreground border border-border')}</div></div>`
+                : '<div class="text-xs text-muted-foreground">No active exclusions.</div>';
+            const status = card.regenerating
+                ? '<span class="inline-flex items-center gap-1 text-tertiary"><iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon>Regenerating your weekly menu…</span>'
+                : '<span class="text-muted-foreground">No saved plan yet — generate one on the recipe page.</span>';
+            return `
+                <div class="bg-card border border-tertiary/40 rounded-2xl p-4 shadow-sm flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <iconify-icon icon="lucide:check-circle-2" class="text-tertiary"></iconify-icon>
+                        <h4 class="font-bold text-sm">Food exclusions updated</h4>
+                    </div>
+                    ${addedLine}
+                    ${removedLine}
+                    ${nowLine}
+                    <div class="text-xs border-t border-border pt-2 mt-1 flex items-center justify-between gap-2">
+                        ${status}
+                        <a href="/recipe" class="text-primary font-semibold hover:underline whitespace-nowrap">Open recipe page →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecipeCard(card) {
+            const slot = (card.meal_type || 'meal').replace(/\b\w/g, c => c.toUpperCase());
+            const title = escapeHtml(card.title || slot);
+            const desc = escapeHtml(card.description || '');
+            const cals = escapeHtml(String(card.calories || '—'));
+            const prot = escapeHtml(String(card.protein || '—'));
+            const tags = Array.isArray(card.tags) ? card.tags.filter(Boolean) : [];
+            const tagHtml = tags.slice(0, 3).map(t =>
+                `<span class="text-[10px] font-semibold text-tertiary bg-tertiary/10 px-2 py-0.5 rounded-full">${escapeHtml(t)}</span>`
+            ).join(' ');
+            // Encode the snapshot so the like button can POST it without
+            // round-tripping through a global.
+            const snap = encodeURIComponent(JSON.stringify(card));
+            const noteHtml = card.note
+                ? `<p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1">${escapeHtml(card.note)}</p>`
+                : '';
+            // Heart state — if this exact meal/day/plan slot is already
+            // liked, render the heart filled-red instead of muted.
+            const likeId = likedByKey.get(likeKeyFor(card)) ?? null;
+            const heartCls = likeId
+                ? 'text-red-500 hover:text-red-600'
+                : 'text-muted-foreground hover:text-red-500';
+            const heartStyle = likeId ? 'fill: currentColor;' : '';
+            const heartTitle = likeId ? 'Tap to remove from favorites' : 'Save to favorites';
+            const likeAttr = likeId ? `data-like-id="${likeId}"` : '';
+            return `
+                <div class="bg-card border border-border rounded-2xl p-4 shadow-sm flex flex-col gap-2">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">${escapeHtml(slot)}</span>
+                            <h4 class="font-bold text-sm leading-tight mt-1 truncate">${title}</h4>
+                        </div>
+                        <button data-action="like-recipe" data-card="${snap}" ${likeAttr}
+                            class="${heartCls} transition-colors flex-shrink-0"
+                            title="${heartTitle}">
+                            <iconify-icon icon="lucide:heart" style="${heartStyle}"></iconify-icon>
+                        </button>
+                    </div>
+                    ${noteHtml}
+                    ${desc ? `<p class="text-xs text-muted-foreground line-clamp-2">${desc}</p>` : ''}
+                    <div class="flex flex-wrap gap-1">${tagHtml}</div>
+                    <div class="flex items-center gap-4 text-xs text-muted-foreground border-t border-border pt-2 mt-1">
+                        <span><strong class="text-foreground">${cals}</strong> cal</span>
+                        <span><strong class="text-foreground">${prot}</strong> protein</span>
+                        ${card.ingredient_count ? `<span>${card.ingredient_count} ingredients</span>` : ''}
+                        <a href="/recipe?day=${encodeURIComponent(card.day_key || '')}&meal=${encodeURIComponent(card.meal_type || '')}"
+                           class="ml-auto text-primary font-semibold hover:underline">Open in plan →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExerciseCard(card) {
+            const day = escapeHtml(card.day_label || 'Workout');
+            const title = escapeHtml(card.title || 'Workout');
+            const desc = escapeHtml(card.description || '');
+            const dur = escapeHtml(String(card.duration || ''));
+            const exs = Array.isArray(card.exercises_preview) ? card.exercises_preview : [];
+            const ids = Array.isArray(card.image_ids) ? card.image_ids.slice(0, 3) : [];
+            const thumbs = ids.map(id =>
+                `<img src="/api/exercises/${encodeURIComponent(id)}/image?kind=jpg" alt="" class="w-10 h-10 rounded object-cover border border-border" />`
+            ).join('');
+            const exList = exs.slice(0, 4).map(e => {
+                const n = escapeHtml(e.name || '');
+                const d = e.detail ? ` <span class="text-muted-foreground">· ${escapeHtml(e.detail)}</span>` : '';
+                return `<li class="text-xs">${n}${d}</li>`;
+            }).join('');
+            return `
+                <div class="bg-card border border-border rounded-2xl p-4 shadow-sm flex flex-col gap-2">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                            <iconify-icon icon="lucide:dumbbell"></iconify-icon>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">${day}${dur ? ' · ' + dur : ''}</span>
+                            <h4 class="font-bold text-sm leading-tight mt-1">${title}</h4>
+                        </div>
+                    </div>
+                    ${desc ? `<p class="text-xs text-muted-foreground line-clamp-2">${desc}</p>` : ''}
+                    ${thumbs ? `<div class="flex gap-1 mt-1">${thumbs}</div>` : ''}
+                    ${exList ? `<ul class="space-y-1 mt-1">${exList}</ul>` : ''}
+                    <div class="flex items-center gap-3 text-xs text-muted-foreground border-t border-border pt-2 mt-1">
+                        ${card.exercise_count ? `<span>${card.exercise_count} exercises</span>` : ''}
+                        <a href="/exercise?day=${encodeURIComponent((card.day_label || '').toLowerCase())}"
+                           class="ml-auto text-primary font-semibold hover:underline">Open in plan →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function likeRecipeCard(btn) {
+            try {
+                const card = JSON.parse(decodeURIComponent(btn.dataset.card || ''));
+                if (!card) return;
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const existingLikeId = btn.dataset.likeId || likedByKey.get(likeKeyFor(card));
+
+                if (existingLikeId) {
+                    // Already liked — toggle off.
+                    const res = await fetch(`/api/meal-likes/${existingLikeId}`, {
+                        method: 'DELETE',
+                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                        credentials: 'same-origin',
+                    });
+                    if (res.ok) {
+                        likedByKey.delete(likeKeyFor(card));
+                        markHeart(btn, null);
+                    }
+                    return;
+                }
+                if (!card.snapshot) return;
+                const res = await fetch('/api/meal-likes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        meal_plan_id: card.meal_plan_id || null,
+                        day_key: card.day_key || null,
+                        meal_type: card.meal_type || 'snack',
+                        title: card.title || 'Saved meal',
+                        snapshot: card.snapshot,
+                    }),
+                });
+                if (res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    const newId = body?.like?.id;
+                    if (newId) {
+                        likedByKey.set(likeKeyFor(card), newId);
+                        markHeart(btn, newId);
+                    }
+                }
+            } catch (e) {
+                console.warn('likeRecipeCard failed:', e);
+            }
+        }
+
+        // Delegate clicks on card like-buttons (cards are rendered into the
+        // chat stream dynamically, so direct listeners would miss new ones).
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest?.('button[data-action="like-recipe"]');
+            if (btn) {
+                e.preventDefault();
+                likeRecipeCard(btn);
+            }
+        });
 
         async function sendChat() {
             const textarea = document.querySelector('textarea');
@@ -342,6 +649,7 @@
                 });
 
                 let reply;
+                let cards = null;
                 if (!res.ok) {
                     let detail = '';
                     try {
@@ -352,6 +660,7 @@
                 } else {
                     const data = await res.json();
                     reply = data.reply || 'I had no response. Try again.';
+                    cards = Array.isArray(data.cards) ? data.cards : null;
                     if (data.conversation_id) {
                         setConversationId(data.conversation_id);
                         // Refresh history dropdown so the new conversation
@@ -363,7 +672,7 @@
                 }
 
                 const pending = document.getElementById(pendingId);
-                if (pending) pending.outerHTML = renderBotMessage(reply);
+                if (pending) pending.outerHTML = renderBotMessage(reply, { cards });
             } catch (err) {
                 const pending = document.getElementById(pendingId);
                 const msg = `Network error: ${err?.message || err}`;
@@ -470,7 +779,7 @@
                         if (!alreadyShown) {
                             insertBefore(m.role === 'user'
                                 ? renderUserMessage(m.content)
-                                : renderBotMessage(m.content));
+                                : renderBotMessage(m.content, { cards: m.cards || null }));
                             chatHistory.push({ role: m.role, content: m.content });
                         }
                         lastSeenMessageId = Math.max(lastSeenMessageId, m.id);
@@ -520,7 +829,7 @@
                 for (const m of data.messages) {
                     insertBefore(m.role === 'user'
                         ? renderUserMessage(m.content)
-                        : renderBotMessage(m.content));
+                        : renderBotMessage(m.content, { cards: m.cards || null }));
                     chatHistory.push({ role: m.role, content: m.content });
                     lastSeenMessageId = Math.max(lastSeenMessageId, m.id);
                 }
@@ -603,10 +912,17 @@
             }
         });
 
-        // On page open: resume the saved conversation if there is one.
-        if (conversationId) {
-            loadConversation(conversationId);
-        }
+        // On page open: load the user's likes FIRST so cards render with
+        // correct heart state, then resume the conversation. We re-fetch
+        // after the conversation loads so any cards rendered from history
+        // also get their hearts repainted.
+        (async () => {
+            await refreshLikedSet();
+            if (conversationId) {
+                await loadConversation(conversationId);
+                await refreshLikedSet();  // repaint cards from history
+            }
+        })();
         // Pre-load the dropdown list in the background so it opens instantly.
         loadConversationList();
     </script>

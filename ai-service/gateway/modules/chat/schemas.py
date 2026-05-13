@@ -22,3 +22,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    # Optional structured intent the model identified in the user's message,
+    # used as a fallback when Laravel's regex detector didn't catch it.
+    # Shape kept loose so we can add fields without breaking clients.
+    intent: dict | None = None

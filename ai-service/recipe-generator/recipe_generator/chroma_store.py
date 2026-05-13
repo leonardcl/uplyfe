@@ -58,3 +58,19 @@ def search(query: str, k: Optional[int] = None) -> list[RecipeMatch]:
             score=float(1.0 - dist) if dist is not None else 0.0,
         ))
     return out
+
+
+def fetch_curated(limit: int = 100) -> list[RecipeMatch]:
+    """Pull every recipe whose metadata has `curated == true`. Used to
+    guarantee the small curated set always lands in the candidate pool
+    even when vector search would drown them in the 200k bulk corpus."""
+    try:
+        res = _collection().get(where={"curated": True}, limit=limit)
+    except Exception:
+        return []
+    docs = res.get("documents") or []
+    metas = res.get("metadatas") or []
+    out: list[RecipeMatch] = []
+    for d, m in zip(docs, metas):
+        out.append(RecipeMatch(document=d, metadata=m or {}, score=1.0))
+    return out

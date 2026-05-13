@@ -91,7 +91,13 @@ class UserController extends Controller
                 'notification_preferences' => json_decode($request->notification_preferences, true)
             ]);
         }
-        
+
+        if ($request->has('food_exclusions') && is_string($request->food_exclusions)) {
+            $request->merge([
+                'food_exclusions' => json_decode($request->food_exclusions, true)
+            ]);
+        }
+
         $validated = $request->validate([
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
@@ -104,6 +110,8 @@ class UserController extends Controller
             'weight' => ['nullable', 'numeric'],
             'dietary_preferences' => ['nullable', 'array'],
             'notification_preferences' => ['nullable', 'array'],
+            'food_exclusions' => ['nullable', 'array'],
+            'food_exclusions.*' => ['string', 'max:64'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
@@ -124,16 +132,25 @@ class UserController extends Controller
         $user->weight = $validated['weight'] ?? $user->weight;
         $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;
         $user->notification_preferences = $validated['notification_preferences'] ?? $user->notification_preferences;
+        // food_exclusions: empty array means "clear" — preserve the explicit
+        // [] over the null-fallback so users can wipe the list.
+        if (array_key_exists('food_exclusions', $validated)) {
+            $cleaned = array_values(array_unique(array_filter(
+                array_map(fn ($f) => trim(mb_strtolower((string) $f)), $validated['food_exclusions']),
+                fn ($f) => $f !== ''
+            )));
+            $user->food_exclusions = $cleaned;
+        }
 
         if ($request->hasFile('profile_photo')) {
-            $directory = public_path('profile/');
+            $directory = public_path('profile_photos/');
             if (!File::exists($directory)) {
                 File::makeDirectory($directory, 0755, true);
             }        
             $extension = $request->file('profile_photo')->getClientOriginalExtension();
             $fileName = $user->id . '.' . $extension;
             $request->file('profile_photo')->move($directory, $fileName);
-            $user->profile_photo = '/profile/' . $fileName;
+            $user->profile_photo = '/profile_photos/' . $fileName;
         }
 
         $user->save();
@@ -154,6 +171,7 @@ class UserController extends Controller
                 'weight' => $user->weight,
                 'dietary_preferences' => $user->dietary_preferences,
                 'notification_preferences' => $user->notification_preferences,
+                'food_exclusions' => $user->food_exclusions,
                 'profile_photo' => $user->profile_photo,
             ],
         ]);

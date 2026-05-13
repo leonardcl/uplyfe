@@ -242,6 +242,33 @@
                                 </section>
 
                                 <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="text-lg font-semibold">Foods you avoid</h3>
+                                        <button id="open-edit-from-exclusions"
+                                            class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground mb-3">
+                                        Recipe generation and the chat avoid these. Update via the chat
+                                        (<em>"I can't eat fish"</em>) or by editing your profile.
+                                    </p>
+                                    @php
+                                        $foodExclusionsView = $user->food_exclusions ?? [];
+                                    @endphp
+                                    <div id="profile-exclusions-view" class="flex flex-wrap gap-2">
+                                        @if(count($foodExclusionsView))
+                                            @foreach($foodExclusionsView as $f)
+                                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                                                    <iconify-icon icon="lucide:ban" class="text-xs"></iconify-icon>
+                                                    {{ $f }}
+                                                </span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-sm text-muted-foreground">No food exclusions yet.</span>
+                                        @endif
+                                    </div>
+                                </section>
+
+                                <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6">
                                     <h3 class="text-lg font-semibold mb-4">Support</h3>
                                     <p class="text-sm text-muted-foreground">Need help with your account or health plan? Our team is ready to assist.</p>
                                     <a href="mailto:support@uplyfe.com" class="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition">Contact Support</a>
@@ -381,6 +408,42 @@
                                     <span class="text-sm">Mediterranean</span>
                                 </label>
                             </div>
+                        </div>
+
+                        <!-- Food exclusions -->
+                        <div class="border-t border-border pt-6">
+                            <h4 class="text-lg font-semibold mb-1">Food Exclusions</h4>
+                            <p class="text-xs text-muted-foreground mb-3">
+                                Foods you don't eat. Recipe generation and the chat will avoid these.
+                                You can also tell the chat — e.g. <em>"I can't eat fish"</em> — and they'll appear here.
+                            </p>
+                            @php
+                                $foodExclusions = $user->food_exclusions ?? [];
+                            @endphp
+                            <div id="profile-exclusions-chips" class="flex flex-wrap gap-2 mb-3 min-h-[1.5rem]">
+                                @foreach ($foodExclusions as $f)
+                                    <span data-exclusion-chip="{{ $f }}"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted border border-border text-xs">
+                                        {{ $f }}
+                                        <button type="button" class="text-muted-foreground hover:text-destructive"
+                                            data-remove-exclusion="{{ $f }}" aria-label="Remove {{ $f }}">
+                                            <iconify-icon icon="lucide:x" class="text-sm"></iconify-icon>
+                                        </button>
+                                    </span>
+                                @endforeach
+                                <span id="profile-exclusions-empty" class="text-xs text-muted-foreground @if(!empty($foodExclusions)) hidden @endif">
+                                    No exclusions yet.
+                                </span>
+                            </div>
+                            <div class="flex gap-2">
+                                <input id="profile-exclusion-input" type="text" placeholder="e.g. fish, peanuts, dairy"
+                                    class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                                <button id="profile-exclusion-add" type="button"
+                                    class="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+                                    Add
+                                </button>
+                            </div>
+                            <input type="hidden" id="profile-exclusions-json" value="{{ json_encode(array_values($foodExclusions)) }}" />
                         </div>
 
                         <!-- Notifications -->
@@ -695,6 +758,11 @@
             formData.append('dietary_preferences', JSON.stringify(dietaryPreferences));
             formData.append('notification_preferences', JSON.stringify(notificationPreferences));
 
+            // Food exclusions managed via chip UI; the hidden input holds
+            // the canonical JSON list.
+            const exclusionsJson = document.getElementById('profile-exclusions-json')?.value || '[]';
+            formData.append('food_exclusions', exclusionsJson);
+
             const photoInput = document.getElementById('profile-picture-input');
 
             if (photoInput.files.length > 0) {
@@ -770,6 +838,21 @@
                         </span>
                     `).join('')
                     : '<span class="px-3 py-2 rounded-full bg-primary/10 text-primary-foreground text-sm">No preferences set</span>';
+            }
+
+            // Re-render the read-only "Foods you avoid" section.
+            const exclusionsView = document.getElementById('profile-exclusions-view');
+            if (exclusionsView) {
+                const list = saved.food_exclusions || [];
+                const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+                exclusionsView.innerHTML = list.length
+                    ? list.map(f => `
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                            <iconify-icon icon="lucide:ban" class="text-xs"></iconify-icon>
+                            ${esc(f)}
+                        </span>
+                    `).join('')
+                    : '<span class="text-sm text-muted-foreground">No food exclusions yet.</span>';
             }
 
             const sidebarName = document.getElementById('sidebar-user-name');
@@ -858,6 +941,7 @@
 
             // Modal buttons
             document.getElementById('edit-profile-btn')?.addEventListener('click', openEditProfileModal);
+            document.getElementById('open-edit-from-exclusions')?.addEventListener('click', openEditProfileModal);
             document.getElementById('security-manage-btn')?.addEventListener('click', openSecurityModal);
             document.getElementById('edit-profile-backdrop')?.addEventListener('click', closeEditProfileModal);
             document.getElementById('edit-profile-close-btn')?.addEventListener('click', closeEditProfileModal);
@@ -870,6 +954,66 @@
             // Profile picture input
             document.getElementById('profile-picture-change-btn')?.addEventListener('click', changeProfilePicture);
             document.getElementById('profile-picture-input')?.addEventListener('change', handleProfilePictureChange);
+
+            // ----- Food exclusions chip editor -----
+            const exclusionsJsonEl = document.getElementById('profile-exclusions-json');
+            const chipsEl = document.getElementById('profile-exclusions-chips');
+            const emptyEl = document.getElementById('profile-exclusions-empty');
+            const inputEl = document.getElementById('profile-exclusion-input');
+            const addBtn = document.getElementById('profile-exclusion-add');
+
+            function readExclusions() {
+                try { return JSON.parse(exclusionsJsonEl?.value || '[]'); } catch { return []; }
+            }
+            function writeExclusions(list) {
+                if (exclusionsJsonEl) exclusionsJsonEl.value = JSON.stringify(list);
+                renderChips(list);
+            }
+            function renderChips(list) {
+                if (!chipsEl) return;
+                chipsEl.querySelectorAll('[data-exclusion-chip]').forEach(el => el.remove());
+                list.forEach(f => {
+                    const chip = document.createElement('span');
+                    chip.dataset.exclusionChip = f;
+                    chip.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted border border-border text-xs';
+                    chip.innerHTML = `${escapeHtmlSimple(f)} <button type="button" class="text-muted-foreground hover:text-destructive" aria-label="Remove ${escapeHtmlSimple(f)}"><iconify-icon icon="lucide:x" class="text-sm"></iconify-icon></button>`;
+                    chip.querySelector('button').addEventListener('click', () => removeExclusion(f));
+                    chipsEl.insertBefore(chip, emptyEl);
+                });
+                if (emptyEl) emptyEl.classList.toggle('hidden', list.length > 0);
+            }
+            function escapeHtmlSimple(s) {
+                return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+            }
+            function addExclusion(raw) {
+                const cleaned = String(raw || '').trim().toLowerCase();
+                if (!cleaned) return;
+                const list = readExclusions();
+                if (list.includes(cleaned)) return;
+                list.push(cleaned);
+                writeExclusions(list);
+            }
+            function removeExclusion(food) {
+                const list = readExclusions().filter(f => f !== food);
+                writeExclusions(list);
+            }
+
+            // Wire the pre-rendered chips (Blade-painted on first load).
+            chipsEl?.querySelectorAll('button[data-remove-exclusion]').forEach(btn => {
+                btn.addEventListener('click', () => removeExclusion(btn.dataset.removeExclusion));
+            });
+
+            addBtn?.addEventListener('click', () => {
+                // Support comma-separated paste: "fish, peanuts, dairy" → 3 chips.
+                (inputEl?.value || '').split(',').forEach(piece => addExclusion(piece));
+                if (inputEl) inputEl.value = '';
+            });
+            inputEl?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addBtn.click();
+                }
+            });
         });
     </script>
 </body>

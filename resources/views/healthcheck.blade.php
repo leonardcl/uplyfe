@@ -345,10 +345,9 @@
                                 <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
                                 Key Health Insights
                             </h2>
-                            <select
+                            <select id="hc-report-picker"
                                 class="bg-card border border-border text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary shadow-sm">
-                                <option>Latest Report (Oct 24)</option>
-                                <option>Previous (Jun 12)</option>
+                                <option value="">No reports yet</option>
                             </select>
                         </div>
 
@@ -647,17 +646,85 @@
             };
         }
 
+        // The full list of past reports kept around so the picker can switch
+        // between them without re-fetching every time.
+        let hcReports = [];
+
         async function loadLatestReportFromHistory() {
             try {
                 const r = await fetch(HC_HISTORY_URL, { headers: { 'Accept': 'application/json' } });
                 if (!r.ok) {
                     showLastUploadCard(null);
+                    populateReportPicker([]);
                     return;
                 }
                 const data = await r.json();
-                showLastUploadCard((data.reports || [])[0] || null);
+                hcReports = data.reports || [];
+                showLastUploadCard(hcReports[0] || null);
+                populateReportPicker(hcReports);
+                // Show the latest report's key insights immediately so the
+                // page never sits at the empty state when the user has
+                // already uploaded something.
+                if (hcReports[0]) {
+                    await loadReportIntoPage(hcReports[0].id, { silent: true });
+                }
             } catch (e) {
                 showLastUploadCard(null);
+                populateReportPicker([]);
+            }
+        }
+
+        function populateReportPicker(reports) {
+            const sel = document.getElementById('hc-report-picker');
+            if (!sel) return;
+            if (!reports.length) {
+                sel.innerHTML = '<option value="">No reports yet</option>';
+                sel.disabled = true;
+                return;
+            }
+            sel.disabled = false;
+            sel.innerHTML = reports.map((r, i) => {
+                const when = r.created_at
+                    ? new Date(r.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                    : `Report #${r.id}`;
+                const tag = i === 0 ? 'Latest' : 'Previous';
+                const fname = r.original_filename || '';
+                const label = `${tag} (${when})${fname ? ' · ' + fname : ''}`;
+                return `<option value="${r.id}">${label.replace(/</g, '&lt;')}</option>`;
+            }).join('');
+            sel.value = String(reports[0].id);
+            sel.onchange = (e) => {
+                const id = Number(e.target.value);
+                if (id) loadReportIntoPage(id);
+            };
+        }
+
+        // Pull the full report payload for `id` and apply it to:
+        //   1. the Key Health Insights hero cards
+        //   2. the full AI Health Report section below
+        // When `silent` is true, errors are swallowed (used on initial page
+        // load so the page still renders if the report endpoint hiccups).
+        async function loadReportIntoPage(id, { silent = false } = {}) {
+            try {
+                const res = await fetch(`${HC_HISTORY_URL}/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (!res.ok) {
+                    if (!silent) showError('Could not load report: HTTP ' + res.status);
+                    return;
+                }
+                const data = await res.json();
+                // Insights first — that's what the user asked to surface.
+                renderInsightsGrid(data.key_insights || []);
+                // Mirror the matching summary from the list into the page
+                // header (file name + size) so renderReport has something.
+                const meta = hcReports.find(r => r.id === id) || {};
+                renderReport(
+                    { name: meta.original_filename || `report-${id}`, size: meta.original_size_bytes || 0 },
+                    data,
+                );
+            } catch (e) {
+                if (!silent) showError('Could not load report: ' + (e?.message || e));
             }
         }
 

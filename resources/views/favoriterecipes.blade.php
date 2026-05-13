@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Uplyfe - Liked Recipes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -121,10 +122,20 @@
 
             <div class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                 <div class="max-w-6xl mx-auto">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-heading font-bold">Your Favorite Recipes</h2>
+                    <div class="mb-6 flex items-center justify-between gap-4 flex-wrap">
+                        <div>
+                            <h2 class="text-2xl font-heading font-bold">Your Favorite Recipes</h2>
+                            <p class="text-xs text-muted-foreground mt-1" id="favorite-meta">Loading…</p>
+                        </div>
+                        <a href="/recipe" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border text-sm font-semibold hover:bg-muted">
+                            <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+                            Back to meal plan
+                        </a>
                     </div>
                     <div id="favorite-recipe-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <p id="favorite-empty" class="text-center text-sm text-muted-foreground py-16 hidden">
+                        You haven't liked any meals yet. Tap a ❤ on the recipe page to save it here.
+                    </p>
                 </div>
             </div>
         </main>
@@ -189,7 +200,55 @@
     </div>
 
     <script>
-        const FAVORITE_RECIPES_STORAGE_KEY = 'uplyfeFavoriteRecipes';
+        // Real data only — pulled from /api/meal-likes. The legacy
+        // localStorage / dummy lists are gone.
+        const FAVORITE_API = '/api/meal-likes';
+        let favoriteRecipes = [];
+
+        // Light Title-Case to match what /recipe shows.
+        function favTitleCase(str) {
+            if (!str) return '';
+            const minors = new Set(['a','an','and','as','at','but','by','for','in','nor','of','on','or','so','the','to','up','yet','with']);
+            const words = String(str).trim().split(/\s+/);
+            return words.map((w, i) => {
+                if (!w) return w;
+                if (/^[A-Z]{2,}$/.test(w)) return w;
+                if (/^[ivxlcm]+$/i.test(w) && w.length <= 4) return w.toUpperCase();
+                const lower = w.toLowerCase();
+                if (minors.has(lower) && i !== 0 && i !== words.length - 1) return lower;
+                return lower.replace(/(^|[\s\-'/])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
+            }).join(' ');
+        }
+
+        function csrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        async function loadFavorites() {
+            const meta = document.getElementById('favorite-meta');
+            try {
+                const res = await fetch(FAVORITE_API, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                favoriteRecipes = (data.likes || []).map(like => ({
+                    id: like.id,
+                    mealType: like.meal_type,
+                    dayKey: like.day_key,
+                    mealPlanId: like.meal_plan_id,
+                    createdAt: like.created_at,
+                    recipe: like.snapshot || {},
+                }));
+                meta.textContent = `${favoriteRecipes.length} saved meal${favoriteRecipes.length === 1 ? '' : 's'}`;
+            } catch (e) {
+                favoriteRecipes = [];
+                meta.textContent = 'Could not load favorites — check that you are logged in.';
+            }
+            renderFavoriteRecipes();
+        }
+
         const DUMMY_FAVORITE_RECIPES = [{
                 recipe: {
                     title: 'Greek Yogurt Berry Bowl',
@@ -248,56 +307,76 @@
                 }
             }
         ];
-        let favoriteRecipes = [];
-
-        function getFavoriteRecipes() {
-            try {
-                const stored = localStorage.getItem(FAVORITE_RECIPES_STORAGE_KEY);
-                const parsed = stored ? JSON.parse(stored) : {};
-                return Object.values(parsed);
-            } catch (_) {
-                return [];
-            }
-        }
-
         function renderFavoriteRecipes() {
             const grid = document.getElementById('favorite-recipe-grid');
+            const empty = document.getElementById('favorite-empty');
             if (!grid) return;
-
-            favoriteRecipes = getFavoriteRecipes();
-            if (!favoriteRecipes.length) {
-                favoriteRecipes = DUMMY_FAVORITE_RECIPES;
-            }
             grid.innerHTML = '';
+            if (!favoriteRecipes.length) {
+                empty?.classList.remove('hidden');
+                return;
+            }
+            empty?.classList.add('hidden');
             favoriteRecipes.forEach((favorite, index) => {
                 const recipe = favorite.recipe || {};
-                const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
-                const tagsHTML = tags.map((tag) => `<span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">${tag.text || ''}</span>`).join('');
-
+                const tagsRaw = Array.isArray(recipe.tags) ? recipe.tags : [];
+                const tagsHTML = tagsRaw.map((tag) => {
+                    const text = typeof tag === 'string' ? tag : (tag.text || '');
+                    if (!text) return '';
+                    return `<span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">${text}</span>`;
+                }).join('');
+                const slot = (favorite.mealType || '').replace(/\b\w/g, c => c.toUpperCase());
+                const slotDay = [slot, favorite.dayKey].filter(Boolean).join(' · ');
+                const cardHref = `/recipe?day=${encodeURIComponent(favorite.dayKey || '')}&meal=${encodeURIComponent(favorite.mealType || '')}`;
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer';
-                card.onclick = () => openRecipeModal(index);
+                card.className = 'bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col';
                 card.innerHTML = `
-                    <div class="h-48 relative overflow-hidden bg-slate-100">
-                        <div class="absolute inset-0 flex items-center justify-center text-slate-400">
-                            <iconify-icon icon="lucide:image" class="text-4xl opacity-30"></iconify-icon>
+                    <div class="h-32 relative overflow-hidden bg-muted cursor-pointer" data-action="open" data-idx="${index}">
+                        <div class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                            <iconify-icon icon="lucide:utensils" class="text-4xl opacity-30"></iconify-icon>
                         </div>
-                        <div class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-red-500 shadow-sm">
-                            <iconify-icon icon="lucide:heart" class="text-red-500" style="fill: currentColor;"></iconify-icon>
-                        </div>
+                        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-red-500 shadow-sm hover:bg-red-50"
+                            data-action="unlike" data-like-id="${favorite.id}" title="Remove from favorites">
+                            <iconify-icon icon="lucide:heart" style="fill: currentColor;"></iconify-icon>
+                        </button>
+                        ${slotDay ? `<span class="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-sm text-[10px] font-bold">${slotDay}</span>` : ''}
                     </div>
-                    <div class="p-5 flex flex-col flex-1">
-                        <div class="flex items-center gap-2 mb-2">${tagsHTML}</div>
-                        <h3 class="font-bold text-lg mb-1 leading-tight group-hover:text-emerald-700 transition-colors">${recipe.title || '-'}</h3>
-                        <p class="text-xs text-[var(--muted-foreground)] mb-4 line-clamp-2">${recipe.description || '-'}</p>
-                        <div class="mt-auto grid grid-cols-2 gap-2 border-t border-[var(--border)] pt-4">
-                            <div class="text-center"><p class="text-xs text-[var(--muted-foreground)]">Cals</p><p class="text-sm font-bold">${recipe.calories || '-'}</p></div>
-                            <div class="text-center border-l border-[var(--border)]"><p class="text-xs text-[var(--muted-foreground)]">Protein</p><p class="text-sm font-bold">${recipe.protein || '-'}</p></div>
+                    <div class="p-4 flex flex-col flex-1 gap-2">
+                        <div class="flex flex-wrap items-center gap-1">${tagsHTML}</div>
+                        <h3 class="font-bold text-base leading-tight group-hover:text-primary transition-colors cursor-pointer"
+                            data-action="open" data-idx="${index}">${favTitleCase(recipe.title || '')}</h3>
+                        <p class="text-xs text-muted-foreground line-clamp-2">${recipe.description || ''}</p>
+                        <div class="mt-auto grid grid-cols-3 gap-1 border-t border-border pt-3 text-center text-xs">
+                            <div><p class="text-muted-foreground">Cals</p><p class="font-bold">${recipe.calories || '—'}</p></div>
+                            <div class="border-l border-border"><p class="text-muted-foreground">Protein</p><p class="font-bold">${recipe.protein || '—'}</p></div>
+                            <div class="border-l border-border"><p class="text-muted-foreground">Carbs</p><p class="font-bold">${recipe.carbs || '—'}</p></div>
                         </div>
+                        <a href="${cardHref}" class="text-xs text-primary font-semibold hover:underline self-end">Open in plan →</a>
                     </div>
                 `;
                 grid.appendChild(card);
             });
+        }
+
+        function getMealLabel(slot) {
+            if (!slot) return 'Meal';
+            return slot.charAt(0).toUpperCase() + slot.slice(1);
+        }
+
+        async function unlikeFavorite(likeId) {
+            try {
+                const res = await fetch(`${FAVORITE_API}/${likeId}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+                    credentials: 'same-origin',
+                });
+                if (res.ok) {
+                    favoriteRecipes = favoriteRecipes.filter(f => f.id !== Number(likeId));
+                    renderFavoriteRecipes();
+                    const meta = document.getElementById('favorite-meta');
+                    if (meta) meta.textContent = `${favoriteRecipes.length} saved meal${favoriteRecipes.length === 1 ? '' : 's'}`;
+                }
+            } catch (e) { /* swallow */ }
         }
 
         function openRecipeModal(index) {
@@ -305,7 +384,7 @@
             if (!favorite || !favorite.recipe) return;
             const recipe = favorite.recipe;
 
-            document.getElementById('modal-recipe-title').textContent = recipe.title || '-';
+            document.getElementById('modal-recipe-title').textContent = favTitleCase(recipe.title || '-');
             document.getElementById('modal-recipe-subtitle').textContent = recipe.subtitle || `${getMealLabel(favorite.mealType)} recipe`;
             document.getElementById('modal-calories').textContent = recipe.calories || '-';
             document.getElementById('modal-protein').textContent = recipe.protein || '-';
@@ -324,9 +403,14 @@
             const ingredientsContainer = document.getElementById('modal-ingredients');
             ingredientsContainer.innerHTML = '';
             (Array.isArray(recipe.ingredients) ? recipe.ingredients : []).forEach((ingredient) => {
+                const text = typeof ingredient === 'string'
+                    ? ingredient
+                    : [(ingredient.quantity || '').toString().trim(), (ingredient.name || '').toString().trim()]
+                        .filter(Boolean).join(' ');
+                if (!text) return;
                 const li = document.createElement('li');
                 li.className = 'flex items-center gap-2';
-                li.innerHTML = `<iconify-icon icon="lucide:circle" class="text-emerald-600 text-xs"></iconify-icon><span class="text-sm">${ingredient}</span>`;
+                li.innerHTML = `<iconify-icon icon="lucide:circle" class="text-emerald-600 text-xs"></iconify-icon><span class="text-sm">${text}</span>`;
                 ingredientsContainer.appendChild(li);
             });
 
@@ -367,7 +451,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
             document.getElementById('mobile-sidebar-backdrop')?.addEventListener('click', () => toggleSidebar(false));
-            renderFavoriteRecipes();
+            // Pull real favorites from the API (no more dummy data).
+            loadFavorites();
+
+            // Delegate clicks: unlike + open modal.
+            document.getElementById('favorite-recipe-grid')?.addEventListener('click', (e) => {
+                const unlikeBtn = e.target.closest?.('[data-action="unlike"]');
+                if (unlikeBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    unlikeFavorite(unlikeBtn.dataset.likeId);
+                    return;
+                }
+                const openEl = e.target.closest?.('[data-action="open"]');
+                if (openEl) {
+                    openRecipeModal(Number(openEl.dataset.idx));
+                }
+            });
         });
     </script>
 </body>

@@ -471,6 +471,36 @@
             </div>
         </div>
 
+        <!-- Generation progress overlay — shown while the 3-stage LLM
+             pipeline runs. Replaces the previous "spinner only" UX so the
+             user can see what's actually happening during the ~80s wait. -->
+        <div id="gen-progress-modal" class="fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                <div class="bg-card rounded-3xl border border-border shadow-2xl p-6 flex flex-col gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <iconify-icon icon="lucide:sparkles" class="text-2xl"></iconify-icon>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="gen-progress-title" class="font-bold text-lg leading-tight">Building your workout</h3>
+                            <p class="text-xs text-muted-foreground">This usually takes about 80 seconds. Feel free to leave the page open.</p>
+                        </div>
+                    </div>
+
+                    <ol id="gen-progress-steps" class="space-y-2 mt-1">
+                        <!-- populated by JS -->
+                    </ol>
+
+                    <div class="flex items-center justify-between text-xs border-t border-border pt-3 mt-1">
+                        <span class="text-muted-foreground">Elapsed</span>
+                        <span id="gen-progress-elapsed" class="font-mono font-bold text-foreground">00:00</span>
+                    </div>
+                    <p id="gen-progress-tip" class="text-[11px] text-muted-foreground italic"></p>
+                </div>
+            </div>
+        </div>
+
         <div id="edit-activity-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onclick="closeEditActivityModal()"></div>
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 h-[95vh] sm:h-[90vh] flex flex-col">
@@ -1024,6 +1054,88 @@
             switchToDailyView();
         }
 
+        // Deep-link: /exercise?day=monday switches to that day on load.
+        function applyExerciseDeepLink() {
+            try {
+                const url = new URL(window.location.href);
+                const want = (url.searchParams.get('day') || '').toLowerCase();
+                if (!want) return;
+                const idx = weeklyWorkoutPlans.findIndex(d =>
+                    (d.dayLabel || '').toLowerCase() === want
+                );
+                if (idx >= 0) goToWorkoutDay(idx);
+            } catch (e) { /* swallow */ }
+        }
+
+        // Pull the user's most recent saved exercise plan from the API and
+        // render it. Without this the page always opens with the hardcoded
+        // "Full Body Flow" placeholder, which makes a freshly-generated
+        // plan appear to vanish on the next page visit.
+        async function loadActiveExercisePlan() {
+            try {
+                const list = await fetch('/api/exercise-plans', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!list.ok) return;
+                const data = await list.json();
+                const plans = data.plans || [];
+                if (!plans.length) return; // never generated — keep the placeholder
+                const detail = await fetch(`/api/exercise-plans/${plans[0].id}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!detail.ok) return;
+                const payload = await detail.json();
+                applyAiPlanToExistingUi(payload);
+                if (typeof stashCoachAssessment === 'function' && payload.assessment) {
+                    stashCoachAssessment(payload.assessment, payload.equipment_resolved || []);
+                }
+            } catch (e) {
+                console.warn('loadActiveExercisePlan failed:', e);
+            }
+        }
+
+        // Poll every 30s while the page is visible — picks up a workout
+        // regenerated in the background by the chat without a manual reload.
+        let exercisePlanPollHandle = null;
+        let lastSeenExercisePlanId = null;
+        async function pollLatestExercisePlan() {
+            try {
+                const res = await fetch('/api/exercise-plans', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const plans = data.plans || [];
+                if (!plans.length) return;
+                const newest = plans[0].id;
+                if (lastSeenExercisePlanId === null) {
+                    lastSeenExercisePlanId = newest;
+                    return;
+                }
+                if (newest !== lastSeenExercisePlanId) {
+                    lastSeenExercisePlanId = newest;
+                    await loadActiveExercisePlan();
+                }
+            } catch (_) { /* swallow */ }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ORDER MATTERS: load the saved plan first, then honor any
+            // ?day= deep-link against the freshly-loaded weeklyWorkoutPlans.
+            await loadActiveExercisePlan();
+            applyExerciseDeepLink();
+            if (exercisePlanPollHandle) clearInterval(exercisePlanPollHandle);
+            exercisePlanPollHandle = setInterval(() => {
+                if (!document.hidden) pollLatestExercisePlan();
+            }, 30000);
+        });
+
         document.getElementById('workout-prev-day-btn')?.addEventListener('click', showPreviousWorkoutDay);
         document.getElementById('workout-next-day-btn')?.addEventListener('click', showNextWorkoutDay);
         document.querySelectorAll('[data-workout-day]').forEach((card) => {
@@ -1287,27 +1399,117 @@
         }
 
         function setGenerateButtonBusy(busy) {
-            // Find any button calling generateNewRoutine() and swap its label
-            // to indicate progress. Catches both the floating button and the
-            // modal "Generate" CTA.
             document.querySelectorAll('button').forEach(btn => {
                 if (!btn.getAttribute('onclick')?.includes('generateNewRoutine')) return;
                 if (busy) {
                     if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
                     btn.disabled = true;
-                    btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating… (30-90s)`;
+                    btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating…`;
                 } else {
                     if (btn.dataset.origLabel) btn.innerHTML = btn.dataset.origLabel;
                     btn.disabled = false;
                 }
             });
+            if (busy) openGenerationProgress();
+            else closeGenerationProgress();
+        }
+
+        // ---------- Generation progress modal ----------
+        // 3 stages that roughly match the gateway pipeline. We don't have
+        // real progress events from the server (no SSE / WebSocket yet) so
+        // we time-slice the bar based on the typical 80-100s wall clock.
+        const GEN_STAGES = [
+            { id: 'assessment', label: 'Analyzing your profile',     pctStart: 0,   pctEnd: 25 },
+            { id: 'structure',  label: 'Designing your weekly split', pctStart: 25,  pctEnd: 55 },
+            { id: 'exercises',  label: 'Picking matching exercises',  pctStart: 55,  pctEnd: 95 },
+            { id: 'finalize',   label: 'Finalizing',                  pctStart: 95,  pctEnd: 100 },
+        ];
+        const GEN_TIPS = [
+            "Each stage uses the local gemma4:26b model on your machine — it's smart but heavy.",
+            "You can leave the page open or even switch tabs; the server keeps working.",
+            "The exercise picker also searches a real exercise dataset, then asks the model to shape the picks into your plan.",
+            "Faster generation would mean a smaller model — gemma4:26b is the quality tradeoff.",
+        ];
+        const EXPECTED_SECS = 90; // typical wall clock for the 3-stage pipeline
+
+        let genStart = 0;
+        let genTimer = null;
+        function fmtMMSS(s) {
+            const m = Math.floor(s / 60).toString().padStart(2, '0');
+            const ss = (s % 60).toString().padStart(2, '0');
+            return `${m}:${ss}`;
+        }
+        function openGenerationProgress(opts = {}) {
+            const modal = document.getElementById('gen-progress-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            document.getElementById('gen-progress-title').textContent =
+                opts.title || 'Building your workout';
+            document.getElementById('gen-progress-tip').textContent =
+                GEN_TIPS[Math.floor(Math.random() * GEN_TIPS.length)];
+            genStart = Date.now();
+            renderStages(0);
+            if (genTimer) clearInterval(genTimer);
+            genTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - genStart) / 1000);
+                document.getElementById('gen-progress-elapsed').textContent = fmtMMSS(elapsed);
+                renderStages(Math.min(elapsed / EXPECTED_SECS, 0.99));
+            }, 500);
+        }
+        function closeGenerationProgress() {
+            const modal = document.getElementById('gen-progress-modal');
+            if (!modal) return;
+            // Snap to 100% briefly so the user sees the finish.
+            renderStages(1);
+            const elapsed = Math.floor((Date.now() - genStart) / 1000);
+            document.getElementById('gen-progress-elapsed').textContent = fmtMMSS(elapsed);
+            setTimeout(() => { modal.classList.add('hidden'); }, 350);
+            if (genTimer) { clearInterval(genTimer); genTimer = null; }
+        }
+        function renderStages(fraction) {
+            const pct = Math.round(fraction * 100);
+            const stepsEl = document.getElementById('gen-progress-steps');
+            if (!stepsEl) return;
+            stepsEl.innerHTML = GEN_STAGES.map((s) => {
+                let state, icon;
+                if (pct >= s.pctEnd) {
+                    state = 'done'; icon = 'lucide:check-circle-2';
+                } else if (pct >= s.pctStart) {
+                    state = 'active'; icon = 'lucide:loader-2';
+                } else {
+                    state = 'idle'; icon = 'lucide:circle';
+                }
+                const colour = state === 'done'  ? 'text-tertiary'
+                            :  state === 'active'? 'text-primary'
+                            :                      'text-muted-foreground';
+                const spin = state === 'active' ? 'animate-spin' : '';
+                const fill = state === 'active' ? Math.round(((pct - s.pctStart) / (s.pctEnd - s.pctStart)) * 100) : (state === 'done' ? 100 : 0);
+                return `
+                    <li class="flex items-center gap-3 text-sm">
+                        <iconify-icon icon="${icon}" class="${colour} ${spin} text-lg"></iconify-icon>
+                        <div class="flex-1">
+                            <p class="${state !== 'idle' ? 'font-semibold' : 'text-muted-foreground'}">${s.label}</p>
+                            <div class="h-1 mt-1 rounded-full bg-muted overflow-hidden">
+                                <div class="h-full bg-primary transition-all" style="width:${Math.max(0, Math.min(100, fill))}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
         }
 
         // AI plan → existing-UI plan shape.
         function applyAiPlanToExistingUi(aiPlan) {
             const aiDays = aiPlan.weekly_workout_plan || [];
             if (aiDays.length === 0) {
-                alert('The AI returned no workout days. Try adjusting your profile or equipment selection.');
+                // Don't silently fail — surface a clear message ON the page
+                // (not just an alert) so the user knows their generation hit
+                // an empty result and the visible workout is the OLD one.
+                const headingEl = document.getElementById('workout-heading');
+                if (headingEl) {
+                    headingEl.textContent = 'AI returned no workout days — try Generate again';
+                }
+                alert('The AI returned no workout days. This is usually a transient model failure — try Generate again. If it keeps happening, simplify your equipment or goals.');
                 return;
             }
 

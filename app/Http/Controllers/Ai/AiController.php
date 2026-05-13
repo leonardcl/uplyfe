@@ -15,8 +15,10 @@ use App\Services\Ai\AiServiceException;
 use App\Services\Ai\ChatService;
 use App\Services\Ai\DietaryIntentDetector;
 use App\Services\Ai\ExerciseService;
+use App\Services\Ai\FoodVocabulary;
 use App\Services\Ai\HealthCheckupService;
 use App\Services\Ai\RecipeService;
+use App\Services\Ai\RecommendationIntentDetector;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,6 +31,7 @@ class AiController extends Controller
         protected RecipeService $recipe,
         protected ChatService $chat,
         protected DietaryIntentDetector $dietaryIntent,
+        protected RecommendationIntentDetector $recommendIntent,
     ) {}
 
     public function health(): JsonResponse
@@ -433,11 +436,6 @@ class AiController extends Controller
         $userId = $this->sessionUserId($request);
         $conversation = $this->resolveConversation($userId, $data['conversation_id'] ?? null);
 
-        // STEP 1: detect dietary intent (e.g. "I can't eat fish") so we can
-        // act on it BEFORE the LLM replies. Saved exclusions immediately
-        // affect the next recipe generation and are surfaced in user_context.
-        $dietaryChange = $this->applyDietaryIntent($userId, $data['message']);
-
         // Build a compact "what we know about this user" block the gateway
         // injects into the system prompt. Without this the chat can only
         // answer in the abstract — it has no idea about the user's profile
@@ -463,11 +461,20 @@ class AiController extends Controller
         // Build LLM history from the persisted conversation (10 most recent
         // turns, including the user message we just inserted). Fall back to
         // the client-supplied history when we have no conversation.
+        // When an assistant turn had attached cards (recipe / exercise /
+        // dietary), append a brief textual summary so the LLM "remembers"
+        // what it actually showed and can answer follow-ups about it.
         $history = $conversation
             ? $conversation->messages()->latest('id')->limit(11)->get()
                 ->reverse()
                 ->slice(0, -1) // drop the just-inserted user message; it's $data['message']
-                ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+                ->map(function ($m) {
+                    $content = (string) $m->content;
+                    if ($m->role === 'assistant' && is_array($m->cards) && $m->cards) {
+                        $content .= "\n\n" . $this->cardsToHistorySummary($m->cards);
+                    }
+                    return ['role' => $m->role, 'content' => $content];
+                })
                 ->values()->all()
             : ($data['history'] ?? []);
 
@@ -494,6 +501,27 @@ class AiController extends Controller
             $reply = "Sorry — something went wrong: {$error}";
         }
 
+        // LLM-FIRST DIETARY ROUTING. The chat LLM emits structured intent
+        // (intent.dietary_change.exclude / include). We trust that first;
+        // the regex detector runs as a backup for misses. Every candidate
+        // is sanity-checked against the FoodVocabulary allow-list so we
+        // never save "workout routine" or other non-food captures.
+        $llmIntent = is_array($result['intent'] ?? null) ? $result['intent'] : null;
+        $dietaryChange = $this->applyDietaryIntent($userId, $data['message'], $llmIntent);
+
+        // LLM-routed: regenerate the workout plan when the user asks for a
+        // fresh routine. The chat reply mentions the regen so the user
+        // doesn't think we ignored them.
+        $workoutRegen = false;
+        if ($userId !== null && ($llmIntent['regenerate_workout'] ?? false)) {
+            $this->spawnWorkoutRegen($userId);
+            $workoutRegen = true;
+            $reply = "✓ Got it — I'm generating a fresh weekly workout for you in the background "
+                . "(takes a couple of minutes). Open /exercise once it's ready.\n\n" . $reply;
+            $result['reply'] = $reply;
+            $result['workout_regen'] = true;
+        }
+
         // If we acted on a dietary change, prepend a short confirmation so
         // the user knows the system actually did something — not just that
         // the assistant talked about it.
@@ -503,11 +531,32 @@ class AiController extends Controller
             $result['dietary_update'] = $dietaryChange;
         }
 
+        // Recommendation cards. When the user asked "give me a recipe" or
+        // "suggest a workout", we attach functional cards so they can see
+        // (and like / open) a real item from their saved plans instead of
+        // just reading a paragraph about it. The LLM's own intent
+        // detection (returned in the chat response) acts as a fallback
+        // for phrasings the regex detector missed.
+        $llmIntent = is_array($result['intent'] ?? null) ? $result['intent'] : null;
+        $cards = $this->buildRecommendationCards($userId, $data['message'], $llmIntent);
+
+        // When we just updated the user's exclusions, prepend a small
+        // confirmation card showing the current list + a link to the recipe
+        // page (which will refresh on its own once the regen finishes).
+        if ($dietaryChange['acted']) {
+            array_unshift($cards, $this->buildExclusionsCard($dietaryChange));
+        }
+
+        if ($cards) {
+            $result['cards'] = $cards;
+        }
+
         if ($conversation) {
             ChatMessage::create([
                 'conversation_id' => $conversation->id,
                 'role' => 'assistant',
                 'content' => $reply,
+                'cards' => !empty($cards) ? $cards : null,
             ]);
             $conversation->last_message_at = now();
             $conversation->save();
@@ -537,13 +586,49 @@ class AiController extends Controller
      *     'notice'     => string,     // human-readable confirmation
      *   ]
      */
-    protected function applyDietaryIntent(?int $userId, string $message): array
+    protected function applyDietaryIntent(?int $userId, string $message, ?array $llmIntent = null): array
     {
-        $result = ['acted' => false, 'regenerate' => false, 'added' => [], 'removed' => [], 'notice' => ''];
+        $result = ['acted' => false, 'regenerate' => false, 'added' => [], 'removed' => [], 'notice' => '', 'source' => null];
         if ($userId === null) return $result;
 
-        $intent = $this->dietaryIntent->detect($message);
-        if (!$intent['exclude'] && !$intent['include']) return $result;
+        // LLM-first: take the structured dietary_change from the chat reply.
+        $llmExclude = [];
+        $llmInclude = [];
+        if (is_array($llmIntent['dietary_change'] ?? null)) {
+            $llmExclude = is_array($llmIntent['dietary_change']['exclude'] ?? null)
+                ? $llmIntent['dietary_change']['exclude'] : [];
+            $llmInclude = is_array($llmIntent['dietary_change']['include'] ?? null)
+                ? $llmIntent['dietary_change']['include'] : [];
+        }
+        // Regex fallback: only run when the LLM didn't catch anything.
+        $regexExclude = [];
+        $regexInclude = [];
+        if (!$llmExclude && !$llmInclude) {
+            $regex = $this->dietaryIntent->detect($message);
+            $regexExclude = $regex['exclude'];
+            $regexInclude = $regex['include'];
+        }
+        $rawExclude = array_merge($llmExclude, $regexExclude);
+        $rawInclude = array_merge($llmInclude, $regexInclude);
+
+        // VOCABULARY FILTER — final safety net. Only known foods get through.
+        $intent = [
+            'exclude' => FoodVocabulary::filter($rawExclude),
+            'include' => FoodVocabulary::filter($rawInclude),
+        ];
+        $result['source'] = $llmExclude || $llmInclude ? 'llm' : ($regexExclude || $regexInclude ? 'regex' : null);
+        if (!$intent['exclude'] && !$intent['include']) {
+            // We may have HAD candidates that the vocabulary rejected. Log
+            // those for debugging without saving them.
+            if ($rawExclude || $rawInclude) {
+                \Log::info('Dietary intent rejected by vocabulary filter', [
+                    'user_id' => $userId,
+                    'raw_exclude' => $rawExclude,
+                    'raw_include' => $rawInclude,
+                ]);
+            }
+            return $result;
+        }
 
         $user = User::find($userId);
         if (!$user) return $result;
@@ -587,12 +672,12 @@ class AiController extends Controller
         $parts = [];
         if ($added) $parts[] = 'added ' . implode(', ', $added);
         if ($removed) $parts[] = 'removed ' . implode(', ', $removed);
-        $notice = '✓ Updated your food preferences: ' . implode('; ', $parts) . '.';
+        $notice = '✓ Updated your food exclusions: ' . implode('; ', $parts) . '.';
 
         // Trigger a regen only when there's an active plan to refresh.
         $hasPlan = MealPlan::where('user_id', $userId)->exists();
         if ($hasPlan) {
-            $notice .= ' Regenerating your weekly menu in the background (a few minutes) — refresh /recipe shortly to see it.';
+            $notice .= ' Regenerating your weekly menu in the background (a few minutes) — your /recipe page will update on its own.';
         }
 
         return [
@@ -601,6 +686,10 @@ class AiController extends Controller
             'added' => $added,
             'removed' => $removed,
             'notice' => $notice,
+            'exclusions_now' => array_values($current),
+            // Which detector caught this — surfaced for debugging / UX
+            // (e.g. show a "detected by AI router" badge later).
+            'source' => $result['source'] ?? null,
         ];
     }
 
@@ -611,16 +700,31 @@ class AiController extends Controller
      */
     protected function spawnWeeklyMenuRegen(int $userId): void
     {
+        $this->spawnArtisan('menu:regenerate', $userId, 'menu-regen.log');
+    }
+
+    protected function spawnWorkoutRegen(int $userId): void
+    {
+        $this->spawnArtisan('exercise:regenerate', $userId, 'exercise-regen.log');
+    }
+
+    /**
+     * Fire an artisan command as a detached background process so the
+     * parent HTTP request returns immediately. nohup + & keeps it alive
+     * past the parent process exit; output is appended to storage/logs.
+     */
+    protected function spawnArtisan(string $command, int $userId, string $log): void
+    {
         $artisan = base_path('artisan');
         $php = PHP_BINARY ?: 'php';
-        $log = storage_path('logs/menu-regen.log');
-        // Use nohup + & to fully detach so the parent request can return.
+        $logPath = storage_path('logs/' . $log);
         $cmd = sprintf(
-            'nohup %s %s menu:regenerate %d >> %s 2>&1 &',
+            'nohup %s %s %s %d >> %s 2>&1 &',
             escapeshellarg($php),
             escapeshellarg($artisan),
+            escapeshellarg($command),
             $userId,
-            escapeshellarg($log),
+            escapeshellarg($logPath),
         );
         @shell_exec($cmd);
     }
@@ -645,7 +749,7 @@ class AiController extends Controller
         if (!$conv || $conv->user_id !== $userId) {
             return response()->json(['error' => 'Conversation not found'], 404);
         }
-        $messages = $conv->messages()->get(['id', 'role', 'content', 'created_at']);
+        $messages = $conv->messages()->get(['id', 'role', 'content', 'cards', 'created_at']);
         return response()->json([
             'id' => $conv->id,
             'title' => $conv->title,
@@ -740,6 +844,24 @@ class AiController extends Controller
         ]);
     }
 
+    public function profileMe(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['error' => 'Not logged in'], 401);
+        }
+        $u = User::find($userId);
+        if (!$u) return response()->json(['error' => 'Not found'], 404);
+        return response()->json([
+            'id' => $u->id,
+            'first_name' => $u->first_name,
+            'last_name' => $u->last_name,
+            'email' => $u->email,
+            'dietary_preferences' => $u->dietary_preferences ?? [],
+            'food_exclusions' => $u->food_exclusions ?? [],
+        ]);
+    }
+
     public function listLikedMeals(Request $request): JsonResponse
     {
         $userId = $this->sessionUserId($request);
@@ -798,17 +920,268 @@ class AiController extends Controller
     }
 
     /**
+     * Compact text summary of the cards attached to an assistant turn —
+     * fed back into the LLM history so it can answer follow-ups like
+     * "that's breakfast, I wanted dinner" instead of saying "I don't
+     * have any info in our current conversation."
+     */
+    protected function cardsToHistorySummary(array $cards): string
+    {
+        $parts = ['[Cards I just showed the user:]'];
+        foreach ($cards as $c) {
+            if (!is_array($c)) continue;
+            $t = $c['type'] ?? '';
+            if ($t === 'recipe') {
+                $parts[] = sprintf(
+                    '- Recipe card: "%s" (slot: %s, day: %s, %s cal). %s',
+                    $c['title'] ?? '',
+                    $c['meal_type'] ?? '?',
+                    $c['day_key'] ?? '?',
+                    $c['calories'] ?? '?',
+                    $c['description'] ?? ''
+                );
+            } elseif ($t === 'exercise') {
+                $parts[] = sprintf(
+                    '- Workout card: "%s" (%s, %d exercises). %s',
+                    $c['title'] ?? '',
+                    $c['day_label'] ?? '?',
+                    (int) ($c['exercise_count'] ?? 0),
+                    $c['description'] ?? ''
+                );
+            } elseif ($t === 'dietary_update') {
+                $added = $c['added'] ?? [];
+                $removed = $c['removed'] ?? [];
+                $now = $c['exclusions_now'] ?? [];
+                $parts[] = sprintf(
+                    '- Dietary update saved: added [%s], removed [%s]. Current exclusions: [%s].',
+                    implode(', ', $added),
+                    implode(', ', $removed),
+                    implode(', ', $now)
+                );
+            }
+        }
+        return implode("\n", $parts);
+    }
+
+    /**
+     * Small confirmation card surfaced after we update a user's food
+     * exclusions from a chat message. Shows what changed + the current
+     * full list + a link to the recipe page that auto-refreshes.
+     */
+    protected function buildExclusionsCard(array $dietaryChange): array
+    {
+        return [
+            'type' => 'dietary_update',
+            'added' => $dietaryChange['added'] ?? [],
+            'removed' => $dietaryChange['removed'] ?? [],
+            'exclusions_now' => $dietaryChange['exclusions_now'] ?? [],
+            'regenerating' => (bool) ($dietaryChange['regenerate'] ?? false),
+        ];
+    }
+
+    /**
+     * Build the chat reply's `cards` array based on what the user asked
+     * for. Sourced from the user's most recent saved meal plan / exercise
+     * plan — never blocks the chat on an LLM call. Returns [] when
+     * nothing matches so the response stays compact.
+     */
+    protected function buildRecommendationCards(?int $userId, string $message, ?array $llmIntent = null): array
+    {
+        if ($userId === null) return [];
+        $regex = $this->recommendIntent->detect($message);
+        // Merge regex (high-precision) with the LLM's structured intent
+        // (broader recall for creative phrasings). Regex wins on slot
+        // detection when both agree, LLM fills gaps when regex missed.
+        $wantsRecipe = $regex['recipe'] || ($llmIntent['wants_recipe'] ?? false);
+        $mealType = $regex['meal_type'] ?? ($llmIntent['meal_type'] ?? null);
+        $wantsExercise = $regex['exercise'] || ($llmIntent['wants_workout'] ?? false);
+
+        $cards = [];
+        if ($wantsRecipe) {
+            $card = $this->pickRecipeCard($userId, $mealType);
+            if ($card) $cards[] = $card;
+        }
+        if ($wantsExercise) {
+            $card = $this->pickExerciseCard($userId);
+            if ($card) $cards[] = $card;
+        }
+        return $cards;
+    }
+
+    /**
+     * Pull a meal out of the user's most recent meal plan. When the user
+     * specified a slot ("suggest a dinner"), we look hardest for that slot
+     * on today's weekday, then on any other day, before falling back to
+     * the current time-of-day. The card includes `requested_meal_type`
+     * and `note` so the UI can show why the fallback kicked in.
+     */
+    protected function pickRecipeCard(int $userId, ?string $mealType): ?array
+    {
+        $plan = MealPlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->first();
+        if (!$plan) return null;
+        $payload = $plan->payload ?? [];
+        $plans = $payload['plan'] ?? [];
+        if (!$plans) return null;
+
+        $today = strtolower(date('l'));
+        $todayKey = isset($plans[$today]) ? $today : null;
+        $allDayKeys = array_keys($plans);
+
+        // Resolution order:
+        //   1. Asked slot on TODAY's day
+        //   2. Asked slot on ANY day in the plan
+        //   3. Time-of-day slot on today
+        //   4. Time-of-day slot on any day
+        //   5. First day, any available slot
+        $dayKey = null; $slot = null; $note = null;
+        $tryPick = function (?string $dKey, ?string $sKey) use ($plans) {
+            if (!$dKey || !$sKey) return null;
+            $d = $plans[$dKey] ?? null;
+            if (!is_array($d) || !isset($d[$sKey]) || !is_array($d[$sKey])) return null;
+            return [$dKey, $sKey];
+        };
+
+        if ($mealType) {
+            // Try today first.
+            $hit = $tryPick($todayKey, $mealType);
+            // Else any other day.
+            if (!$hit) {
+                foreach ($allDayKeys as $dk) {
+                    $hit = $tryPick($dk, $mealType);
+                    if ($hit) {
+                        $note = "Today's plan doesn't have a {$mealType} — showing {$dk}'s instead.";
+                        break;
+                    }
+                }
+            }
+            if ($hit) {
+                [$dayKey, $slot] = $hit;
+            } else {
+                $note = "Your saved plan doesn't have a {$mealType} for any day. Showing a different meal.";
+            }
+        }
+
+        // Fallback: time-of-day slot.
+        if (!$dayKey || !$slot) {
+            $bySlot = $this->mealSlotByHour((int) date('G'));
+            $hit = $tryPick($todayKey, $bySlot) ?: null;
+            if (!$hit) {
+                foreach ($allDayKeys as $dk) {
+                    $hit = $tryPick($dk, $bySlot);
+                    if ($hit) break;
+                }
+            }
+            // Last resort: ANY slot on the first available day.
+            if (!$hit) {
+                foreach ($allDayKeys as $dk) {
+                    foreach (['breakfast','lunch','dinner','snack'] as $sk) {
+                        $hit = $tryPick($dk, $sk);
+                        if ($hit) break 2;
+                    }
+                }
+            }
+            if (!$hit) return null;
+            [$dayKey, $slot] = $hit;
+        }
+
+        $meal = $plans[$dayKey][$slot];
+
+        return [
+            'type' => 'recipe',
+            'meal_type' => $slot,
+            'requested_meal_type' => $mealType,
+            'day_key' => $dayKey,
+            'meal_plan_id' => $plan->id,
+            'title' => (string) ($meal['title'] ?? ucfirst($slot)),
+            'subtitle' => (string) ($meal['subtitle'] ?? ucfirst($slot)),
+            'description' => (string) ($meal['description'] ?? ''),
+            'calories' => (string) ($meal['calories'] ?? ''),
+            'protein' => (string) ($meal['protein'] ?? ''),
+            'carbs' => (string) ($meal['carbs'] ?? ''),
+            'tags' => array_map(
+                fn ($t) => is_array($t) ? ($t['text'] ?? '') : (string) $t,
+                $meal['tags'] ?? []
+            ),
+            'ingredient_count' => is_array($meal['ingredients'] ?? null) ? count($meal['ingredients']) : 0,
+            'note' => $note,
+            // Full snapshot so the like-button on the card can POST it.
+            'snapshot' => $meal,
+        ];
+    }
+
+    protected function mealSlotByHour(int $hour): string
+    {
+        if ($hour < 10) return 'breakfast';
+        if ($hour < 15) return 'lunch';
+        if ($hour < 21) return 'dinner';
+        return 'snack';
+    }
+
+    /**
+     * Pick an exercise card from the user's most recent saved exercise plan.
+     * Surfaces today's workout if the plan has a weekly structure, else the
+     * first listed workout. Includes the first exercise's image_id so the
+     * card can render a GIF via /api/exercises/{id}/image.
+     */
+    protected function pickExerciseCard(int $userId): ?array
+    {
+        $plan = ExercisePlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->first();
+        if (!$plan) return null;
+        $payload = $plan->payload ?? [];
+        $days = $payload['weekly_workout_plan'] ?? [];
+        if (!is_array($days) || empty($days)) return null;
+
+        $today = strtolower(date('l'));
+        $picked = null;
+        foreach ($days as $d) {
+            $label = mb_strtolower((string) ($d['day_label'] ?? ''));
+            if ($label === $today) { $picked = $d; break; }
+        }
+        $picked ??= $days[0];
+
+        $exercises = $picked['exercises'] ?? [];
+        $exerciseIds = [];
+        foreach (array_slice($exercises, 0, 6) as $ex) {
+            if (!empty($ex['exercise_id'])) $exerciseIds[] = $ex['exercise_id'];
+        }
+
+        return [
+            'type' => 'exercise',
+            'exercise_plan_id' => $plan->id,
+            'day_label' => (string) ($picked['day_label'] ?? ''),
+            'title' => (string) ($picked['title'] ?? $picked['heading'] ?? 'Workout'),
+            'description' => (string) ($picked['description'] ?? ''),
+            'duration' => (string) ($picked['duration'] ?? ''),
+            'exercise_count' => count($exercises),
+            'exercises_preview' => array_map(fn ($e) => [
+                'name' => (string) ($e['name'] ?? ''),
+                'detail' => (string) ($e['detail'] ?? ''),
+                'exercise_id' => $e['exercise_id'] ?? null,
+            ], array_slice($exercises, 0, 4)),
+            'image_ids' => array_values(array_filter($exerciseIds)),
+        ];
+    }
+
+    /**
      * Merge the user's saved food_exclusions into a per-request allergies
      * list (case-insensitive, no duplicates). Used by recipe daily/weekly
      * so the generator always honours what the user told the chat.
+     *
+     * Also expands category nouns into their common species/forms because
+     * the gateway's filter is substring-based — "fish" alone won't catch
+     * "trout" / "salmon" / "tuna".
      */
     protected function mergeUserExclusions(Request $request, array $allergies): array
     {
         $userId = $this->sessionUserId($request);
-        if ($userId === null) return array_values(array_unique($allergies));
+        if ($userId === null) return array_values(array_unique(static::expandExclusionSynonyms($allergies)));
         $user = User::find($userId);
         if (!$user || empty($user->food_exclusions) || !is_array($user->food_exclusions)) {
-            return array_values(array_unique($allergies));
+            return array_values(array_unique(static::expandExclusionSynonyms($allergies)));
         }
         $merged = $allergies;
         $lowered = array_map('mb_strtolower', $merged);
@@ -819,7 +1192,60 @@ class AiController extends Controller
                 $lowered[] = $low;
             }
         }
-        return array_values($merged);
+        return array_values(array_unique(static::expandExclusionSynonyms($merged)));
+    }
+
+    /**
+     * Expand category foods into the substrings the recipe filter actually
+     * needs to see. "fish" alone misses "salmon" / "trout"; "dairy" misses
+     * "cheese" / "milk"; "shellfish" misses "shrimp" / "lobster". This
+     * stays in Laravel so the gateway can remain generic.
+     */
+    public static function expandExclusionSynonyms(array $items): array
+    {
+        $map = [
+            'fish' => ['fish', 'salmon', 'tuna', 'trout', 'cod', 'halibut',
+                'mackerel', 'sardine', 'anchovy', 'tilapia', 'haddock',
+                'snapper', 'bass', 'catfish', 'pollock', 'flounder', 'sole',
+                'swordfish', 'mahi'],
+            'seafood' => ['fish', 'salmon', 'tuna', 'trout', 'cod', 'shrimp',
+                'prawn', 'lobster', 'crab', 'clam', 'mussel', 'oyster',
+                'squid', 'octopus', 'scallop', 'calamari', 'anchovy', 'sardine'],
+            'shellfish' => ['shellfish', 'shrimp', 'prawn', 'lobster', 'crab',
+                'clam', 'mussel', 'oyster', 'scallop', 'crayfish'],
+            'dairy' => ['dairy', 'milk', 'cheese', 'butter', 'cream', 'yogurt',
+                'yoghurt', 'whey', 'casein', 'ghee', 'paneer'],
+            'gluten' => ['gluten', 'wheat', 'barley', 'rye', 'bread', 'pasta',
+                'flour', 'farro'],
+            'nuts' => ['nuts', 'almond', 'walnut', 'pecan', 'cashew', 'hazelnut',
+                'pistachio', 'brazil nut', 'macadamia'],
+            'peanut' => ['peanut', 'peanuts', 'peanut butter', 'groundnut'],
+            'peanuts' => ['peanut', 'peanuts', 'peanut butter', 'groundnut'],
+            'soy' => ['soy', 'soya', 'tofu', 'tempeh', 'edamame', 'miso', 'soybean'],
+            'pork' => ['pork', 'bacon', 'ham', 'prosciutto', 'sausage', 'pancetta',
+                'chorizo', 'salami'],
+            'beef' => ['beef', 'steak', 'brisket', 'roast beef', 'meatloaf'],
+            'chicken' => ['chicken', 'poultry', 'hen'],
+            'egg' => ['egg', 'eggs'],
+            'eggs' => ['egg', 'eggs'],
+            'meat' => ['meat', 'beef', 'pork', 'chicken', 'lamb', 'bacon',
+                'sausage', 'ham', 'turkey', 'mutton'],
+            'red meat' => ['beef', 'pork', 'lamb', 'mutton', 'venison'],
+        ];
+        $out = [];
+        $seen = [];
+        foreach ($items as $raw) {
+            $key = mb_strtolower(trim((string) $raw));
+            if ($key === '') continue;
+            $expansions = $map[$key] ?? [$key];
+            foreach ($expansions as $e) {
+                if (!isset($seen[$e])) {
+                    $out[] = $e;
+                    $seen[$e] = true;
+                }
+            }
+        }
+        return $out;
     }
 
     /**
@@ -858,8 +1284,9 @@ class AiController extends Controller
             if ($diet !== '') $lines[] = "Dietary preferences: {$diet}";
         }
         if (!empty($user->food_exclusions) && is_array($user->food_exclusions)) {
-            $lines[] = 'Foods to AVOID (user said they cannot/will not eat): '
-                . implode(', ', $user->food_exclusions);
+            $lines[] = 'Foods to AVOID (the user said they cannot or will not eat these — '
+                . 'treat as a personal exclusion, NOT a medical allergy unless they '
+                . 'specifically said "allergic"): ' . implode(', ', $user->food_exclusions);
         }
 
         // Pull the most recent health checkup (if any) and lift only the
@@ -924,6 +1351,53 @@ class AiController extends Controller
             }
         } else {
             $lines[] = "\nNo health checkup uploaded yet.";
+        }
+
+        // --- Today's saved plans, so the chat can answer "what's my dinner
+        // today" without claiming it has no access. Compact: titles + slot
+        // labels only; the user can drill into the cards for ingredients.
+        $mealPlan = MealPlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->first();
+        if ($mealPlan) {
+            $plans = $mealPlan->payload['plan'] ?? [];
+            $today = strtolower(date('l'));
+            $dayKey = isset($plans[$today]) ? $today : array_key_first($plans);
+            $day = $plans[$dayKey] ?? null;
+            if ($day) {
+                $lines[] = "\nTODAY'S MEAL PLAN (day key: {$dayKey}, plan #{$mealPlan->id}, span {$mealPlan->span}):";
+                foreach (['breakfast','lunch','dinner','snack'] as $slot) {
+                    $meal = $day[$slot] ?? null;
+                    if (is_array($meal)) {
+                        $title = (string) ($meal['title'] ?? '');
+                        $cals = (string) ($meal['calories'] ?? '');
+                        $lines[] = sprintf('  %s: %s%s', $slot, $title, $cals !== '' ? " ({$cals} cal)" : '');
+                    }
+                }
+            }
+        } else {
+            $lines[] = "\nNo meal plan saved yet (suggest the user generate one on /recipe).";
+        }
+
+        $exercisePlan = ExercisePlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->first();
+        if ($exercisePlan) {
+            $days = $exercisePlan->payload['weekly_workout_plan'] ?? [];
+            $today = strtolower(date('l'));
+            $picked = null;
+            foreach ($days as $d) {
+                if (mb_strtolower((string) ($d['day_label'] ?? '')) === $today) {
+                    $picked = $d; break;
+                }
+            }
+            $picked ??= ($days[0] ?? null);
+            if ($picked) {
+                $title = (string) ($picked['title'] ?? $picked['heading'] ?? 'Workout');
+                $label = (string) ($picked['day_label'] ?? '');
+                $exCount = is_array($picked['exercises'] ?? null) ? count($picked['exercises']) : 0;
+                $lines[] = "\nTODAY'S WORKOUT (plan #{$exercisePlan->id}, {$label}): {$title} — {$exCount} exercises.";
+            }
         }
 
         return $lines ? implode("\n", $lines) : null;

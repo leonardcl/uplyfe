@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\Ai\AiController;
 use App\Models\MealPlan;
 use App\Models\User;
 use App\Services\Ai\AiServiceException;
@@ -31,7 +32,9 @@ class RegenerateUserMenu extends Command
             'diet' => is_array($user->dietary_preferences) && !empty($user->dietary_preferences)
                 ? (string) ($user->dietary_preferences[0] ?? 'none')
                 : (string) ($user->dietary_preferences ?? 'none'),
-            'allergies' => is_array($user->food_exclusions) ? $user->food_exclusions : [],
+            'allergies' => AiController::expandExclusionSynonyms(
+                is_array($user->food_exclusions) ? $user->food_exclusions : []
+            ),
             'days' => 7,
         ];
 

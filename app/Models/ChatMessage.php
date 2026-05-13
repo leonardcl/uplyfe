@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChatMessage extends Model
 {
-    protected $fillable = ['conversation_id', 'role', 'content'];
+    protected $fillable = ['conversation_id', 'role', 'content', 'cards'];
+
+    protected $casts = [
+        'cards' => 'array',
+    ];
 
     public function conversation(): BelongsTo
     {

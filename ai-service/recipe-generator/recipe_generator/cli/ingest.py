@@ -50,6 +50,8 @@ _PROTEIN_FIELDS = ["protein_per_serving", "protein", "protein_g"]
 _CARBS_FIELDS = ["carbs_per_serving", "carbs", "carbohydrates", "carbs_g"]
 _CUISINE_FIELDS = ["cuisine", "cuisine_type", "origin"]
 _DIET_FIELDS = ["diet", "diet_tags", "tags"]
+_MEAL_TYPE_FIELDS = ["meal_type", "meal", "course", "slot"]
+_CURATED_FIELDS = ["curated", "is_curated"]
 
 
 def _first(entry: dict, fields: list[str], default=None):
@@ -92,6 +94,9 @@ def _normalize(entry: dict) -> dict:
         "protein_per_serving": _first(entry, _PROTEIN_FIELDS),
         "carbs_per_serving": _first(entry, _CARBS_FIELDS),
         "diet_tags": _to_string_list(_first(entry, _DIET_FIELDS)),
+        "meal_type": str(_first(entry, _MEAL_TYPE_FIELDS, default="")).lower() or None,
+        "curated": bool(_first(entry, _CURATED_FIELDS, default=False)),
+        "description": str(entry.get("description") or "").strip() or None,
     }
 
 
@@ -165,8 +170,14 @@ def _is_prebuilt_rag_shape(entry: dict) -> bool:
 def _build_text(r: dict) -> str:
     """The text we embed + return as the document."""
     parts = [f"Recipe: {r['name']}"]
+    if r.get("meal_type"):
+        # Embedded in the document so vector search ranks this recipe
+        # higher for queries that mention the meal slot.
+        parts.append(f"Meal type: {r['meal_type']}")
     if r.get("cuisine"):
         parts.append(f"Cuisine: {r['cuisine']}")
+    if r.get("description"):
+        parts.append(r["description"])
     if r.get("calories_per_serving"):
         parts.append(f"Calories: {r['calories_per_serving']}")
     if r.get("protein_per_serving"):
@@ -209,6 +220,9 @@ def _metadata_for_chroma(r: dict, source_file: str) -> dict:
         "protein_per_serving": _scalar(r.get("protein_per_serving")) or "",
         "carbs_per_serving": _scalar(r.get("carbs_per_serving")) or "",
         "diet_tags": _scalar(r.get("diet_tags")) or "",
+        "meal_type": _scalar(r.get("meal_type")) or "",
+        "curated": bool(r.get("curated", False)),
+        "description": _scalar(r.get("description")) or "",
         "ingredients": ", ".join(r["ingredients"])[:1500],
     }
 

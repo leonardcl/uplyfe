@@ -15,7 +15,7 @@ import random
 import re
 from typing import Optional
 
-from recipe_generator.chroma_store import RecipeMatch, recipe_count, search
+from recipe_generator.chroma_store import RecipeMatch, fetch_curated, recipe_count, search
 from recipe_generator.llm import LLMUnavailableError, generate_json
 from recipe_generator.models import (
     DayPlan,
@@ -32,8 +32,10 @@ _WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 
 
 def _retrieval_query(req: MealPlanRequest) -> str:
-    """Combine the user's free-text query (if any) with explicit fields so
-    the vector search gets enough signal."""
+    """Build a positive-only retrieval query. We intentionally OMIT
+    `req.allergies` here: vector search can't negate, so phrasing like
+    "without fish" pulls fish-heavy results back in. Exclusions are
+    enforced strictly in `_filter_candidates` instead."""
     parts: list[str] = []
     if req.query:
         parts.append(req.query.strip())
@@ -43,30 +45,26 @@ def _retrieval_query(req: MealPlanRequest) -> str:
         parts.append(", ".join(req.cuisine_preferences))
     if req.target_calories:
         parts.append(f"around {req.target_calories} kcal balanced day")
-    if req.allergies:
-        parts.append(f"without {', '.join(req.allergies)}")
     if req.notes:
         parts.append(req.notes.strip())
     return " ; ".join(parts) or "balanced healthy meals"
 
 
 def _filter_candidates(matches: list[RecipeMatch], req: MealPlanRequest) -> list[RecipeMatch]:
-    """Drop candidates that obviously violate the user's constraints.
-    Keeps the original ranking; filtering is best-effort because not every
-    recipe's metadata is complete."""
+    """Drop candidates that violate the user's constraints. Allergy
+    exclusions are HARD — when the user said "no fish" we never serve
+    fish, even at the cost of an empty pool. The empty-pool case is
+    handled upstream by widening the retrieval k (see build_meal_plan)."""
     allergies_low = [a.lower() for a in req.allergies]
 
     def ok(r: RecipeMatch) -> bool:
         meta = r.metadata
-        # Diet check: if the metadata declares a diet that conflicts, skip.
-        # We never reject a recipe just because metadata is missing.
         if req.diet == "vegetarian" and meta.get("contains_meat") is True:
             return False
         if req.diet == "vegan" and (
             meta.get("contains_meat") is True or meta.get("contains_dairy") is True
         ):
             return False
-        # Allergy check against document text + name + metadata fields.
         if allergies_low:
             haystack = " ".join([
                 str(meta.get("name", "")),
@@ -78,7 +76,12 @@ def _filter_candidates(matches: list[RecipeMatch], req: MealPlanRequest) -> list
                     return False
         return True
 
-    return [m for m in matches if ok(m)] or matches  # never return empty
+    filtered = [m for m in matches if ok(m)]
+    # Only fall back to the unfiltered list when the user has no allergies
+    # at all — otherwise we'd silently serve them food they said they can't eat.
+    if not filtered and not allergies_low:
+        return matches
+    return filtered
 
 
 # Keywords that disqualify a recipe from a specific meal slot. Kept short
@@ -131,16 +134,54 @@ def _slot_ok(recipe: RecipeMatch, meal_type: str) -> bool:
     return True
 
 
+def _is_curated(recipe: RecipeMatch) -> bool:
+    meta = recipe.metadata or {}
+    v = meta.get("curated")
+    return v in (True, "true", "True", 1, "1")
+
+
+def _slot_matches_metadata(recipe: RecipeMatch, meal_type: str) -> bool:
+    meta = recipe.metadata or {}
+    return str(meta.get("meal_type", "")).lower() == meal_type.lower()
+
+
 def _pick(candidates: list[RecipeMatch], used: set[str], meal_type: Optional[str] = None) -> RecipeMatch:
     """Random pick avoiding repeats and (optionally) respecting meal-slot
-    constraints. Falls back to the full list when filters empty the pool."""
-    pool = candidates
-    if meal_type:
-        slot_ok = [c for c in candidates if _slot_ok(c, meal_type)]
+    constraints. Tiered preference order so good recipes win when present:
+       1. curated + matching meal_type metadata
+       2. curated (any)
+       3. metadata meal_type match
+       4. passes _slot_ok keyword/calorie heuristics
+       5. anything available
+    Falls back through tiers when one is empty (or only contains repeats)."""
+    if not candidates:
+        raise ValueError("empty candidate pool")
+
+    tier1 = []  # curated + matching meal_type
+    tier2 = []  # curated, any meal_type
+    tier3 = []  # metadata meal_type match
+    tier4 = []  # passes heuristics
+    for c in candidates:
+        curated = _is_curated(c)
+        meta_ok = bool(meal_type) and _slot_matches_metadata(c, meal_type)
+        slot_ok = (not meal_type) or _slot_ok(c, meal_type)
+        if curated and meta_ok:
+            tier1.append(c)
+        if curated:
+            tier2.append(c)
+        if meta_ok:
+            tier3.append(c)
         if slot_ok:
-            pool = slot_ok
-    fresh = [c for c in pool if c.metadata.get("name", "") not in used]
-    return random.choice(fresh) if fresh else random.choice(pool)
+            tier4.append(c)
+
+    for pool in (tier1, tier2, tier3, tier4, candidates):
+        if not pool:
+            continue
+        fresh = [c for c in pool if c.metadata.get("name", "") not in used]
+        if fresh:
+            return random.choice(fresh)
+    # Every candidate already used — just pick something.
+    return random.choice(candidates)
 
 
 def _build_meal_prompt(recipe: RecipeMatch, meal_type: str) -> str:
@@ -273,8 +314,24 @@ def build_meal_plan(req: MealPlanRequest) -> MealPlanResponse:
         )
 
     query = _retrieval_query(req)
-    matches = search(query, k=max(req.top_k_recipes if hasattr(req, "top_k_recipes") else 50, 20))
-    candidates = _filter_candidates(matches, req)
+    # Pull a bigger candidate set so allergy filtering still leaves a usable
+    # pool. With the filter going strict on exclusions, a tight k=50 could
+    # leave us with 0 acceptable recipes; 250 gives breathing room.
+    matches = search(query, k=max(req.top_k_recipes if hasattr(req, "top_k_recipes") else 250, 250))
+    # Always merge in the small curated pool so it has a chance to win the
+    # tiered _pick selection. Without this, vector search alone drowns 32
+    # curated recipes in 200k bulk ones.
+    curated = fetch_curated(limit=200)
+    seen_names: set[str] = set()
+    all_matches: list[RecipeMatch] = []
+    for m in (curated + matches):  # curated first so de-dup keeps the curated copy
+        name = (m.metadata or {}).get("name", "")
+        if name and name in seen_names:
+            continue
+        if name:
+            seen_names.add(name)
+        all_matches.append(m)
+    candidates = _filter_candidates(all_matches, req)
 
     days_label = _WEEKDAYS if req.days >= 7 else [f"day_{i+1}" for i in range(req.days)]
     if req.days <= 7 and req.days > 0 and len(days_label) != req.days:

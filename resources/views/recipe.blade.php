@@ -323,7 +323,10 @@
                             </div>
                         </div>
                         <!-- 7-day strip; populated by buildDateStrip() -->
-                        <div id="date-strip" class="grid grid-cols-7 gap-2 mb-5"></div>
+                        <div id="date-strip" class="grid grid-cols-7 gap-2 mb-3"></div>
+                        <!-- Active food exclusions banner; populated by loadExclusionsBanner() -->
+                        <div id="exclusions-banner"
+                            class="hidden mb-4 flex items-center flex-wrap gap-2 text-xs bg-red-50 border border-red-200 rounded-xl px-3 py-2"></div>
                         <div id="recipe-feedback" class="mb-4 text-sm text-muted-foreground"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-grid">
 
@@ -993,19 +996,117 @@
             }
         }
 
-        // Toggle the busy state on the Generate button so the user knows
-        // something's happening during the ~60-180s LLM wait.
+        // Toggle the busy state on the Generate button + open the staged
+        // progress overlay so the user can see what's happening during the
+        // multi-minute LLM wait.
         function setGenerateBusy(busy) {
             const btn = document.getElementById('generate-recipes-btn');
-            if (!btn) return;
-            if (busy) {
-                if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating… (60-180s)`;
-            } else {
-                if (btn.dataset.origLabel) btn.innerHTML = btn.dataset.origLabel;
-                btn.disabled = false;
+            if (btn) {
+                if (busy) {
+                    if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating…`;
+                } else {
+                    if (btn.dataset.origLabel) btn.innerHTML = btn.dataset.origLabel;
+                    btn.disabled = false;
+                }
             }
+            if (busy) openRecipeGenProgress();
+            else closeRecipeGenProgress();
+        }
+
+        // ---------- Recipe generation progress modal ----------
+        // Weekly menu = 7 days x 4 meals = ~28 LLM calls. Wall clock is
+        // ~5-7 minutes on gemma4:26b. Show staged progress so the user
+        // doesn't think the app froze.
+        const RECIPE_GEN_STAGES = [
+            { label: 'Retrieving healthy recipes',  pctStart: 0,  pctEnd: 15 },
+            { label: 'Picking meals for each day',  pctStart: 15, pctEnd: 90 },
+            { label: 'Formatting your weekly plan', pctStart: 90, pctEnd: 100 },
+        ];
+        const RECIPE_EXPECTED_SECS = 360;  // 6 minutes typical
+        let recGenStart = 0;
+        let recGenTimer = null;
+
+        function fmtMMSS(s) {
+            const m = Math.floor(s / 60).toString().padStart(2, '0');
+            const ss = (s % 60).toString().padStart(2, '0');
+            return `${m}:${ss}`;
+        }
+        function ensureRecipeGenModal() {
+            if (document.getElementById('rec-gen-modal')) return;
+            const html = `
+                <div id="rec-gen-modal" class="fixed inset-0 z-[60] hidden">
+                    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+                        <div class="bg-card rounded-3xl border border-border shadow-2xl p-6 flex flex-col gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    <iconify-icon icon="lucide:utensils" class="text-2xl"></iconify-icon>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-lg leading-tight">Building your weekly meal plan</h3>
+                                    <p class="text-xs text-muted-foreground">This usually takes about 5-7 minutes. You can switch tabs — the page auto-refreshes when it's ready.</p>
+                                </div>
+                            </div>
+                            <ol id="rec-gen-steps" class="space-y-2 mt-1"></ol>
+                            <div class="flex items-center justify-between text-xs border-t border-border pt-3 mt-1">
+                                <span class="text-muted-foreground">Elapsed</span>
+                                <span id="rec-gen-elapsed" class="font-mono font-bold text-foreground">00:00</span>
+                            </div>
+                            <p class="text-[11px] text-muted-foreground italic">Each meal is picked from a curated set first, then formatted by the local gemma4:26b model.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+        function renderRecipeStages(fraction) {
+            const pct = Math.round(fraction * 100);
+            const el = document.getElementById('rec-gen-steps');
+            if (!el) return;
+            el.innerHTML = RECIPE_GEN_STAGES.map(s => {
+                let state, icon;
+                if (pct >= s.pctEnd) { state = 'done'; icon = 'lucide:check-circle-2'; }
+                else if (pct >= s.pctStart) { state = 'active'; icon = 'lucide:loader-2'; }
+                else { state = 'idle'; icon = 'lucide:circle'; }
+                const colour = state === 'done' ? 'text-tertiary' : state === 'active' ? 'text-primary' : 'text-muted-foreground';
+                const spin = state === 'active' ? 'animate-spin' : '';
+                const fill = state === 'active' ? Math.round(((pct - s.pctStart) / (s.pctEnd - s.pctStart)) * 100) : (state === 'done' ? 100 : 0);
+                return `
+                    <li class="flex items-center gap-3 text-sm">
+                        <iconify-icon icon="${icon}" class="${colour} ${spin} text-lg"></iconify-icon>
+                        <div class="flex-1">
+                            <p class="${state !== 'idle' ? 'font-semibold' : 'text-muted-foreground'}">${s.label}</p>
+                            <div class="h-1 mt-1 rounded-full bg-muted overflow-hidden">
+                                <div class="h-full bg-primary transition-all" style="width:${Math.max(0, Math.min(100, fill))}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+        function openRecipeGenProgress() {
+            ensureRecipeGenModal();
+            document.getElementById('rec-gen-modal').classList.remove('hidden');
+            recGenStart = Date.now();
+            renderRecipeStages(0);
+            if (recGenTimer) clearInterval(recGenTimer);
+            recGenTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recGenStart) / 1000);
+                document.getElementById('rec-gen-elapsed').textContent = fmtMMSS(elapsed);
+                renderRecipeStages(Math.min(elapsed / RECIPE_EXPECTED_SECS, 0.99));
+            }, 750);
+        }
+        function closeRecipeGenProgress() {
+            const m = document.getElementById('rec-gen-modal');
+            if (!m) return;
+            renderRecipeStages(1);
+            const elapsed = Math.floor((Date.now() - recGenStart) / 1000);
+            const el = document.getElementById('rec-gen-elapsed');
+            if (el) el.textContent = fmtMMSS(elapsed);
+            setTimeout(() => { m.classList.add('hidden'); }, 350);
+            if (recGenTimer) { clearInterval(recGenTimer); recGenTimer = null; }
         }
 
         async function loadGeneratedMealPlans() {
@@ -1360,10 +1461,78 @@
 
             setRecipeFeedback('Loading your latest meal plan…', 'info');
             // Auto-load from DB so the page shows real data, not a blank state.
-            loadActiveMealPlan();
+            // After it lands, honor any ?day=&meal= deep-link from the URL.
+            loadActiveMealPlan().then(() => applyDeepLinkFromUrl());
             loadLikedMeals();
+            loadExclusionsBanner();
             startActivePlanPolling();
         });
+
+        // Surface the user's saved food exclusions at the top of the meal
+        // plan so they know what's being filtered out. Pulled from /api/user
+        // which already returns the session user (auth:sanctum). We hit a
+        // small Laravel endpoint instead — /api/profile/me — that doesn't
+        // require a Sanctum token.
+        async function loadExclusionsBanner() {
+            const banner = document.getElementById('exclusions-banner');
+            if (!banner) return;
+            try {
+                const res = await fetch('/api/profile/me', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const list = data.food_exclusions || [];
+                if (!list.length) {
+                    banner.classList.add('hidden');
+                    return;
+                }
+                banner.classList.remove('hidden');
+                banner.innerHTML = `
+                    <iconify-icon icon="lucide:ban" class="text-red-600"></iconify-icon>
+                    <span class="text-red-700 font-semibold mr-1">Avoiding:</span>
+                    ${list.map(f => `<span class="px-2 py-0.5 rounded-full bg-white border border-red-200 text-red-700 font-semibold">${String(f).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span>`).join('')}
+                    <a href="/profile" class="ml-auto text-red-600 font-semibold hover:underline">Manage →</a>
+                `;
+            } catch (_) { /* swallow */ }
+        }
+
+        // Deep-link support: /recipe?day=monday&meal=lunch jumps the date
+        // strip to the matching cell (within the current 7-day window) and
+        // optionally pops the recipe modal for the chosen slot.
+        function applyDeepLinkFromUrl() {
+            try {
+                const url = new URL(window.location.href);
+                const wantDay = (url.searchParams.get('day') || '').toLowerCase();
+                const wantMeal = (url.searchParams.get('meal') || '').toLowerCase();
+                if (!wantDay && !wantMeal) return;
+                if (wantDay) {
+                    // Move dateIndex to the strip cell whose weekday matches.
+                    rebuildWeekDates();
+                    const idx = weekDates.findIndex(iso => weekdayKeyFor(iso) === wantDay);
+                    if (idx >= 0) {
+                        dateIndex = idx;
+                    } else if (dayOrder.includes(wantDay)) {
+                        // Day isn't in current 7-day window — shift weekStart
+                        // so today's weekday lines up with the requested day.
+                        const offsetFromToday = (WEEKDAY_KEYS.indexOf(wantDay) - new Date().getDay() + 7) % 7;
+                        weekStart = isoForOffset(startOfTodayIso(), offsetFromToday);
+                        dateIndex = 0;
+                    }
+                    buildDateStrip();
+                    updateMealPlan();
+                    updateNavigationButtons();
+                }
+                if (wantMeal && ['breakfast', 'lunch', 'dinner', 'snack'].includes(wantMeal)) {
+                    // Modal is keyed by meal type; open it once the cards
+                    // have rendered above.
+                    setTimeout(() => openRecipeModal(wantMeal), 50);
+                }
+            } catch (e) {
+                console.warn('applyDeepLinkFromUrl failed:', e);
+            }
+        }
 
         // ---------- Auto-load the user's current meal plan ----------
         async function loadActiveMealPlan({ silent = false } = {}) {

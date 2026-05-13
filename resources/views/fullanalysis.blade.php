@@ -162,220 +162,132 @@
             <div class="flex-1 overflow-y-auto p-6 md:p-8">
                 <div class="max-w-6xl mx-auto space-y-8">
 
-                    <!-- Report Header -->
-                    <section class="bg-card rounded-3xl border border-border p-8 shadow-sm">
+                    <!-- Report Header (data-driven from /api/health-reports) -->
+                    <section id="fa-report-header" class="bg-card rounded-3xl border border-border p-8 shadow-sm">
                         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                            <div>
-                                <h2 class="text-2xl font-heading font-bold mb-2">Blood Work Analysis - October 24, 2023</h2>
-                                <p class="text-muted-foreground text-sm mb-4">
-                                    Comprehensive analysis of your latest blood work report with AI-powered insights and recommendations.
+                            <div class="flex-1">
+                                <h2 id="fa-report-title" class="text-2xl font-heading font-bold mb-2">Loading your latest report…</h2>
+                                <p id="fa-report-desc" class="text-muted-foreground text-sm mb-4">
+                                    We'll pull the most recent lab report from your account.
                                 </p>
-                                <div class="flex items-center gap-4 text-sm">
-                                    <span class="flex items-center gap-2">
-                                        <iconify-icon icon="lucide:file-type-pdf" class="text-red-500"></iconify-icon>
-                                        Blood_Work_2023.pdf
-                                    </span>
-                                    <span class="text-muted-foreground">•</span>
-                                    <span>2.4 MB</span>
-                                    <span class="text-muted-foreground">•</span>
-                                    <span class="flex items-center gap-1">
-                                        <iconify-icon icon="lucide:check-circle-2" class="text-tertiary"></iconify-icon>
-                                        Analyzed
-                                    </span>
-                                </div>
+                                <div id="fa-report-meta" class="flex items-center gap-3 text-sm flex-wrap"></div>
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="text-center">
-                                    <div class="text-3xl font-heading font-extrabold text-tertiary">92%</div>
-                                    <div class="text-xs text-muted-foreground">Overall Health Score</div>
+                                    <div id="fa-report-score" class="text-3xl font-heading font-extrabold text-muted-foreground">—</div>
+                                    <div class="text-xs text-muted-foreground">Severity</div>
                                 </div>
+                            </div>
+                        </div>
+                        <p id="fa-no-report" class="hidden mt-4 text-sm text-muted-foreground">
+                            No lab reports yet. <a href="/health-check" class="text-primary font-semibold">Upload one →</a>
+                        </p>
+                    </section>
+
+                    <!-- Today's plan (meal + workout) -->
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <iconify-icon icon="lucide:utensils" class="text-primary"></iconify-icon>
+                                    Today's meals
+                                </h3>
+                                <a href="/recipe" class="text-xs text-primary font-semibold hover:underline">Open plan →</a>
+                            </div>
+                            <div id="fa-today-meals" class="space-y-2">
+                                <p class="text-xs text-muted-foreground">Loading…</p>
+                            </div>
+                        </div>
+                        <div class="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <iconify-icon icon="lucide:dumbbell" class="text-primary"></iconify-icon>
+                                    Today's workout
+                                </h3>
+                                <a href="/exercise" class="text-xs text-primary font-semibold hover:underline">Open plan →</a>
+                            </div>
+                            <div id="fa-today-workout" class="space-y-2">
+                                <p class="text-xs text-muted-foreground">Loading…</p>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Detailed Biomarkers -->
+                    <!-- Recent activity -->
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <iconify-icon icon="lucide:message-circle" class="text-primary"></iconify-icon>
+                                    Recent conversations
+                                </h3>
+                                <a href="/chat" class="text-xs text-primary font-semibold hover:underline">Open chat →</a>
+                            </div>
+                            <ul id="fa-recent-chats" class="space-y-2 text-sm"><li class="text-xs text-muted-foreground">Loading…</li></ul>
+                        </div>
+                        <div class="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <iconify-icon icon="lucide:heart" class="text-red-500"></iconify-icon>
+                                    Liked meals
+                                </h3>
+                                <a href="/favorite-recipes" class="text-xs text-primary font-semibold hover:underline">See all →</a>
+                            </div>
+                            <ul id="fa-recent-likes" class="space-y-2 text-sm"><li class="text-xs text-muted-foreground">Loading…</li></ul>
+                        </div>
+                    </section>
+
+                    <!-- Key health insights from the latest report -->
                     <section>
-                        <h2 class="text-xl font-heading font-bold mb-6 flex items-center gap-2">
+                        <h2 class="text-xl font-heading font-bold mb-4 flex items-center gap-2">
                             <iconify-icon icon="lucide:activity" class="text-primary"></iconify-icon>
-                            Detailed Biomarkers
+                            Key health insights
                         </h2>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- Cholesterol Panel -->
-                            <div class="bg-card rounded-2xl p-6 border border-border shadow-sm">
-                                <h3 class="font-bold mb-4 flex items-center gap-2">
-                                    <iconify-icon icon="lucide:heart" class="text-blue-500"></iconify-icon>
-                                    Cholesterol Panel
-                                </h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Total Cholesterol</span>
-                                        <span class="font-semibold">175 mg/dL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-blue-500 w-[70%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Optimal range: <125-200 mg/dL</p>
-
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">HDL (Good)</span>
-                                        <span class="font-semibold">55 mg/dL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-[85%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Optimal: >40 mg/dL</p>
-
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">LDL (Bad)</span>
-                                        <span class="font-semibold">95 mg/dL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-yellow-500 w-[60%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Optimal: <100 mg/dL</p>
-                                </div>
-                            </div>
-
-                            <!-- Blood Sugar -->
-                            <div class="bg-card rounded-2xl p-6 border border-border shadow-sm">
-                                <h3 class="font-bold mb-4 flex items-center gap-2">
-                                    <iconify-icon icon="lucide:droplet" class="text-red-500"></iconify-icon>
-                                    Blood Sugar
-                                </h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Fasting Glucose</span>
-                                        <span class="font-semibold">92 mg/dL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-[80%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Normal: 70-99 mg/dL</p>
-
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">HbA1c</span>
-                                        <span class="font-semibold">5.2%</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-[75%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Normal: <5.7%</p>
-                                </div>
-                            </div>
-
-                            <!-- Vitamins & Minerals -->
-                            <div class="bg-card rounded-2xl p-6 border border-border shadow-sm">
-                                <h3 class="font-bold mb-4 flex items-center gap-2">
-                                    <iconify-icon icon="lucide:sun" class="text-yellow-500"></iconify-icon>
-                                    Vitamins & Minerals
-                                </h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Vitamin D</span>
-                                        <span class="font-semibold">22 ng/mL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-yellow-500 w-[40%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Optimal: 30-50 ng/mL</p>
-
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Vitamin B12</span>
-                                        <span class="font-semibold">450 pg/mL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-[90%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Normal: 200-900 pg/mL</p>
-
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Iron</span>
-                                        <span class="font-semibold">85 mcg/dL</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                                        <div class="h-full bg-tertiary w-[85%] rounded-full"></div>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground">Normal: 60-170 mcg/dL</p>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="fa-insights-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                        <p id="fa-no-insights" class="hidden text-sm text-muted-foreground">Upload a lab report to see your key insights.</p>
                     </section>
 
-                    <!-- Clinical Summary -->
+                    <!-- Clinical summary from the latest report -->
                     <section class="bg-card rounded-3xl border border-border p-8 shadow-sm">
                         <h2 class="text-xl font-heading font-bold mb-4 flex items-center gap-2">
                             <iconify-icon icon="lucide:file-text" class="text-primary"></iconify-icon>
                             Summary
                         </h2>
-                        <p class="text-sm text-muted-foreground leading-relaxed">
-                            Your latest analysis shows an overall stable and improving metabolic profile. Cholesterol and blood
-                            sugar markers remain within healthy targets, indicating good response to your current nutrition and
-                            activity plan. The primary focus area is Vitamin D, which is still below optimal range. Prioritize
-                            consistent sunlight exposure, Vitamin D-rich foods, and supplementation as recommended, then recheck
-                            labs in the next cycle to confirm improvement.
+                        <p id="fa-summary" class="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            Loading the most recent analysis…
                         </p>
                     </section>
 
-                    <!-- AI Recommendations -->
+                    <!-- AI-extracted recommendations (diet + exercise advice from the report) -->
                     <section class="bg-gradient-to-r from-primary/5 to-tertiary/5 rounded-3xl border border-primary/20 p-8">
                         <h2 class="text-xl font-heading font-bold mb-6 flex items-center gap-2">
                             <iconify-icon icon="lucide:sparkles" class="text-primary"></iconify-icon>
-                            AI-Powered Recommendations
+                            From your report
                         </h2>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="bg-card rounded-2xl p-6 border border-border">
-                                <h3 class="font-bold mb-4 text-tertiary">Immediate Actions</h3>
-                                <ul class="space-y-3">
-                                    <li class="flex items-start gap-3">
-                                        <iconify-icon icon="lucide:sun" class="text-yellow-500 mt-0.5"></iconify-icon>
-                                        <div>
-                                            <p class="font-medium">Increase Vitamin D Intake</p>
-                                            <p class="text-sm text-muted-foreground">Consider 2000 IU daily supplement and 15-20 min sun exposure.</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <iconify-icon icon="lucide:apple" class="text-tertiary mt-0.5"></iconify-icon>
-                                        <div>
-                                            <p class="font-medium">Maintain Current Diet</p>
-                                            <p class="text-sm text-muted-foreground">Your blood sugar levels are excellent. Continue balanced nutrition.</p>
-                                        </div>
-                                    </li>
-                                </ul>
+                                <h3 class="font-bold mb-3 text-tertiary flex items-center gap-2">
+                                    <iconify-icon icon="lucide:apple"></iconify-icon>
+                                    Diet advice
+                                </h3>
+                                <p id="fa-diet-advice" class="text-sm text-muted-foreground whitespace-pre-wrap">—</p>
                             </div>
-
                             <div class="bg-card rounded-2xl p-6 border border-border">
-                                <h3 class="font-bold mb-4 text-blue-600">Long-term Monitoring</h3>
-                                <ul class="space-y-3">
-                                    <li class="flex items-start gap-3">
-                                        <iconify-icon icon="lucide:activity" class="text-blue-500 mt-0.5"></iconify-icon>
-                                        <div>
-                                            <p class="font-medium">Cholesterol Check</p>
-                                            <p class="text-sm text-muted-foreground">Schedule next lipid panel in 6 months.</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <iconify-icon icon="lucide:calendar" class="text-purple-500 mt-0.5"></iconify-icon>
-                                        <div>
-                                            <p class="font-medium">Regular Monitoring</p>
-                                            <p class="text-sm text-muted-foreground">Continue quarterly blood work to track Vitamin D levels.</p>
-                                        </div>
-                                    </li>
-                                </ul>
+                                <h3 class="font-bold mb-3 text-blue-600 flex items-center gap-2">
+                                    <iconify-icon icon="lucide:dumbbell"></iconify-icon>
+                                    Exercise advice
+                                </h3>
+                                <p id="fa-exercise-advice" class="text-sm text-muted-foreground whitespace-pre-wrap">—</p>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Trends Chart -->
+                    <!-- Abnormal findings list -->
                     <section class="bg-card rounded-3xl border border-border p-8 shadow-sm">
-                        <h2 class="text-xl font-heading font-bold mb-6 flex items-center gap-2">
-                            <iconify-icon icon="lucide:trending-up" class="text-primary"></iconify-icon>
-                            Health Trends (Last 12 Months)
+                        <h2 class="text-xl font-heading font-bold mb-4 flex items-center gap-2">
+                            <iconify-icon icon="lucide:alert-triangle" class="text-orange-500"></iconify-icon>
+                            Abnormal findings
                         </h2>
-                        <div class="h-80">
-                            <canvas id="trendsChart"></canvas>
-                        </div>
+                        <ul id="fa-abnormal" class="space-y-3 text-sm"><li class="text-xs text-muted-foreground">Loading…</li></ul>
                     </section>
 
                 </div>
@@ -402,51 +314,199 @@
             }
         }
 
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+        }
+
+        function severityClass(sev) {
+            return {
+                normal:     'bg-tertiary/20 text-tertiary',
+                borderline: 'bg-amber-100 text-amber-700',
+                abnormal:   'bg-orange-100 text-orange-700',
+                critical:   'bg-red-100 text-red-700',
+            }[sev] || 'bg-muted text-muted-foreground';
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        async function fetchJson(url) {
+            try {
+                const r = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin', cache: 'no-store' });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch (_) { return null; }
+        }
+
+        async function loadHealthHeader() {
+            const list = await fetchJson('/api/health-reports');
+            const reports = list?.reports || [];
+            const noReport = document.getElementById('fa-no-report');
+            if (!reports.length) {
+                document.getElementById('fa-report-title').textContent = 'No lab reports yet';
+                document.getElementById('fa-report-desc').textContent = 'Upload one on the Health Check page and your analysis lands here automatically.';
+                noReport?.classList.remove('hidden');
+                document.getElementById('fa-summary').textContent = 'No report to summarize yet.';
+                document.getElementById('fa-no-insights')?.classList.remove('hidden');
+                document.getElementById('fa-abnormal').innerHTML = '<li class="text-xs text-muted-foreground">No findings yet.</li>';
+                return;
+            }
+            const head = reports[0];
+            const full = await fetchJson(`/api/health-reports/${head.id}`);
+            const when = fmtDate(head.created_at);
+            document.getElementById('fa-report-title').textContent = `${head.original_filename || 'Health report'} · ${when}`;
+            document.getElementById('fa-report-desc').textContent = `Analyzed ${head.biomarker_count ?? '—'} biomarkers · ${head.abnormal_count ?? 0} outside range${head.critical_count ? ` · ${head.critical_count} critical` : ''}.`;
+            const meta = document.getElementById('fa-report-meta');
+            meta.innerHTML = `
+                <span class="flex items-center gap-2"><iconify-icon icon="lucide:file-type-pdf" class="text-red-500"></iconify-icon>${escapeHtml(head.original_filename || '')}</span>
+                ${head.original_size_bytes ? `<span>${(head.original_size_bytes/1024).toFixed(0)} KB</span>` : ''}
+                <span class="px-2 py-1 rounded-md text-xs font-bold ${severityClass(head.overall_severity)}">${escapeHtml(head.overall_severity || 'normal')}</span>
+            `;
+            const score = document.getElementById('fa-report-score');
+            score.textContent = head.overall_severity || '—';
+            score.className = 'text-2xl font-heading font-extrabold px-3 py-1 rounded-xl ' + severityClass(head.overall_severity);
+            // Summary
+            document.getElementById('fa-summary').textContent = (full?.summary || head.summary || '—');
+            // Key insights
+            const grid = document.getElementById('fa-insights-grid');
+            const insights = full?.key_insights || [];
+            if (!insights.length) {
+                grid.innerHTML = '';
+                document.getElementById('fa-no-insights')?.classList.remove('hidden');
+            } else {
+                grid.innerHTML = insights.map(i => `
+                    <div class="bg-card rounded-2xl p-5 border border-border shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold">${escapeHtml(i.label || i.key)}</h3>
+                            <span class="px-2 py-0.5 rounded-md text-xs font-bold ${severityClass(i.status)}">${escapeHtml(i.status || '')}</span>
+                        </div>
+                        <p class="text-2xl font-heading font-extrabold">${escapeHtml(i.value ?? '—')} <span class="text-sm font-medium text-muted-foreground">${escapeHtml(i.unit || '')}</span></p>
+                        <p class="text-xs text-muted-foreground mt-1">${escapeHtml(i.summary || '')}</p>
+                    </div>
+                `).join('');
+            }
+            // Advice
+            const diet = full?.diet_advice || '—';
+            const ex = full?.exercise_advice || '—';
+            document.getElementById('fa-diet-advice').textContent = diet;
+            document.getElementById('fa-exercise-advice').textContent = ex;
+            // Abnormal findings
+            const abn = full?.abnormal_findings || [];
+            const abnEl = document.getElementById('fa-abnormal');
+            if (!abn.length) {
+                abnEl.innerHTML = '<li class="text-xs text-muted-foreground">No abnormal findings.</li>';
+            } else {
+                abnEl.innerHTML = abn.map(f => `
+                    <li class="flex items-center justify-between gap-3 border-b border-border pb-2">
+                        <div>
+                            <div class="font-medium capitalize">${escapeHtml(String(f.biomarker || '').replace(/_/g,' '))}</div>
+                            <div class="text-xs text-muted-foreground">${escapeHtml(f.rationale || f.label || '')}</div>
+                        </div>
+                        <span class="text-right">
+                            <div class="font-mono text-sm">${escapeHtml(f.value)} ${escapeHtml(f.unit || '')}</div>
+                            <span class="px-2 py-0.5 rounded text-xs font-bold ${severityClass(f.severity)}">${escapeHtml(f.severity || '')}</span>
+                        </span>
+                    </li>
+                `).join('');
+            }
+        }
+
+        async function loadTodayMeals() {
+            const data = await fetchJson('/api/meal-plans/active');
+            const slot = document.getElementById('fa-today-meals');
+            if (!data?.payload) {
+                slot.innerHTML = '<p class="text-xs text-muted-foreground">No meal plan yet. <a href="/recipe" class="text-primary font-semibold">Generate one →</a></p>';
+                return;
+            }
+            const plans = data.payload.plan || {};
+            const today = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
+            const dayKey = plans[today] ? today : Object.keys(plans)[0];
+            const day = plans[dayKey];
+            if (!day) { slot.innerHTML = '<p class="text-xs text-muted-foreground">No meals for today.</p>'; return; }
+            const items = ['breakfast','lunch','dinner','snack']
+                .filter(m => day[m])
+                .map(m => {
+                    const meal = day[m];
+                    const href = `/recipe?day=${encodeURIComponent(dayKey)}&meal=${encodeURIComponent(m)}`;
+                    return `<a href="${href}" class="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-muted-foreground">${m}</span>
+                            <p class="text-sm font-medium leading-tight">${escapeHtml(meal.title || '')}</p>
+                        </div>
+                        <span class="text-xs text-muted-foreground">${escapeHtml(meal.calories || '—')} cal</span>
+                    </a>`;
+                }).join('');
+            slot.innerHTML = items || '<p class="text-xs text-muted-foreground">No meals for today.</p>';
+        }
+
+        async function loadTodayWorkout() {
+            const data = await fetchJson('/api/exercise-plans');
+            const slot = document.getElementById('fa-today-workout');
+            const plans = data?.plans || [];
+            if (!plans.length) {
+                slot.innerHTML = '<p class="text-xs text-muted-foreground">No exercise plan yet. <a href="/exercise" class="text-primary font-semibold">Generate one →</a></p>';
+                return;
+            }
+            const full = await fetchJson(`/api/exercise-plans/${plans[0].id}`);
+            const days = full?.weekly_workout_plan || [];
+            if (!days.length) { slot.innerHTML = '<p class="text-xs text-muted-foreground">No workouts in the latest plan.</p>'; return; }
+            const today = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
+            const picked = days.find(d => (d.day_label || '').toLowerCase() === today) || days[0];
+            const exs = (picked.exercises || []).slice(0, 4);
+            const items = exs.map(e =>
+                `<li class="text-sm flex items-center justify-between"><span>${escapeHtml(e.name || '')}</span><span class="text-xs text-muted-foreground">${escapeHtml(e.detail || '')}</span></li>`
+            ).join('');
+            slot.innerHTML = `
+                <div class="text-xs text-muted-foreground">${escapeHtml(picked.day_label || 'Day')}${picked.duration ? ' · ' + escapeHtml(picked.duration) : ''}</div>
+                <p class="font-medium text-sm">${escapeHtml(picked.title || picked.heading || 'Workout')}</p>
+                <ul class="space-y-1 mt-2">${items}</ul>
+            `;
+        }
+
+        async function loadRecentChats() {
+            const data = await fetchJson('/api/chat-conversations');
+            const list = data?.conversations || [];
+            const ul = document.getElementById('fa-recent-chats');
+            if (!list.length) {
+                ul.innerHTML = '<li class="text-xs text-muted-foreground">No conversations yet.</li>';
+                return;
+            }
+            ul.innerHTML = list.slice(0, 5).map(c => `
+                <li><a href="/chat" class="block p-2 rounded-lg hover:bg-muted transition-colors">
+                    <p class="text-sm font-medium truncate">${escapeHtml(c.title || 'Untitled chat')}</p>
+                    <p class="text-[10px] text-muted-foreground">${fmtDate(c.last_message_at || c.created_at)}</p>
+                </a></li>
+            `).join('');
+        }
+
+        async function loadRecentLikes() {
+            const data = await fetchJson('/api/meal-likes');
+            const list = data?.likes || [];
+            const ul = document.getElementById('fa-recent-likes');
+            if (!list.length) {
+                ul.innerHTML = '<li class="text-xs text-muted-foreground">No liked meals yet.</li>';
+                return;
+            }
+            ul.innerHTML = list.slice(0, 5).map(l => {
+                const href = `/recipe?day=${encodeURIComponent(l.day_key || '')}&meal=${encodeURIComponent(l.meal_type || '')}`;
+                return `<li><a href="${href}" class="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors">
+                    <span class="text-sm truncate">${escapeHtml(l.title || '')}</span>
+                    <span class="text-[10px] text-muted-foreground capitalize">${escapeHtml(l.meal_type || '')}</span>
+                </a></li>`;
+            }).join('');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+            loadHealthHeader();
+            loadTodayMeals();
+            loadTodayWorkout();
+            loadRecentChats();
+            loadRecentLikes();
         });
 
-        // Trends Chart
-        const ctx = document.getElementById('trendsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Oct 2022', 'Jan 2023', 'Apr 2023', 'Jul 2023', 'Oct 2023'],
-                datasets: [{
-                    label: 'Cholesterol (mg/dL)',
-                    data: [185, 180, 178, 175, 175],
-                    borderColor: '#3b82f6',
-                    backgroundColor: '#3b82f640',
-                    tension: 0.4
-                }, {
-                    label: 'Blood Sugar (mg/dL)',
-                    data: [98, 95, 94, 93, 92],
-                    borderColor: '#10b981',
-                    backgroundColor: '#10b98140',
-                    tension: 0.4
-                }, {
-                    label: 'Vitamin D (ng/mL)',
-                    data: [18, 20, 21, 22, 22],
-                    borderColor: '#f59e0b',
-                    backgroundColor: '#f59e0b40',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false
-                    }
-                }
-            }
-        });
     </script>
 </body>
 
