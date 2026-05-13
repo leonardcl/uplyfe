@@ -8,8 +8,8 @@ __pycache__/
 # .env
 
 # --- Generated data ---
-data/chroma/            # rebuild with `erg-ingest exercises`
-data/prompt_debug.jsonl # optional debug log
+# data/chroma/            # rebuild with `erg-ingest exercises`
+# data/prompt_debug.jsonl # optional debug log
 
 # --- Big binary RAG sources ---
 # Textbook PDFs stay ignored — they're commercially published works
