@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -137,11 +138,23 @@
                     </button>
                     <h1 class="text-xl font-heading font-bold">Nutrition & Recipes</h1>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 relative">
                     <div
                         class="hidden sm:flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full text-sm font-medium">
                         <iconify-icon icon="lucide:flame" class="text-orange-500"></iconify-icon>
                         <span>2,150 kcal / day</span>
+                    </div>
+                    <button id="meal-history-toggle" title="Past meal plans"
+                        class="bg-card border border-border px-3 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-muted transition-colors flex items-center gap-2">
+                        <iconify-icon icon="lucide:history"></iconify-icon>
+                        <span class="hidden sm:inline">History</span>
+                    </button>
+                    <div id="meal-history-dropdown"
+                        class="hidden absolute right-12 top-12 w-80 max-h-96 overflow-y-auto bg-card border border-border rounded-xl shadow-lg z-50 p-2">
+                        <p class="text-xs font-bold text-muted-foreground px-3 py-2 sticky top-0 bg-card">Your past meal plans</p>
+                        <div id="meal-history-list" class="flex flex-col gap-1">
+                            <p class="text-xs text-muted-foreground px-3 py-4 text-center">Loading…</p>
+                        </div>
                     </div>
                     <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
                         class="w-8 h-8 rounded-full border border-border cursor-pointer">
@@ -289,17 +302,28 @@
 
                     <!-- Recipe Grid -->
                     <section>
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-heading font-bold" id="meal-plan-title">Today's AI Meal Plan</h2>
-                            <div class="flex gap-2">
-                                <button id="prev-day-btn"
-                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><iconify-icon
-                                        icon="lucide:chevron-left"></iconify-icon></button>
-                                <button id="next-day-btn"
-                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"><iconify-icon
-                                        icon="lucide:chevron-right"></iconify-icon></button>
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div>
+                                <h2 class="text-2xl font-heading font-bold" id="meal-plan-title">Your meal plan</h2>
+                                <p class="text-xs text-muted-foreground mt-1" id="meal-plan-source">Loading…</p>
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <input type="date" id="week-start-date"
+                                    class="bg-card border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                                <button id="reset-today-btn"
+                                    class="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold hover:bg-muted transition-colors">Today</button>
+                                <button id="prev-day-btn" title="Previous day"
+                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <iconify-icon icon="lucide:chevron-left"></iconify-icon>
+                                </button>
+                                <button id="next-day-btn" title="Next day"
+                                    class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                </button>
                             </div>
                         </div>
+                        <!-- 7-day strip; populated by buildDateStrip() -->
+                        <div id="date-strip" class="grid grid-cols-7 gap-2 mb-5"></div>
                         <div id="recipe-feedback" class="mb-4 text-sm text-muted-foreground"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-grid">
 
@@ -356,9 +380,8 @@
                                         class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
                                         Lunch</div>
                                     <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-red-500 transition-colors shadow-sm" id="lunch-heart">
-                                        <iconify-icon icon="lucide:heart" class="text-red-500" data-icon="lucide:heart"
-                                            style="fill: currentColor;"></iconify-icon>
+                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="lunch-heart">
+                                        <iconify-icon icon="lucide:heart"></iconify-icon>
                                     </button>
                                 </div>
                                 <div class="p-5 flex flex-col flex-1">
@@ -428,6 +451,20 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </section>
+
+                    <!-- Favorites -->
+                    <section>
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-2xl font-heading font-bold">Your liked meals</h2>
+                                <p class="text-xs text-muted-foreground mt-1">Tap the heart on any meal to save it.</p>
+                            </div>
+                            <span id="favorites-count" class="text-xs text-muted-foreground"></span>
+                        </div>
+                        <div id="favorites-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="col-span-full text-sm text-muted-foreground text-center py-8" id="favorites-empty">No liked meals yet.</p>
                         </div>
                     </section>
                 </div>
@@ -692,10 +729,87 @@
     </div>
 
     <script>
-        const GENERATED_RECIPE_JSON_PATH = '/food/data/example.json';
+        // POSTs to the Laravel AI route, which forwards to the gateway →
+        // recipe-generator. The old static-JSON path (`/food/data/example.json`)
+        // is gone — we generate fresh plans on demand now.
+        const RECIPE_API_URL = '/api/ai/recipe/weekly-menu';
         let mealPlans = {};
+        // `dayOrder` is the list of weekday keys present in the loaded plan
+        // (monday..sunday or day_1..day_N). `weekDates` is the 7 ISO dates
+        // the strip currently shows. `dateIndex` is which strip cell is
+        // active. `currentDay` is the weekday key for the active date.
         let dayOrder = [];
         let currentDay = 'monday';
+        let weekDates = [];
+        let weekStart = startOfTodayIso();
+        let dateIndex = 0;
+        let activePlanId = null;
+        let likedByKey = new Map(); // "planId:dayKey:mealType" -> {id,title}
+
+        const WEEKDAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+        // Format a Date as YYYY-MM-DD using its LOCAL components. The naive
+        // `.toISOString().slice(0,10)` path converts to UTC, which in any
+        // non-UTC timezone (e.g. Jakarta UTC+7) flips local midnight to the
+        // previous calendar day and made the page open on yesterday.
+        function toLocalIso(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function startOfTodayIso() {
+            return toLocalIso(new Date());
+        }
+
+        function parseIso(iso) {
+            // Treat dates as local midnight so weekday lookup matches the
+            // user's calendar, not UTC's.
+            const [y, m, d] = iso.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function isoForOffset(startIso, offsetDays) {
+            const d = parseIso(startIso);
+            d.setDate(d.getDate() + offsetDays);
+            return toLocalIso(d);
+        }
+
+        function weekdayKeyFor(iso) {
+            return WEEKDAY_KEYS[parseIso(iso).getDay()];
+        }
+
+        function rebuildWeekDates() {
+            weekDates = Array.from({ length: 7 }, (_, i) => isoForOffset(weekStart, i));
+        }
+
+        function likeKey(planId, dayKey, mealType) {
+            return `${planId ?? 'none'}:${dayKey ?? 'none'}:${mealType}`;
+        }
+
+        // Title Case — capitalize each word except common minor words, which
+        // stay lowercase UNLESS they're the first or last word. Roman-numeral
+        // suffixes ("II", "III") and all-caps acronyms are left alone.
+        const TITLE_MINORS = new Set([
+            'a','an','and','as','at','but','by','for','in','nor','of','on','or',
+            'so','the','to','up','yet','with','from','over','into','out','via',
+        ]);
+        function titleCase(str) {
+            if (!str) return '';
+            const words = String(str).trim().split(/\s+/);
+            return words.map((w, i) => {
+                if (!w) return w;
+                // Preserve already-capitalized tokens like ROMAN, II, BBQ.
+                if (/^[A-Z]{2,}$/.test(w)) return w;
+                if (/^[IVXLCM]+$/i.test(w) && w.length <= 4) return w.toUpperCase();
+                const lower = w.toLowerCase();
+                const isMinor = TITLE_MINORS.has(lower) && i !== 0 && i !== words.length - 1;
+                if (isMinor) return lower;
+                // Capitalize first letter; preserve apostrophes / hyphens.
+                return lower.replace(/(^|[\s\-'/])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
+            }).join(' ');
+        }
 
         function setRecipeFeedback(message, type = 'info') {
             const feedback = document.getElementById('recipe-feedback');
@@ -725,14 +839,34 @@
                 title: dayData.title || formatDayTitle(dayKey),
                 breakfast: dayData.breakfast,
                 lunch: dayData.lunch,
-                dinner: dayData.dinner
+                dinner: dayData.dinner,
+                snack: dayData.snack || null
+            };
+        }
+
+        // Collect the user's dietary preferences from the chip buttons on the
+        // page. Each chip button has data-chip-group and toggles aria-pressed.
+        function collectActiveChips(group) {
+            return Array.from(document.querySelectorAll(
+                `button[data-chip-group="${group}"][aria-pressed="true"]`
+            )).map(b => (b.textContent || '').trim()).filter(Boolean);
+        }
+
+        function buildRecipeRequest() {
+            return {
+                target_calories: 2000,
+                servings: 1,
+                diet: 'none',
+                allergies: collectActiveChips('allergy'),
+                cuisine_preferences: collectActiveChips('cuisine'),
+                days: 7,
             };
         }
 
         function updateRecipeCard(mealType, recipe) {
             if (!recipe) return;
 
-            document.getElementById(`${mealType}-title`).textContent = recipe.title || '-';
+            document.getElementById(`${mealType}-title`).textContent = titleCase(recipe.title || '-');
             document.getElementById(`${mealType}-description`).textContent = recipe.description || '-';
             document.getElementById(`${mealType}-calories`).textContent = recipe.calories || '-';
             document.getElementById(`${mealType}-protein`).textContent = recipe.protein || '-';
@@ -748,76 +882,184 @@
             });
         }
 
-        function updateMealPlan() {
-            const plan = mealPlans[currentDay];
-            if (!plan) return;
+        // Pick the right plan day for an ISO date. Strategy:
+        //   1. If the plan is keyed by weekdays (monday..sunday), use the
+        //      date's weekday → that key.
+        //   2. Else (day_1..day_N), use the strip offset → `day_{i+1}`.
+        function dayKeyForDate(iso) {
+            if (!dayOrder.length) return null;
+            const wk = weekdayKeyFor(iso);
+            if (dayOrder.includes(wk)) return wk;
+            const offset = weekDates.indexOf(iso);
+            const numeric = `day_${(offset >= 0 ? offset : 0) + 1}`;
+            if (dayOrder.includes(numeric)) return numeric;
+            // Fallback: cycle through whatever the plan has.
+            const idx = (offset >= 0 ? offset : 0) % dayOrder.length;
+            return dayOrder[idx];
+        }
 
-            document.getElementById('meal-plan-title').textContent = plan.title;
+        function updateMealPlan() {
+            if (!weekDates.length) rebuildWeekDates();
+            const activeIso = weekDates[dateIndex] || weekDates[0];
+            currentDay = dayKeyForDate(activeIso);
+            const plan = currentDay ? mealPlans[currentDay] : null;
+            const titleEl = document.getElementById('meal-plan-title');
+            const labelDate = parseIso(activeIso).toLocaleDateString(undefined, {
+                weekday: 'long', month: 'short', day: 'numeric',
+            });
+            if (!plan) {
+                titleEl.textContent = `${labelDate}`;
+                ['breakfast', 'lunch', 'dinner'].forEach(t => {
+                    const titleNode = document.getElementById(`${t}-title`);
+                    if (titleNode) titleNode.textContent = '—';
+                    const desc = document.getElementById(`${t}-description`);
+                    if (desc) desc.textContent = 'No plan loaded for this day.';
+                    const cal = document.getElementById(`${t}-calories`); if (cal) cal.textContent = '—';
+                    const pro = document.getElementById(`${t}-protein`); if (pro) pro.textContent = '—';
+                    syncHeartButton(t, null);
+                });
+                return;
+            }
+            titleEl.textContent = `${labelDate}${plan.title ? ' · ' + titleCase(plan.title) : ''}`;
             updateRecipeCard('breakfast', plan.breakfast);
             updateRecipeCard('lunch', plan.lunch);
             updateRecipeCard('dinner', plan.dinner);
+            ['breakfast', 'lunch', 'dinner'].forEach(t => syncHeartButton(t, plan[t]));
         }
 
         function updateNavigationButtons() {
-            const currentIndex = dayOrder.indexOf(currentDay);
             const prevBtn = document.getElementById('prev-day-btn');
             const nextBtn = document.getElementById('next-day-btn');
-
-            prevBtn.disabled = currentIndex <= 0;
-            nextBtn.disabled = currentIndex === -1 || currentIndex >= dayOrder.length - 1;
+            if (!prevBtn || !nextBtn) return;
+            prevBtn.disabled = dateIndex <= 0;
+            nextBtn.disabled = dateIndex >= weekDates.length - 1;
         }
 
         function navigateDay(direction) {
-            const currentIndex = dayOrder.indexOf(currentDay);
-            if (currentIndex === -1) return;
-
-            let newIndex = currentIndex;
-            if (direction === 'next') newIndex = Math.min(currentIndex + 1, dayOrder.length - 1);
-            if (direction === 'prev') newIndex = Math.max(currentIndex - 1, 0);
-
-            if (newIndex !== currentIndex) {
-                currentDay = dayOrder[newIndex];
+            let next = dateIndex;
+            if (direction === 'next') next = Math.min(dateIndex + 1, weekDates.length - 1);
+            if (direction === 'prev') next = Math.max(dateIndex - 1, 0);
+            if (next !== dateIndex) {
+                dateIndex = next;
+                buildDateStrip();
                 updateMealPlan();
                 updateNavigationButtons();
             }
         }
 
-        async function loadGeneratedMealPlans() {
-            const response = await fetch(`${GENERATED_RECIPE_JSON_PATH}?t=${Date.now()}`, {
-                cache: 'no-store'
+        function buildDateStrip() {
+            rebuildWeekDates();
+            const strip = document.getElementById('date-strip');
+            if (!strip) return;
+            strip.innerHTML = weekDates.map((iso, i) => {
+                const d = parseIso(iso);
+                const today = startOfTodayIso();
+                const isActive = i === dateIndex;
+                const isToday = iso === today;
+                const weekday = d.toLocaleDateString(undefined, { weekday: 'short' });
+                const dayNum = d.getDate();
+                const cls = isActive
+                    ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                    : 'bg-card border-border text-foreground hover:border-primary/40 hover:bg-muted';
+                return `
+                    <button type="button" data-iso="${iso}" data-idx="${i}"
+                        class="date-cell flex flex-col items-center py-2 rounded-xl border transition-all ${cls}">
+                        <span class="text-[10px] font-bold uppercase tracking-wide opacity-70">${weekday}</span>
+                        <span class="text-lg font-bold leading-none mt-1">${dayNum}</span>
+                        ${isToday ? '<span class="text-[9px] mt-1 opacity-80">today</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+            strip.querySelectorAll('.date-cell').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    dateIndex = Number(btn.dataset.idx);
+                    buildDateStrip();
+                    updateMealPlan();
+                    updateNavigationButtons();
+                });
             });
+            // Keep the date input in sync (it's the week-start anchor).
+            const dateInput = document.getElementById('week-start-date');
+            if (dateInput && dateInput.value !== weekStart) {
+                dateInput.value = weekStart;
+            }
+            const sourceEl = document.getElementById('meal-plan-source');
+            if (sourceEl) {
+                if (activePlanId) {
+                    sourceEl.textContent = `Showing plan #${activePlanId} · 7 days starting ${weekStart}`;
+                } else {
+                    sourceEl.textContent = `No saved plan yet. Generate one or pick a date · 7 days starting ${weekStart}`;
+                }
+            }
+        }
 
-            if (response.status === 404) {
-                setRecipeFeedback('Generated recipes are not available yet. Please generate recipes first.', 'info');
+        // Toggle the busy state on the Generate button so the user knows
+        // something's happening during the ~60-180s LLM wait.
+        function setGenerateBusy(busy) {
+            const btn = document.getElementById('generate-recipes-btn');
+            if (!btn) return;
+            if (busy) {
+                if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Generating… (60-180s)`;
+            } else {
+                if (btn.dataset.origLabel) btn.innerHTML = btn.dataset.origLabel;
+                btn.disabled = false;
+            }
+        }
+
+        async function loadGeneratedMealPlans() {
+            setRecipeFeedback('Asking the AI to plan your week…', 'info');
+            setGenerateBusy(true);
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            let response;
+            try {
+                response = await fetch(RECIPE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify(buildRecipeRequest()),
+                });
+            } catch (e) {
+                setGenerateBusy(false);
+                setRecipeFeedback('Network error: ' + (e?.message || e), 'error');
                 return;
             }
+
+            const text = await response.text();
+            let body;
+            try { body = text ? JSON.parse(text) : {}; } catch { body = { error: text }; }
 
             if (!response.ok) {
-                setRecipeFeedback('Unable to load generated recipes right now. Please try again.', 'error');
+                setGenerateBusy(false);
+                // Surface the gateway / Laravel error message verbatim — the
+                // empty-collection guard returns a helpful "drop JSON, run
+                // ingest" message that users need to see.
+                const msg = body.error || body.detail || body.message
+                    || ('HTTP ' + response.status);
+                setRecipeFeedback(msg, 'error');
                 return;
             }
 
-            let jsonData;
-            try {
-                jsonData = await response.json();
-            } catch (error) {
-                setRecipeFeedback('Generated recipe file is invalid JSON. Please regenerate it.', 'error');
-                return;
-            }
-
-            const rawDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-                .filter((day) => jsonData[day]);
-
+            // The recipe-generator returns { summary, plan: { monday: {...}, ... } }.
+            const planData = body.plan || body;  // tolerate either shape
+            const dayKeys = Object.keys(planData);
             const normalized = {};
-            rawDays.forEach((day) => {
-                const normalizedDay = normalizeDayPlan(jsonData[day], day);
+            dayKeys.forEach((day) => {
+                const normalizedDay = normalizeDayPlan(planData[day], day);
                 if (normalizedDay) {
                     normalized[day] = normalizedDay;
                 }
             });
 
+            setGenerateBusy(false);
+
             if (!Object.keys(normalized).length) {
-                setRecipeFeedback('Generated recipe data format is incomplete. Please regenerate recipes.', 'error');
+                setRecipeFeedback('AI returned an empty or malformed plan. Please try again.', 'error');
                 return;
             }
 
@@ -827,7 +1069,7 @@
 
             updateMealPlan();
             updateNavigationButtons();
-            setRecipeFeedback('Generated recipes loaded.', 'success');
+            setRecipeFeedback(body.summary || 'AI meal plan ready.', 'success');
         }
 
         function openRecipeModal(mealType) {
@@ -835,7 +1077,7 @@
             if (!dayPlan || !dayPlan[mealType]) return;
             const recipe = dayPlan[mealType];
 
-            document.getElementById('modal-recipe-title').textContent = recipe.title || '-';
+            document.getElementById('modal-recipe-title').textContent = titleCase(recipe.title || '-');
             document.getElementById('modal-recipe-subtitle').textContent = recipe.subtitle || '-';
             document.getElementById('modal-recipe-badge').textContent = recipe.badge || '-';
             document.getElementById('modal-calories').textContent = recipe.calories || '-';
@@ -857,12 +1099,22 @@
             ingredientsContainer.innerHTML = '';
             const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
             ingredients.forEach((ingredient) => {
+                // Accept BOTH legacy string ingredients ("2 eggs") and the new
+                // {name, quantity} object shape coming from the recipe-generator.
+                let label;
+                if (ingredient && typeof ingredient === 'object') {
+                    const qty = ingredient.quantity ? `${ingredient.quantity} ` : '';
+                    label = `${qty}${ingredient.name || ''}`.trim();
+                } else {
+                    label = String(ingredient ?? '');
+                }
                 const li = document.createElement('li');
                 li.className = 'flex items-center gap-2';
                 li.innerHTML = `
                     <iconify-icon icon="lucide:circle" class="text-primary text-xs"></iconify-icon>
-                    <span class="text-sm">${ingredient}</span>
+                    <span class="text-sm"></span>
                 `;
+                li.querySelector('span').textContent = label;
                 ingredientsContainer.appendChild(li);
             });
 
@@ -1069,9 +1321,351 @@
             document.getElementById('next-day-btn').addEventListener('click', () => navigateDay('next'));
             document.getElementById('generate-recipes-btn')?.addEventListener('click', loadGeneratedMealPlans);
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+
+            // Week-start date picker.
+            const dateInput = document.getElementById('week-start-date');
+            if (dateInput) {
+                dateInput.value = weekStart;
+                dateInput.addEventListener('change', (e) => {
+                    if (!e.target.value) return;
+                    weekStart = e.target.value;
+                    dateIndex = 0;
+                    buildDateStrip();
+                    updateMealPlan();
+                    updateNavigationButtons();
+                });
+            }
+            document.getElementById('reset-today-btn')?.addEventListener('click', () => {
+                weekStart = startOfTodayIso();
+                dateIndex = 0;
+                buildDateStrip();
+                updateMealPlan();
+                updateNavigationButtons();
+            });
+
+            // Wire heart buttons on each meal card.
+            ['breakfast', 'lunch', 'dinner'].forEach(t => {
+                const btn = document.getElementById(`${t}-heart`);
+                if (btn) btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleMealLike(t);
+                });
+            });
+
+            // Default state: 7-day strip starting today, no plan loaded yet.
             dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            buildDateStrip();
+            updateMealPlan();
             updateNavigationButtons();
-            loadGeneratedMealPlans();
+
+            setRecipeFeedback('Loading your latest meal plan…', 'info');
+            // Auto-load from DB so the page shows real data, not a blank state.
+            loadActiveMealPlan();
+            loadLikedMeals();
+            startActivePlanPolling();
+        });
+
+        // ---------- Auto-load the user's current meal plan ----------
+        async function loadActiveMealPlan({ silent = false } = {}) {
+            try {
+                const res = await fetch('/api/meal-plans/active', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (!data || !data.payload) {
+                    if (!silent) {
+                        setRecipeFeedback(
+                            'No saved meal plan yet. Click "Generate" to build one — it takes a few minutes.',
+                            'info',
+                        );
+                    }
+                    return null;
+                }
+                // Only re-render if the plan id actually changed — avoids
+                // wiping the user's date selection on the polling refresh.
+                if (data.plan_id !== activePlanId) {
+                    applySavedMealPlan({ ...data.payload, plan_id: data.plan_id, _plan_id: data.plan_id });
+                    if (silent) {
+                        setRecipeFeedback('Your meal plan was updated based on your latest preferences.', 'success');
+                    }
+                }
+                return data;
+            } catch (e) {
+                console.warn('loadActiveMealPlan failed:', e);
+                return null;
+            }
+        }
+
+        // While the page is open, poll every 30s for a newer plan id. This
+        // catches background regenerations triggered by the chat (e.g. the
+        // user said "I can't eat fish" — a fresh weekly plan lands a few
+        // minutes later and the page picks it up without a manual refresh).
+        function startActivePlanPolling() {
+            if (window.__planPoll) clearInterval(window.__planPoll);
+            window.__planPoll = setInterval(() => {
+                if (document.hidden) return;
+                loadActiveMealPlan({ silent: true });
+            }, 30000);
+        }
+
+        // ---------- Like / unlike meals ----------
+        function csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        function currentMealSnapshot(mealType) {
+            const plan = mealPlans[currentDay];
+            return plan ? plan[mealType] : null;
+        }
+
+        function syncHeartButton(mealType, meal) {
+            const btn = document.getElementById(`${mealType}-heart`);
+            if (!btn) return;
+            if (!meal) {
+                btn.classList.add('opacity-40', 'pointer-events-none');
+                btn.dataset.likeId = '';
+                return;
+            }
+            btn.classList.remove('opacity-40', 'pointer-events-none');
+            const key = likeKey(activePlanId, currentDay, mealType);
+            const liked = likedByKey.get(key);
+            const icon = btn.querySelector('iconify-icon');
+            if (liked) {
+                btn.dataset.likeId = liked.id;
+                btn.classList.add('text-red-500');
+                btn.classList.remove('text-muted-foreground');
+                if (icon) icon.setAttribute('style', 'fill: currentColor;');
+            } else {
+                btn.dataset.likeId = '';
+                btn.classList.remove('text-red-500');
+                btn.classList.add('text-muted-foreground');
+                if (icon) icon.removeAttribute('style');
+            }
+        }
+
+        async function toggleMealLike(mealType) {
+            const meal = currentMealSnapshot(mealType);
+            if (!meal) return;
+            const btn = document.getElementById(`${mealType}-heart`);
+            const likeId = btn?.dataset.likeId;
+            if (likeId) {
+                // Unlike.
+                try {
+                    const res = await fetch(`/api/meal-likes/${likeId}`, {
+                        method: 'DELETE',
+                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                        credentials: 'same-origin',
+                    });
+                    if (res.ok) {
+                        likedByKey.delete(likeKey(activePlanId, currentDay, mealType));
+                        syncHeartButton(mealType, meal);
+                        renderFavorites();
+                    }
+                } catch (e) { console.warn('unlike failed', e); }
+                return;
+            }
+            try {
+                const res = await fetch('/api/meal-likes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf(),
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        meal_plan_id: activePlanId,
+                        day_key: currentDay,
+                        meal_type: mealType,
+                        title: meal.title || mealType,
+                        snapshot: meal,
+                    }),
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.like) {
+                    likedByKey.set(likeKey(activePlanId, currentDay, mealType), data.like);
+                    syncHeartButton(mealType, meal);
+                    renderFavorites();
+                }
+            } catch (e) { console.warn('like failed', e); }
+        }
+
+        async function loadLikedMeals() {
+            try {
+                const res = await fetch('/api/meal-likes', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                likedByKey = new Map();
+                (data.likes || []).forEach(l => {
+                    likedByKey.set(likeKey(l.meal_plan_id, l.day_key, l.meal_type), l);
+                });
+                renderFavorites();
+                // Re-sync the current cards' hearts now that we know which are liked.
+                ['breakfast', 'lunch', 'dinner'].forEach(t => {
+                    syncHeartButton(t, currentMealSnapshot(t));
+                });
+            } catch (e) { console.warn('loadLikedMeals failed', e); }
+        }
+
+        function renderFavorites() {
+            const grid = document.getElementById('favorites-grid');
+            const count = document.getElementById('favorites-count');
+            const likes = Array.from(likedByKey.values())
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            if (count) count.textContent = `${likes.length} saved`;
+            if (!grid) return;
+            if (!likes.length) {
+                grid.innerHTML = '<p class="col-span-full text-sm text-muted-foreground text-center py-8">No liked meals yet.</p>';
+                return;
+            }
+            grid.innerHTML = likes.map(l => {
+                const snap = l.snapshot || {};
+                const cals = snap.calories || '—';
+                const prot = snap.protein || '—';
+                const desc = (snap.description || '').slice(0, 120);
+                const slot = (l.meal_type || '').replace(/\b\w/g, c => c.toUpperCase());
+                return `
+                    <div class="bg-card rounded-2xl border border-border p-4 shadow-sm flex flex-col gap-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">${_escMeal(slot)}</span>
+                                <h3 class="font-bold text-base leading-tight mt-1">${_escMeal(titleCase(l.title || ''))}</h3>
+                            </div>
+                            <button data-unlike-id="${l.id}" title="Remove from favorites"
+                                class="text-red-500 hover:text-red-600 transition-colors">
+                                <iconify-icon icon="lucide:heart" style="fill: currentColor;"></iconify-icon>
+                            </button>
+                        </div>
+                        ${desc ? `<p class="text-xs text-muted-foreground line-clamp-2">${_escMeal(desc)}</p>` : ''}
+                        <div class="flex gap-4 text-xs text-muted-foreground mt-1">
+                            <span>${_escMeal(String(cals))} cal</span>
+                            <span>${_escMeal(String(prot))} protein</span>
+                            ${l.day_key ? `<span class="ml-auto">${_escMeal(l.day_key)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            grid.querySelectorAll('button[data-unlike-id]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.unlikeId;
+                    try {
+                        const res = await fetch(`/api/meal-likes/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                            credentials: 'same-origin',
+                        });
+                        if (res.ok) {
+                            // Remove from the map by id (key unknown without scan).
+                            for (const [k, v] of likedByKey) {
+                                if (v.id === Number(id)) { likedByKey.delete(k); break; }
+                            }
+                            renderFavorites();
+                            ['breakfast', 'lunch', 'dinner'].forEach(t => {
+                                syncHeartButton(t, currentMealSnapshot(t));
+                            });
+                        }
+                    } catch (_) {}
+                });
+            });
+        }
+
+        // ---------- Past meal plans history dropdown ----------
+        function _escMeal(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function applySavedMealPlan(payload) {
+            const planData = payload.plan || payload;
+            const dayKeys = Object.keys(planData);
+            const normalized = {};
+            dayKeys.forEach((day) => {
+                const nd = normalizeDayPlan(planData[day], day);
+                if (nd) normalized[day] = nd;
+            });
+            if (!Object.keys(normalized).length) {
+                setRecipeFeedback('Saved plan was empty or unreadable.', 'error');
+                return;
+            }
+            mealPlans = normalized;
+            dayOrder = Object.keys(normalized);
+            activePlanId = payload._plan_id || payload.plan_id || null;
+            buildDateStrip();
+            updateMealPlan();
+            updateNavigationButtons();
+            setRecipeFeedback(payload.summary || `Loaded plan #${activePlanId ?? ''}.`, 'success');
+        }
+
+        async function loadMealPlanList() {
+            const listEl = document.getElementById('meal-history-list');
+            try {
+                const res = await fetch('/api/meal-plans', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const data = res.ok ? await res.json() : { plans: [] };
+                const items = data.plans || [];
+                if (items.length === 0) {
+                    listEl.innerHTML = '<p class="text-xs text-muted-foreground px-3 py-4 text-center">No saved meal plans yet.</p>';
+                    return;
+                }
+                listEl.innerHTML = items.map(p => {
+                    const when = p.created_at ? new Date(p.created_at).toLocaleString() : '';
+                    const badge = p.span === 'weekly' ? '7-day' : '1-day';
+                    const cals = p.target_calories ? ` · ${p.target_calories} kcal` : '';
+                    return `
+                        <button data-pid="${p.id}"
+                            class="meal-item text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors">
+                            <p class="text-sm font-medium">${badge}${cals}</p>
+                            <p class="text-[10px] text-muted-foreground">Plan #${p.id} · ${_escMeal(when)}</p>
+                        </button>
+                    `;
+                }).join('');
+                listEl.querySelectorAll('.meal-item').forEach(btn => {
+                    btn.addEventListener('click', () => loadMealPlanDetail(Number(btn.dataset.pid)));
+                });
+            } catch (e) {
+                listEl.innerHTML = '<p class="text-xs text-destructive px-3 py-4 text-center">Failed to load.</p>';
+            }
+        }
+
+        async function loadMealPlanDetail(id) {
+            try {
+                const res = await fetch(`/api/meal-plans/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const payload = await res.json();
+                document.getElementById('meal-history-dropdown').classList.add('hidden');
+                applySavedMealPlan(payload);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                console.warn('loadMealPlanDetail failed:', e);
+            }
+        }
+
+        document.getElementById('meal-history-toggle')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dd = document.getElementById('meal-history-dropdown');
+            const willOpen = dd.classList.contains('hidden');
+            dd.classList.toggle('hidden');
+            if (willOpen) loadMealPlanList();
+        });
+
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('meal-history-dropdown');
+            const toggle = document.getElementById('meal-history-toggle');
+            if (dd && !dd.classList.contains('hidden') && !dd.contains(e.target) && e.target !== toggle && !toggle?.contains(e.target)) {
+                dd.classList.add('hidden');
+            }
         });
     </script>
 </body>

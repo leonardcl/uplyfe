@@ -13,8 +13,8 @@ from fastapi import FastAPI
 from auth import ApiKeyMiddleware
 from config import get_settings
 from llm import is_available as ollama_is_available
+from modules.chat.api import router as chat_router
 from modules.health_checkup_helpers.api import router as health_checkup_helpers_router
-from modules.recipe.api import router as recipe_router
 
 
 def _build_app() -> FastAPI:
@@ -32,7 +32,7 @@ def _build_app() -> FastAPI:
     app.add_middleware(ApiKeyMiddleware)
 
     # --- gateway-owned modules ---
-    app.include_router(recipe_router, prefix="/recipe", tags=["recipe"])
+    app.include_router(chat_router, prefix="/chat", tags=["chat"])
 
     # Helpers that live alongside the mounted health-checkup app.
     # MUST be included BEFORE the mount, otherwise the mount swallows every
@@ -70,6 +70,15 @@ def _build_app() -> FastAPI:
     except Exception as e:  # pragma: no cover — surfaced in /healthz
         app.state.exercise_routine_error = str(e)
 
+    # --- mount the recipe-generator FastAPI app under /recipe ---
+    # Replaces the old in-gateway recipe stub with a RAG-backed generator
+    # that reads from a real recipe collection (when the user has ingested one).
+    try:
+        from recipe_generator.main import app as recipe_app
+        app.mount("/recipe", recipe_app)
+    except Exception as e:  # pragma: no cover — surfaced in /healthz
+        app.state.recipe_generator_error = str(e)
+
     # --- liveness ---
     @app.get("/healthz", tags=["meta"])
     def healthz() -> dict:
@@ -81,7 +90,9 @@ def _build_app() -> FastAPI:
             "health_checkup_error": getattr(app.state, "health_checkup_error", None),
             "exercise_routine_mounted": not hasattr(app.state, "exercise_routine_error"),
             "exercise_routine_error": getattr(app.state, "exercise_routine_error", None),
-            "modules": ["health-checkup", "exercise", "recipe"],
+            "recipe_generator_mounted": not hasattr(app.state, "recipe_generator_error"),
+            "recipe_generator_error": getattr(app.state, "recipe_generator_error", None),
+            "modules": ["health-checkup", "exercise", "recipe", "chat"],
         }
 
     return app

@@ -31,6 +31,7 @@ class User extends Authenticatable
         'profile_photo',
         'dietary_preferences',
         'notification_preferences',
+        'food_exclusions',
         'password_changed_at',
     ];
 
@@ -53,5 +54,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'dietary_preferences' => 'array',
         'notification_preferences' => 'array',
+        'food_exclusions' => 'array',
     ];
 }

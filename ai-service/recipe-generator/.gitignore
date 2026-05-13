@@ -1,0 +1,24 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# --- Local config ---
+.env
+
+# --- Generated data ---
+data/chroma/            # rebuild with `make ingest`
+data/output/            # if anything writes meal plans to disk
+
+# --- User-supplied recipe datasets ---
+# JSON files in recipes/ are intentionally NOT committed by default —
+# they may be large and may have licensing terms that restrict
+# redistribution. Drop them locally; ingest builds the index.
+recipes/*.json
+
+# --- Test cache ---
+.pytest_cache/
+
+# --- OS / editor ---
+.DS_Store

@@ -3,10 +3,17 @@
 namespace App\Http\Controllers\Ai;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChatConversation;
+use App\Models\ChatMessage;
+use App\Models\ExercisePlan;
 use App\Models\HealthReport;
+use App\Models\LikedMeal;
+use App\Models\MealPlan;
 use App\Models\User;
 use App\Services\Ai\AiClient;
 use App\Services\Ai\AiServiceException;
+use App\Services\Ai\ChatService;
+use App\Services\Ai\DietaryIntentDetector;
 use App\Services\Ai\ExerciseService;
 use App\Services\Ai\HealthCheckupService;
 use App\Services\Ai\RecipeService;
@@ -20,6 +27,8 @@ class AiController extends Controller
         protected HealthCheckupService $healthCheckup,
         protected ExerciseService $exercise,
         protected RecipeService $recipe,
+        protected ChatService $chat,
+        protected DietaryIntentDetector $dietaryIntent,
     ) {}
 
     public function health(): JsonResponse
@@ -250,7 +259,32 @@ class AiController extends Controller
         // Lift PHP timeout — LLM stage 3 can take 30-90s.
         @set_time_limit(300);
 
-        return $this->call(fn () => $this->exercise->generatePlan($payload));
+        try {
+            $result = $this->exercise->generatePlan($payload);
+        } catch (AiServiceException $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode() ?: 502);
+        }
+
+        $userId = $this->sessionUserId($request);
+        if ($userId !== null) {
+            try {
+                $plan = ExercisePlan::create([
+                    'user_id' => $userId,
+                    'title' => \Illuminate\Support\Str::limit(
+                        (string) ($result['assessment'] ?? 'Exercise plan'), 80
+                    ),
+                    'fitness_goals' => $profile['fitness_goals'] ?? null,
+                    'available_days' => $profile['available_days'] ?? null,
+                    'request_payload' => $payload,
+                    'payload' => $result,
+                ]);
+                $result['_plan_id'] = $plan->id;
+            } catch (\Throwable $e) {
+                \Log::warning('ExercisePlan save failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json($result);
     }
 
     /**
@@ -272,7 +306,7 @@ class AiController extends Controller
     public function recipeDailyMenu(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'target_calories' => 'sometimes|integer|min:1000|max:4000',
+            'target_calories' => 'sometimes|integer|min:800|max:5000',
             'diet' => 'sometimes|in:none,vegetarian,vegan,pescatarian,halal,kosher,keto,low_carb',
             'allergies' => 'sometimes|array',
             'allergies.*' => 'string',
@@ -280,9 +314,640 @@ class AiController extends Controller
             'cuisine_preferences.*' => 'string',
             'servings' => 'sometimes|integer|min:1|max:10',
             'notes' => 'sometimes|nullable|string|max:500',
+            // New fields supported by the recipe-generator package:
+            'query' => 'sometimes|nullable|string|max:300',
+            'days' => 'sometimes|integer|min:1|max:7',
         ]);
 
-        return $this->call(fn () => $this->recipe->generateDailyMenu($data));
+        // Pull user profile from session to personalize when fields aren't sent.
+        $sessionUser = $request->session()->get('user');
+        if ($sessionUser) {
+            // Default dietary_preferences from the user's profile if the
+            // request didn't override them.
+            if (empty($data['diet']) && !empty($sessionUser->dietary_preferences)) {
+                // dietary_preferences may be an array; pick a sensible single value.
+                $first = is_array($sessionUser->dietary_preferences)
+                    ? ($sessionUser->dietary_preferences[0] ?? null)
+                    : $sessionUser->dietary_preferences;
+                if (is_string($first)) {
+                    $data['diet'] = $first;
+                }
+            }
+        }
+
+        // LLM stages can take 60-180s for a weekly plan.
+        @set_time_limit(300);
+
+        $data['allergies'] = $this->mergeUserExclusions($request, $data['allergies'] ?? []);
+
+        return $this->saveMealPlan(
+            request: $request,
+            data: $data,
+            span: 'daily',
+            generator: fn () => $this->recipe->generateDailyMenu($data),
+        );
+    }
+
+    public function recipeWeeklyMenu(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'target_calories' => 'sometimes|integer|min:800|max:5000',
+            'diet' => 'sometimes|in:none,vegetarian,vegan,pescatarian,halal,kosher,keto,low_carb',
+            'allergies' => 'sometimes|array',
+            'allergies.*' => 'string',
+            'cuisine_preferences' => 'sometimes|array',
+            'cuisine_preferences.*' => 'string',
+            'servings' => 'sometimes|integer|min:1|max:10',
+            'notes' => 'sometimes|nullable|string|max:500',
+            'query' => 'sometimes|nullable|string|max:300',
+        ]);
+        $data['days'] = 7;
+        $data['allergies'] = $this->mergeUserExclusions($request, $data['allergies'] ?? []);
+
+        $sessionUser = $request->session()->get('user');
+        if ($sessionUser && empty($data['diet']) && !empty($sessionUser->dietary_preferences)) {
+            $first = is_array($sessionUser->dietary_preferences)
+                ? ($sessionUser->dietary_preferences[0] ?? null)
+                : $sessionUser->dietary_preferences;
+            if (is_string($first)) {
+                $data['diet'] = $first;
+            }
+        }
+
+        // 7 days × 4 meals × LLM call can take 5-15 minutes.
+        @set_time_limit(900);
+
+        return $this->saveMealPlan(
+            request: $request,
+            data: $data,
+            span: 'weekly',
+            generator: fn () => $this->recipe->generateWeeklyMenu($data),
+        );
+    }
+
+    /**
+     * Run the meal-plan generator, persist the result for logged-in users,
+     * and return the merged payload (with `_plan_id` when saved).
+     */
+    protected function saveMealPlan(Request $request, array $data, string $span, \Closure $generator): JsonResponse
+    {
+        try {
+            $result = $generator();
+        } catch (AiServiceException $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode() ?: 502);
+        }
+
+        $userId = $this->sessionUserId($request);
+        if ($userId !== null) {
+            try {
+                $plan = MealPlan::create([
+                    'user_id' => $userId,
+                    'span' => $span,
+                    'target_calories' => $data['target_calories'] ?? null,
+                    'diet' => $data['diet'] ?? null,
+                    'request_payload' => $data,
+                    'payload' => $result,
+                ]);
+                $result['_plan_id'] = $plan->id;
+                $result['span'] = $span;
+            } catch (\Throwable $e) {
+                \Log::warning('MealPlan save failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    public function chat(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'message' => 'required|string|max:4000',
+            'conversation_id' => 'sometimes|nullable|integer',
+            // Browser-side history is still accepted as a fallback for
+            // anonymous chats; persisted conversations override it.
+            'history' => 'sometimes|array|max:20',
+            'history.*.role' => 'required_with:history|in:user,assistant',
+            'history.*.content' => 'required_with:history|string|max:4000',
+        ]);
+
+        $userId = $this->sessionUserId($request);
+        $conversation = $this->resolveConversation($userId, $data['conversation_id'] ?? null);
+
+        // STEP 1: detect dietary intent (e.g. "I can't eat fish") so we can
+        // act on it BEFORE the LLM replies. Saved exclusions immediately
+        // affect the next recipe generation and are surfaced in user_context.
+        $dietaryChange = $this->applyDietaryIntent($userId, $data['message']);
+
+        // Build a compact "what we know about this user" block the gateway
+        // injects into the system prompt. Without this the chat can only
+        // answer in the abstract — it has no idea about the user's profile
+        // or their saved health-checkup data.
+        $userContext = $this->buildUserContext($userId);
+
+        // Persist the USER turn before the LLM call. If the browser disconnects
+        // mid-generation, the user message is still in the DB and the next
+        // poll/page-load will see a "waiting for assistant" tail.
+        if ($conversation) {
+            ChatMessage::create([
+                'conversation_id' => $conversation->id,
+                'role' => 'user',
+                'content' => $data['message'],
+            ]);
+            if (empty($conversation->title)) {
+                $conversation->title = \Illuminate\Support\Str::limit($data['message'], 60);
+            }
+            $conversation->last_message_at = now();
+            $conversation->save();
+        }
+
+        // Build LLM history from the persisted conversation (10 most recent
+        // turns, including the user message we just inserted). Fall back to
+        // the client-supplied history when we have no conversation.
+        $history = $conversation
+            ? $conversation->messages()->latest('id')->limit(11)->get()
+                ->reverse()
+                ->slice(0, -1) // drop the just-inserted user message; it's $data['message']
+                ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+                ->values()->all()
+            : ($data['history'] ?? []);
+
+        // Keep the PHP process alive even if the browser disconnects so the
+        // LLM call finishes and the assistant reply gets persisted. Without
+        // this, navigating away would orphan the user turn.
+        @ignore_user_abort(true);
+        @set_time_limit(180);
+
+        $reply = '';
+        $error = null;
+        try {
+            $result = $this->chat->send(
+                message: $data['message'],
+                history: $history,
+                userContext: $userContext,
+            );
+            $reply = (string) ($result['reply'] ?? '');
+        } catch (AiServiceException $e) {
+            $error = $e->getMessage();
+            $result = ['error' => $error];
+            // Persist a synthetic assistant message so the UI can recover
+            // gracefully on the next poll instead of waiting forever.
+            $reply = "Sorry — something went wrong: {$error}";
+        }
+
+        // If we acted on a dietary change, prepend a short confirmation so
+        // the user knows the system actually did something — not just that
+        // the assistant talked about it.
+        if ($dietaryChange['acted']) {
+            $reply = $dietaryChange['notice'] . "\n\n" . $reply;
+            $result['reply'] = $reply;
+            $result['dietary_update'] = $dietaryChange;
+        }
+
+        if ($conversation) {
+            ChatMessage::create([
+                'conversation_id' => $conversation->id,
+                'role' => 'assistant',
+                'content' => $reply,
+            ]);
+            $conversation->last_message_at = now();
+            $conversation->save();
+            $result['conversation_id'] = $conversation->id;
+        }
+
+        // Kick off the regen LAST so the response goes back to the user
+        // before we tie up the gateway with another long LLM call.
+        if ($dietaryChange['regenerate']) {
+            $this->spawnWeeklyMenuRegen($userId);
+        }
+
+        if ($error !== null) {
+            return response()->json(['error' => $error, 'conversation_id' => $conversation?->id], 502);
+        }
+        return response()->json($result);
+    }
+
+    /**
+     * Apply a dietary intent (if any) to the user's saved food_exclusions.
+     * Returns:
+     *   [
+     *     'acted'      => bool,       // did we change anything?
+     *     'regenerate' => bool,       // should we spawn a weekly-menu regen?
+     *     'added'      => string[],
+     *     'removed'    => string[],
+     *     'notice'     => string,     // human-readable confirmation
+     *   ]
+     */
+    protected function applyDietaryIntent(?int $userId, string $message): array
+    {
+        $result = ['acted' => false, 'regenerate' => false, 'added' => [], 'removed' => [], 'notice' => ''];
+        if ($userId === null) return $result;
+
+        $intent = $this->dietaryIntent->detect($message);
+        if (!$intent['exclude'] && !$intent['include']) return $result;
+
+        $user = User::find($userId);
+        if (!$user) return $result;
+
+        $current = is_array($user->food_exclusions) ? $user->food_exclusions : [];
+        $currentLower = array_map('mb_strtolower', $current);
+
+        $added = [];
+        foreach ($intent['exclude'] as $food) {
+            if (!in_array(mb_strtolower($food), $currentLower, true)) {
+                $current[] = $food;
+                $currentLower[] = mb_strtolower($food);
+                $added[] = $food;
+            }
+        }
+
+        $removed = [];
+        foreach ($intent['include'] as $food) {
+            $low = mb_strtolower($food);
+            $idx = array_search($low, $currentLower, true);
+            if ($idx !== false) {
+                $removed[] = $current[$idx];
+                array_splice($current, $idx, 1);
+                array_splice($currentLower, $idx, 1);
+            }
+        }
+
+        if (!$added && !$removed) return $result;
+
+        $user->food_exclusions = array_values($current);
+        $user->save();
+
+        // Mirror back into the session user so subsequent requests in the
+        // same session see the update without a fresh login.
+        $sessionUser = request()->session()->get('user');
+        if ($sessionUser instanceof User && $sessionUser->id === $user->id) {
+            $sessionUser->food_exclusions = $user->food_exclusions;
+            request()->session()->put('user', $sessionUser);
+        }
+
+        $parts = [];
+        if ($added) $parts[] = 'added ' . implode(', ', $added);
+        if ($removed) $parts[] = 'removed ' . implode(', ', $removed);
+        $notice = '✓ Updated your food preferences: ' . implode('; ', $parts) . '.';
+
+        // Trigger a regen only when there's an active plan to refresh.
+        $hasPlan = MealPlan::where('user_id', $userId)->exists();
+        if ($hasPlan) {
+            $notice .= ' Regenerating your weekly menu in the background (a few minutes) — refresh /recipe shortly to see it.';
+        }
+
+        return [
+            'acted' => true,
+            'regenerate' => $hasPlan,
+            'added' => $added,
+            'removed' => $removed,
+            'notice' => $notice,
+        ];
+    }
+
+    /**
+     * Kick off a weekly-menu regeneration as a detached background process
+     * so the chat reply can return immediately. We use an artisan command
+     * (php artisan menu:regenerate {userId}) and disown it via shell.
+     */
+    protected function spawnWeeklyMenuRegen(int $userId): void
+    {
+        $artisan = base_path('artisan');
+        $php = PHP_BINARY ?: 'php';
+        $log = storage_path('logs/menu-regen.log');
+        // Use nohup + & to fully detach so the parent request can return.
+        $cmd = sprintf(
+            'nohup %s %s menu:regenerate %d >> %s 2>&1 &',
+            escapeshellarg($php),
+            escapeshellarg($artisan),
+            $userId,
+            escapeshellarg($log),
+        );
+        @shell_exec($cmd);
+    }
+
+    public function listConversations(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['conversations' => []]);
+        }
+        $conversations = ChatConversation::where('user_id', $userId)
+            ->orderByDesc('last_message_at')
+            ->limit(50)
+            ->get(['id', 'title', 'last_message_at', 'created_at']);
+        return response()->json(['conversations' => $conversations]);
+    }
+
+    public function showConversation(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $conv = ChatConversation::find($id);
+        if (!$conv || $conv->user_id !== $userId) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $messages = $conv->messages()->get(['id', 'role', 'content', 'created_at']);
+        return response()->json([
+            'id' => $conv->id,
+            'title' => $conv->title,
+            'messages' => $messages,
+        ]);
+    }
+
+    public function deleteConversation(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $conv = ChatConversation::find($id);
+        if (!$conv || $conv->user_id !== $userId) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $conv->delete();
+        return response()->json(['deleted' => true]);
+    }
+
+    public function listExercisePlans(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['plans' => []]);
+        }
+        $plans = ExercisePlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get(['id', 'title', 'fitness_goals', 'available_days', 'created_at']);
+        return response()->json(['plans' => $plans]);
+    }
+
+    public function showExercisePlan(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $plan = ExercisePlan::find($id);
+        if (!$plan || $plan->user_id !== $userId) {
+            return response()->json(['error' => 'Plan not found'], 404);
+        }
+        return response()->json($plan->payload + ['_plan_id' => $plan->id]);
+    }
+
+    public function listMealPlans(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['plans' => []]);
+        }
+        $plans = MealPlan::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get(['id', 'span', 'target_calories', 'diet', 'created_at']);
+        return response()->json(['plans' => $plans]);
+    }
+
+    public function showMealPlan(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $plan = MealPlan::find($id);
+        if (!$plan || $plan->user_id !== $userId) {
+            return response()->json(['error' => 'Plan not found'], 404);
+        }
+        return response()->json($plan->payload + ['_plan_id' => $plan->id, 'span' => $plan->span]);
+    }
+
+    /**
+     * Resolve the meal plan to display on /recipe for the current week.
+     * Picks the most recent weekly plan; falls back to the most recent
+     * daily plan. Returns 404 (with an empty body) if the user has no
+     * plans yet — the page treats that as "click Generate."
+     */
+    public function activeMealPlan(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['plan' => null], 200);
+        }
+        $plan = MealPlan::where('user_id', $userId)
+            ->where('span', 'weekly')
+            ->orderByDesc('created_at')
+            ->first()
+            ?? MealPlan::where('user_id', $userId)
+                ->orderByDesc('created_at')
+                ->first();
+        if (!$plan) {
+            return response()->json(['plan' => null], 200);
+        }
+        return response()->json([
+            'plan_id' => $plan->id,
+            'span' => $plan->span,
+            'created_at' => $plan->created_at,
+            'payload' => $plan->payload,
+        ]);
+    }
+
+    public function listLikedMeals(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['likes' => []]);
+        }
+        $likes = LikedMeal::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get(['id', 'meal_plan_id', 'day_key', 'meal_type', 'title', 'snapshot', 'created_at']);
+        return response()->json(['likes' => $likes]);
+    }
+
+    public function likeMeal(Request $request): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) {
+            return response()->json(['error' => 'Login required'], 401);
+        }
+        $data = $request->validate([
+            'meal_plan_id' => 'sometimes|nullable|integer',
+            'day_key' => 'sometimes|nullable|string|max:32',
+            'meal_type' => 'required|string|in:breakfast,lunch,dinner,snack',
+            'title' => 'required|string|max:255',
+            'snapshot' => 'required|array',
+        ]);
+        // upsert-ish: if the user already liked this exact slot, return it.
+        $existing = LikedMeal::where('user_id', $userId)
+            ->where('meal_plan_id', $data['meal_plan_id'] ?? null)
+            ->where('day_key', $data['day_key'] ?? null)
+            ->where('meal_type', $data['meal_type'])
+            ->first();
+        if ($existing) {
+            return response()->json(['like' => $existing, 'created' => false]);
+        }
+        $like = LikedMeal::create([
+            'user_id' => $userId,
+            'meal_plan_id' => $data['meal_plan_id'] ?? null,
+            'day_key' => $data['day_key'] ?? null,
+            'meal_type' => $data['meal_type'],
+            'title' => $data['title'],
+            'snapshot' => $data['snapshot'],
+        ]);
+        return response()->json(['like' => $like, 'created' => true], 201);
+    }
+
+    public function unlikeMeal(Request $request, int $id): JsonResponse
+    {
+        $userId = $this->sessionUserId($request);
+        $like = LikedMeal::find($id);
+        if (!$like || $like->user_id !== $userId) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+        $like->delete();
+        return response()->json(['deleted' => true]);
+    }
+
+    /**
+     * Merge the user's saved food_exclusions into a per-request allergies
+     * list (case-insensitive, no duplicates). Used by recipe daily/weekly
+     * so the generator always honours what the user told the chat.
+     */
+    protected function mergeUserExclusions(Request $request, array $allergies): array
+    {
+        $userId = $this->sessionUserId($request);
+        if ($userId === null) return array_values(array_unique($allergies));
+        $user = User::find($userId);
+        if (!$user || empty($user->food_exclusions) || !is_array($user->food_exclusions)) {
+            return array_values(array_unique($allergies));
+        }
+        $merged = $allergies;
+        $lowered = array_map('mb_strtolower', $merged);
+        foreach ($user->food_exclusions as $excl) {
+            $low = mb_strtolower((string) $excl);
+            if (!in_array($low, $lowered, true)) {
+                $merged[] = $excl;
+                $lowered[] = $low;
+            }
+        }
+        return array_values($merged);
+    }
+
+    /**
+     * Compose a plain-text block summarising what the assistant should know
+     * about this user: profile + most recent health checkup. Returns null
+     * when the user isn't logged in. Kept short on purpose — every chat
+     * turn pays for this in tokens.
+     */
+    protected function buildUserContext(?int $userId): ?string
+    {
+        if ($userId === null) {
+            return null;
+        }
+        $user = User::find($userId);
+        if (!$user) {
+            return null;
+        }
+
+        $lines = [];
+        $name = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        if ($name !== '') {
+            $lines[] = "Name: {$name}";
+        }
+        $profile = [];
+        if (!empty($user->age)) $profile[] = "age {$user->age}";
+        if (!empty($user->gender)) $profile[] = "{$user->gender}";
+        if (!empty($user->height)) $profile[] = "height {$user->height} cm";
+        if (!empty($user->weight)) $profile[] = "weight {$user->weight} kg";
+        if ($profile) {
+            $lines[] = 'Profile: ' . implode(', ', $profile);
+        }
+        if (!empty($user->dietary_preferences)) {
+            $diet = is_array($user->dietary_preferences)
+                ? implode(', ', $user->dietary_preferences)
+                : (string) $user->dietary_preferences;
+            if ($diet !== '') $lines[] = "Dietary preferences: {$diet}";
+        }
+        if (!empty($user->food_exclusions) && is_array($user->food_exclusions)) {
+            $lines[] = 'Foods to AVOID (user said they cannot/will not eat): '
+                . implode(', ', $user->food_exclusions);
+        }
+
+        // Pull the most recent health checkup (if any) and lift only the
+        // small, decision-grade fields. Avoid dumping the raw biomarker
+        // array — that's huge and rarely useful in a chat reply.
+        $report = HealthReport::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->first();
+        if ($report) {
+            $when = optional($report->created_at)->toDateString() ?? 'recent';
+            $lines[] = "\nLatest health checkup ({$when}, file: {$report->original_filename}):";
+            if (!empty($report->overall_severity)) {
+                $lines[] = "  Overall severity: {$report->overall_severity}";
+            }
+            $counts = [];
+            if (!is_null($report->biomarker_count)) $counts[] = "{$report->biomarker_count} biomarkers";
+            if (!is_null($report->abnormal_count)) $counts[] = "{$report->abnormal_count} abnormal";
+            if (!is_null($report->critical_count)) $counts[] = "{$report->critical_count} critical";
+            if ($counts) $lines[] = '  Counts: ' . implode(', ', $counts);
+
+            if (!empty($report->summary)) {
+                $lines[] = '  Summary: ' . \Illuminate\Support\Str::limit($report->summary, 600);
+            }
+
+            $payload = $report->payload ?? [];
+            $abnormal = $payload['abnormal_findings'] ?? [];
+            if (is_array($abnormal) && !empty($abnormal)) {
+                $lines[] = '  Abnormal findings:';
+                foreach (array_slice($abnormal, 0, 10) as $finding) {
+                    if (!is_array($finding)) continue;
+                    $bio = $finding['biomarker'] ?? ($finding['name'] ?? 'unknown');
+                    $val = $finding['value'] ?? null;
+                    $unit = $finding['unit'] ?? '';
+                    $sev = $finding['severity'] ?? '';
+                    $note = $finding['note'] ?? ($finding['interpretation'] ?? '');
+                    $valStr = $val !== null ? "{$val} {$unit}" : '';
+                    $extra = $sev ? " [{$sev}]" : '';
+                    $lines[] = "    - {$bio}: {$valStr}{$extra}"
+                        . ($note ? ' — ' . \Illuminate\Support\Str::limit((string) $note, 120) : '');
+                }
+            }
+
+            $critical = $payload['critical_findings'] ?? [];
+            if (is_array($critical) && !empty($critical)) {
+                $lines[] = '  Critical findings (urgent):';
+                foreach (array_slice($critical, 0, 5) as $finding) {
+                    if (!is_array($finding)) continue;
+                    $bio = $finding['biomarker'] ?? ($finding['name'] ?? 'unknown');
+                    $val = $finding['value'] ?? null;
+                    $unit = $finding['unit'] ?? '';
+                    $lines[] = "    - {$bio}: " . ($val !== null ? "{$val} {$unit}" : '(see report)');
+                }
+            }
+
+            $diet = $payload['diet_advice'] ?? null;
+            if (is_string($diet) && trim($diet) !== '') {
+                $lines[] = '  Diet advice from report: ' . \Illuminate\Support\Str::limit($diet, 300);
+            }
+            $exercise = $payload['exercise_advice'] ?? null;
+            if (is_string($exercise) && trim($exercise) !== '') {
+                $lines[] = '  Exercise advice from report: ' . \Illuminate\Support\Str::limit($exercise, 300);
+            }
+        } else {
+            $lines[] = "\nNo health checkup uploaded yet.";
+        }
+
+        return $lines ? implode("\n", $lines) : null;
+    }
+
+    /**
+     * Find or create the conversation we should write into. We only persist
+     * for logged-in users — anonymous chats are ephemeral.
+     */
+    protected function resolveConversation(?int $userId, mixed $explicitId): ?ChatConversation
+    {
+        if ($userId === null) {
+            return null;
+        }
+        if ($explicitId !== null) {
+            $conv = ChatConversation::find((int) $explicitId);
+            if ($conv && $conv->user_id === $userId) {
+                return $conv;
+            }
+        }
+        return ChatConversation::create([
+            'user_id' => $userId,
+            'last_message_at' => now(),
+        ]);
     }
 
     protected function call(\Closure $fn): JsonResponse

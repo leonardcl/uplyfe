@@ -10,4 +10,9 @@ class RecipeService
     {
         return $this->client->postJson('/recipe/daily-menu', $request);
     }
+
+    public function generateWeeklyMenu(array $request): array
+    {
+        return $this->client->postJson('/recipe/weekly-menu', $request);
+    }
 }

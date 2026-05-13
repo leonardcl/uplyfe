@@ -17,18 +17,39 @@ class OllamaError(RuntimeError):
     pass
 
 
-def generate_json(prompt: str, *, system: str | None = None, temperature: float = 0.4) -> dict[str, Any]:
+def generate_json(
+    prompt: str,
+    *,
+    system: str | None = None,
+    temperature: float = 0.4,
+    model: str | None = None,
+) -> dict[str, Any]:
     """Call Ollama and return the parsed JSON object the model produced.
 
     Uses Ollama's `format=json` mode so the model is forced to emit JSON.
+    Pass `model` to override the configured default (e.g. a smaller, faster
+    model for chat).
     """
     settings = get_settings()
     payload: dict[str, Any] = {
-        "model": settings.ollama_model,
+        "model": model or settings.ollama_model,
         "prompt": prompt,
         "stream": False,
         "format": "json",
-        "options": {"temperature": temperature},
+        # gemma4:26b advertises the "thinking" capability — without disabling
+        # it, the model burns its num_predict budget on hidden reasoning
+        # tokens, leaving an empty or truncated `response` field.
+        "think": False,
+        "options": {
+            "temperature": temperature,
+            # num_predict caps generation length; gemma-family models can
+            # wander into long loops that hit our HTTP timeout.
+            "num_predict": 2048,
+            # Defensive against token-level degeneration on longer outputs.
+            "repeat_penalty": 1.15,
+            "top_p": 0.9,
+            "top_k": 40,
+        },
     }
     if system:
         payload["system"] = system

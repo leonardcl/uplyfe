@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -151,95 +152,36 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button
-                        class="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
-                        <iconify-icon icon="lucide:search" class="text-xl"></iconify-icon>
+                <div class="flex items-center gap-3 relative">
+                    <button id="new-chat-button" title="Start a new chat"
+                        class="px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors flex items-center gap-1">
+                        <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+                        <span class="hidden sm:inline">New chat</span>
                     </button>
-                    <button
+                    <button id="history-toggle" title="Conversation history"
                         class="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
-                        <iconify-icon icon="lucide:more-vertical" class="text-xl"></iconify-icon>
+                        <iconify-icon icon="lucide:history" class="text-xl"></iconify-icon>
                     </button>
+                    <div id="history-dropdown"
+                        class="hidden absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-card border border-border rounded-xl shadow-lg z-50 p-2">
+                        <p class="text-xs font-bold text-muted-foreground px-3 py-2 sticky top-0 bg-card">Recent conversations</p>
+                        <div id="history-list" class="flex flex-col gap-1">
+                            <p class="text-xs text-muted-foreground px-3 py-4 text-center">Loading…</p>
+                        </div>
+                    </div>
                 </div>
             </header>
 
             <!-- Chat Area -->
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 scroll-smooth">
-
-                <!-- Date Divider -->
-                <div class="flex justify-center">
-                    <span class="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">Today</span>
+                <div id="chat-empty-state" class="m-auto text-center max-w-md py-12">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4">
+                        <iconify-icon icon="lucide:sparkles" class="text-3xl"></iconify-icon>
+                    </div>
+                    <h2 class="text-lg font-heading font-bold">Hi {{ $user->first_name ?? 'there' }} — how can I help today?</h2>
+                    <p class="text-sm text-muted-foreground mt-2">Ask about your habits, diet, recipes, or workouts. Conversations are saved automatically.</p>
                 </div>
-
-                <!-- AI Message -->
-                <div class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
-                    <div
-                        class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-                        <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
-                        <div
-                            class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
-                            Hi Sarah! I've analyzed your latest checkup report. Your cholesterol is looking great, but I
-                            noticed your Vitamin D is slightly low. How can I help you today?
-                        </div>
-                        <div class="flex gap-2 mt-2">
-                            <button
-                                class="px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors">Suggest
-                                a Vitamin D rich recipe</button>
-                            <button
-                                class="px-3 py-1.5 rounded-full border border-border bg-background text-muted-foreground text-xs font-semibold hover:bg-muted transition-colors">Explain
-                                my cholesterol levels</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- User Message -->
-                <div class="flex gap-4 max-w-3xl ml-auto flex-row-reverse animate-[fadeIn_0.3s_ease-out]">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
-                        class="w-8 h-8 rounded-full border border-border flex-shrink-0 mt-1">
-                    <div class="flex flex-col gap-1 items-end">
-                        <span class="text-xs font-bold text-muted-foreground mr-1">You</span>
-                        <div
-                            class="bg-primary text-primary-foreground rounded-2xl rounded-tr-none p-4 shadow-sm text-sm leading-relaxed">
-                            Can you give me a quick 15-minute workout I can do at home? I want something light.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- AI Message (Typing Simulation) -->
-                <div class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
-                    <div
-                        class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-                        <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
-                        <div
-                            class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
-                            <p class="mb-3">Absolutely! Based on your preference for light activity, here is a quick
-                                15-minute mobility and stretching routine. It's gentle on the joints and perfect for
-                                home.</p>
-
-                            <div
-                                class="bg-background rounded-xl border border-border p-3 flex items-center gap-3 hover:border-primary/50 cursor-pointer transition-colors">
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                    <iconify-icon icon="lucide:play"></iconify-icon>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="font-bold text-sm">15-Min Light Mobility Flow</p>
-                                    <p class="text-xs text-muted-foreground">No equipment needed</p>
-                                </div>
-                                <iconify-icon icon="lucide:chevron-right" class="text-muted-foreground"></iconify-icon>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spacer for input -->
-                <div class="h-20"></div>
+                <div id="chat-spacer" class="h-20"></div>
             </div>
 
             <!-- Input Area -->
@@ -268,43 +210,176 @@
     </div>
 
     <script>
-        document.getElementById('send-button').addEventListener('click', function() {
+        const chatHistory = [];
+        // Server-assigned conversation id. Persisted in localStorage so it
+        // survives page navigation — when the user comes back to /chat, we
+        // resume the same thread rather than starting fresh.
+        const CID_KEY = 'uplyfe.chat.conversationId';
+        let conversationId = (() => {
+            const raw = localStorage.getItem(CID_KEY);
+            return raw ? Number(raw) : null;
+        })();
+
+        function setConversationId(id) {
+            conversationId = id;
+            if (id) {
+                localStorage.setItem(CID_KEY, String(id));
+            } else {
+                localStorage.removeItem(CID_KEY);
+            }
+        }
+
+        function clearMessageArea() {
+            const chatMessages = document.getElementById('chat-messages');
+            // Keep the empty state + spacer, drop every other child.
+            [...chatMessages.children].forEach((child) => {
+                if (child.id !== 'chat-empty-state' && child.id !== 'chat-spacer') {
+                    child.remove();
+                }
+            });
+        }
+
+        function hideEmptyState() {
+            const el = document.getElementById('chat-empty-state');
+            if (el) el.classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            const el = document.getElementById('chat-empty-state');
+            if (el) el.classList.remove('hidden');
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderUserMessage(message) {
+            return `
+                <div class="flex gap-4 max-w-3xl ml-auto flex-row-reverse animate-[fadeIn_0.3s_ease-out]">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="w-8 h-8 rounded-full border border-border flex-shrink-0 mt-1">
+                    <div class="flex flex-col gap-1 items-end">
+                        <span class="text-xs font-bold text-muted-foreground mr-1">You</span>
+                        <div class="bg-primary text-primary-foreground rounded-2xl rounded-tr-none p-4 shadow-sm text-sm leading-relaxed">
+                            ${escapeHtml(message).replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBotMessage(content, opts = {}) {
+            const id = opts.id ? `id="${opts.id}"` : '';
+            const body = opts.isHtml ? content : escapeHtml(content).replace(/\n/g, '<br>');
+            return `
+                <div ${id} class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
+                        <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
+                        <div class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
+                            ${body}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function sendChat() {
             const textarea = document.querySelector('textarea');
+            const sendBtn = document.getElementById('send-button');
             const message = textarea.value.trim();
-            if (message) {
-                const chatMessages = document.getElementById('chat-messages');
-                const userMessageHTML = `
-                    <div class="flex gap-4 max-w-3xl ml-auto flex-row-reverse animate-[fadeIn_0.3s_ease-out]">
-                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="w-8 h-8 rounded-full border border-border flex-shrink-0 mt-1">
-                        <div class="flex flex-col gap-1 items-end">
-                            <span class="text-xs font-bold text-muted-foreground mr-1">You</span>
-                            <div class="bg-primary text-primary-foreground rounded-2xl rounded-tr-none p-4 shadow-sm text-sm leading-relaxed">
-                                ${message.replace(/\n/g, '<br>')}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                chatMessages.insertAdjacentHTML('beforeend', userMessageHTML);
+            if (!message) return;
 
-                const botMessageHTML = `
-                    <div class="flex gap-4 max-w-3xl animate-[fadeIn_0.3s_ease-out]">
-                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-                            <iconify-icon icon="lucide:bot" class="text-sm"></iconify-icon>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <span class="text-xs font-bold text-muted-foreground ml-1">Uplyfe AI</span>
-                            <div class="bg-card border border-border rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed">
-                                Hello, I am Uplyfe chatbot.
-                            </div>
-                        </div>
-                    </div>
-                `;
-                chatMessages.insertAdjacentHTML('beforeend', botMessageHTML);
+            hideEmptyState();
+            const chatMessages = document.getElementById('chat-messages');
+            const spacer = document.getElementById('chat-spacer');
+            const insertBefore = (html) => {
+                if (spacer) {
+                    spacer.insertAdjacentHTML('beforebegin', html);
+                } else {
+                    chatMessages.insertAdjacentHTML('beforeend', html);
+                }
+            };
+            insertBefore(renderUserMessage(message));
 
-                textarea.value = '';
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
+            const pendingId = 'pending-' + Date.now();
+            const pendingHtml = `
+                <span class="inline-flex gap-1 items-center text-muted-foreground">
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:0ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:150ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:300ms"></span>
+                </span>
+            `;
+            insertBefore(renderBotMessage(pendingHtml, { id: pendingId, isHtml: true }));
+
+            textarea.value = '';
+            textarea.style.height = 'auto';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                const res = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        message,
+                        conversation_id: conversationId,
+                        history: chatHistory.slice(-10),
+                    }),
+                });
+
+                let reply;
+                if (!res.ok) {
+                    let detail = '';
+                    try {
+                        const j = await res.json();
+                        detail = j.error || j.message || '';
+                    } catch (_) { /* ignore */ }
+                    reply = `Sorry — something went wrong (HTTP ${res.status})${detail ? `: ${detail}` : ''}.`;
+                } else {
+                    const data = await res.json();
+                    reply = data.reply || 'I had no response. Try again.';
+                    if (data.conversation_id) {
+                        setConversationId(data.conversation_id);
+                        // Refresh history dropdown so the new conversation
+                        // (and its auto-generated title) shows up immediately.
+                        loadConversationList();
+                    }
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'assistant', content: reply });
+                }
+
+                const pending = document.getElementById(pendingId);
+                if (pending) pending.outerHTML = renderBotMessage(reply);
+            } catch (err) {
+                const pending = document.getElementById(pendingId);
+                const msg = `Network error: ${err?.message || err}`;
+                if (pending) pending.outerHTML = renderBotMessage(msg);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        document.getElementById('send-button').addEventListener('click', sendChat);
+        document.querySelector('textarea').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChat();
             }
         });
 
@@ -333,6 +408,207 @@
         }
 
         document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
+
+        // ---------- Conversation history wiring ----------
+        // Tracks an active poll loop so we don't start a second one when the
+        // user clicks around. Cleared when the assistant reply arrives.
+        let pollHandle = null;
+        let lastSeenMessageId = 0;
+
+        function clearPoll() {
+            if (pollHandle) {
+                clearTimeout(pollHandle);
+                pollHandle = null;
+            }
+        }
+
+        function ensurePendingBubble() {
+            if (document.getElementById('pending-poll')) return;
+            hideEmptyState();
+            const spacer = document.getElementById('chat-spacer');
+            const html = `
+                <span class="inline-flex gap-1 items-center text-muted-foreground">
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:0ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:150ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-current animate-bounce" style="animation-delay:300ms"></span>
+                </span>
+            `;
+            const bubble = renderBotMessage(html, { id: 'pending-poll', isHtml: true });
+            if (spacer) spacer.insertAdjacentHTML('beforebegin', bubble);
+        }
+
+        async function pollForAssistantReply(cid) {
+            // Stop polling when the user navigates away.
+            if (document.hidden) {
+                pollHandle = setTimeout(() => pollForAssistantReply(cid), 4000);
+                return;
+            }
+            try {
+                const res = await fetch(`/api/chat-conversations/${cid}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!res.ok) {
+                    clearPoll();
+                    return;
+                }
+                const data = await res.json();
+                const msgs = data.messages || [];
+                // Append any messages we haven't seen yet (could be the
+                // assistant reply, or a user message sent from another tab).
+                const newOnes = msgs.filter(m => m.id > lastSeenMessageId);
+                if (newOnes.length > 0) {
+                    const spacer = document.getElementById('chat-spacer');
+                    const insertBefore = (html) =>
+                        spacer ? spacer.insertAdjacentHTML('beforebegin', html) : null;
+                    for (const m of newOnes) {
+                        // Don't double-render messages that the synchronous
+                        // sendChat() path already inserted into the DOM —
+                        // those are tracked in chatHistory by content.
+                        const alreadyShown = chatHistory.some(h => h.role === m.role && h.content === m.content);
+                        if (!alreadyShown) {
+                            insertBefore(m.role === 'user'
+                                ? renderUserMessage(m.content)
+                                : renderBotMessage(m.content));
+                            chatHistory.push({ role: m.role, content: m.content });
+                        }
+                        lastSeenMessageId = Math.max(lastSeenMessageId, m.id);
+                    }
+                    const chatMessages = document.getElementById('chat-messages');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+                // If the tail is now an assistant message, we're done.
+                const tail = msgs[msgs.length - 1];
+                if (tail && tail.role === 'assistant') {
+                    const pending = document.getElementById('pending-poll');
+                    if (pending) pending.remove();
+                    clearPoll();
+                    return;
+                }
+            } catch (e) {
+                // Network blip — keep polling.
+            }
+            pollHandle = setTimeout(() => pollForAssistantReply(cid), 2000);
+        }
+
+        async function loadConversation(id) {
+            try {
+                const res = await fetch(`/api/chat-conversations/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) {
+                    // Stored id may point to a conversation that was deleted
+                    // or that belongs to a different user (after logout/login).
+                    if (res.status === 404) setConversationId(null);
+                    return;
+                }
+                const data = await res.json();
+                setConversationId(data.id);
+                clearMessageArea();
+                clearPoll();
+                lastSeenMessageId = 0;
+                if (!data.messages || data.messages.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                hideEmptyState();
+                const spacer = document.getElementById('chat-spacer');
+                const insertBefore = (html) =>
+                    spacer ? spacer.insertAdjacentHTML('beforebegin', html) : null;
+                for (const m of data.messages) {
+                    insertBefore(m.role === 'user'
+                        ? renderUserMessage(m.content)
+                        : renderBotMessage(m.content));
+                    chatHistory.push({ role: m.role, content: m.content });
+                    lastSeenMessageId = Math.max(lastSeenMessageId, m.id);
+                }
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                // If the last message is the user's, the assistant reply is
+                // still in flight on the server — start polling so it appears
+                // automatically when ready.
+                const tail = data.messages[data.messages.length - 1];
+                if (tail && tail.role === 'user') {
+                    ensurePendingBubble();
+                    pollForAssistantReply(data.id);
+                }
+            } catch (e) {
+                console.warn('loadConversation failed:', e);
+            }
+        }
+
+        async function loadConversationList() {
+            const listEl = document.getElementById('history-list');
+            try {
+                const res = await fetch('/api/chat-conversations', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const data = res.ok ? await res.json() : { conversations: [] };
+                const items = data.conversations || [];
+                if (items.length === 0) {
+                    listEl.innerHTML = '<p class="text-xs text-muted-foreground px-3 py-4 text-center">No conversations yet.</p>';
+                    return;
+                }
+                listEl.innerHTML = items.map(c => {
+                    const isActive = c.id === conversationId;
+                    const title = escapeHtml(c.title || 'Untitled chat');
+                    const when = c.last_message_at
+                        ? new Date(c.last_message_at).toLocaleString()
+                        : '';
+                    return `
+                        <button data-cid="${c.id}"
+                            class="conv-item text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors ${isActive ? 'bg-muted' : ''}">
+                            <p class="text-sm font-medium truncate">${title}</p>
+                            <p class="text-[10px] text-muted-foreground">${escapeHtml(when)}</p>
+                        </button>
+                    `;
+                }).join('');
+                listEl.querySelectorAll('.conv-item').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const cid = Number(btn.dataset.cid);
+                        document.getElementById('history-dropdown').classList.add('hidden');
+                        chatHistory.length = 0;
+                        await loadConversation(cid);
+                    });
+                });
+            } catch (e) {
+                listEl.innerHTML = '<p class="text-xs text-destructive px-3 py-4 text-center">Failed to load.</p>';
+            }
+        }
+
+        document.getElementById('new-chat-button').addEventListener('click', () => {
+            setConversationId(null);
+            chatHistory.length = 0;
+            clearMessageArea();
+            showEmptyState();
+            document.getElementById('history-dropdown').classList.add('hidden');
+        });
+
+        document.getElementById('history-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dd = document.getElementById('history-dropdown');
+            const willOpen = dd.classList.contains('hidden');
+            dd.classList.toggle('hidden');
+            if (willOpen) loadConversationList();
+        });
+
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('history-dropdown');
+            const toggle = document.getElementById('history-toggle');
+            if (!dd.classList.contains('hidden') && !dd.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                dd.classList.add('hidden');
+            }
+        });
+
+        // On page open: resume the saved conversation if there is one.
+        if (conversationId) {
+            loadConversation(conversationId);
+        }
+        // Pre-load the dropdown list in the background so it opens instantly.
+        loadConversationList();
     </script>
 </body>
 

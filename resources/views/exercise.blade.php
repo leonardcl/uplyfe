@@ -137,12 +137,24 @@
                     </button>
                     <h1 class="text-xl font-heading font-bold">Exercise Routine</h1>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 relative">
                     <button id="weekly-view-btn" onclick="toggleWeeklyView()"
                         class="bg-card border border-border px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-muted transition-colors flex items-center gap-2">
                         <iconify-icon icon="lucide:calendar"></iconify-icon>
                         Weekly View
                     </button>
+                    <button id="plan-history-toggle" title="Past plans"
+                        class="bg-card border border-border px-3 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-muted transition-colors flex items-center gap-2">
+                        <iconify-icon icon="lucide:history"></iconify-icon>
+                        <span class="hidden sm:inline">History</span>
+                    </button>
+                    <div id="plan-history-dropdown"
+                        class="hidden absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-card border border-border rounded-xl shadow-lg z-50 p-2">
+                        <p class="text-xs font-bold text-muted-foreground px-3 py-2 sticky top-0 bg-card">Your past plans</p>
+                        <div id="plan-history-list" class="flex flex-col gap-1">
+                            <p class="text-xs text-muted-foreground px-3 py-4 text-center">Loading…</p>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -1386,6 +1398,82 @@
                     </summary>
                     <div class="text-sm text-muted-foreground mt-3 whitespace-pre-wrap">${escapeHtml(text)}</div>
                 </details>`;
+        }
+
+        // ---------- Past-plan history dropdown ----------
+        async function loadExercisePlanList() {
+            const listEl = document.getElementById('plan-history-list');
+            try {
+                const res = await fetch('/api/exercise-plans', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const data = res.ok ? await res.json() : { plans: [] };
+                const items = data.plans || [];
+                if (items.length === 0) {
+                    listEl.innerHTML = '<p class="text-xs text-muted-foreground px-3 py-4 text-center">No saved plans yet. Generate one and it\'ll appear here.</p>';
+                    return;
+                }
+                listEl.innerHTML = items.map(p => {
+                    const when = p.created_at ? new Date(p.created_at).toLocaleString() : '';
+                    const goal = p.fitness_goals || '—';
+                    const days = p.available_days ? ` · ${escapeHtml(p.available_days)} days` : '';
+                    return `
+                        <button data-pid="${p.id}"
+                            class="plan-item text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors">
+                            <p class="text-sm font-medium">Plan #${p.id} <span class="text-muted-foreground">· ${escapeHtml(goal)}${days}</span></p>
+                            <p class="text-[10px] text-muted-foreground">${escapeHtml(when)}</p>
+                        </button>
+                    `;
+                }).join('');
+                listEl.querySelectorAll('.plan-item').forEach(btn => {
+                    btn.addEventListener('click', () => loadExercisePlan(Number(btn.dataset.pid)));
+                });
+            } catch (e) {
+                listEl.innerHTML = '<p class="text-xs text-destructive px-3 py-4 text-center">Failed to load.</p>';
+            }
+        }
+
+        async function loadExercisePlan(id) {
+            try {
+                const res = await fetch(`/api/exercise-plans/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const payload = await res.json();
+                document.getElementById('plan-history-dropdown').classList.add('hidden');
+                applyAiPlanToExistingUi(payload);
+                if (typeof stashCoachAssessment === 'function' && payload.assessment) {
+                    stashCoachAssessment(payload.assessment, payload.equipment_resolved || []);
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                console.warn('loadExercisePlan failed:', e);
+            }
+        }
+
+        document.getElementById('plan-history-toggle')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dd = document.getElementById('plan-history-dropdown');
+            const willOpen = dd.classList.contains('hidden');
+            dd.classList.toggle('hidden');
+            if (willOpen) loadExercisePlanList();
+        });
+
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('plan-history-dropdown');
+            const toggle = document.getElementById('plan-history-toggle');
+            if (dd && !dd.classList.contains('hidden') && !dd.contains(e.target) && e.target !== toggle && !toggle?.contains(e.target)) {
+                dd.classList.add('hidden');
+            }
+        });
+
+        // Helper used by the dropdown when the page's own escapeHtml isn't in scope.
+        if (typeof escapeHtml !== 'function') {
+            window.escapeHtml = function (s) {
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            };
         }
     </script>
 </body>

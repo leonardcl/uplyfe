@@ -32,12 +32,11 @@ Route::prefix('ai')->group(function () {
     // No CSRF — they're JSON / multipart POSTs from authenticated pages.
     Route::middleware('api.session')->group(function () {
         Route::post('/health-checkup/upload', [AiController::class, 'healthCheckupUpload']);
-        Route::post('/exercise/generate', [AiController::class, 'exerciseGenerate']);
-    });
-
-    Route::middleware('auth:sanctum')->group(function () {
         Route::post('/health-checkup/manual', [AiController::class, 'healthCheckupManual']);
+        Route::post('/exercise/generate', [AiController::class, 'exerciseGenerate']);
         Route::post('/recipe/daily-menu', [AiController::class, 'recipeDailyMenu']);
+        Route::post('/recipe/weekly-menu', [AiController::class, 'recipeWeeklyMenu']);
+        Route::post('/chat', [AiController::class, 'chat']);
     });
 });
 
@@ -46,6 +45,31 @@ Route::prefix('ai')->group(function () {
 Route::middleware('api.session')->prefix('health-reports')->group(function () {
     Route::get('/', [AiController::class, 'listReports']);
     Route::get('/{id}', [AiController::class, 'showReport'])->where('id', '[0-9]+');
+});
+
+// Persisted history: chat conversations, exercise plans, meal plans. All
+// scoped to the session user — anonymous requests get empty lists / 404s.
+Route::middleware('api.session')->prefix('chat-conversations')->group(function () {
+    Route::get('/', [AiController::class, 'listConversations']);
+    Route::get('/{id}', [AiController::class, 'showConversation'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [AiController::class, 'deleteConversation'])->where('id', '[0-9]+');
+});
+
+Route::middleware('api.session')->prefix('exercise-plans')->group(function () {
+    Route::get('/', [AiController::class, 'listExercisePlans']);
+    Route::get('/{id}', [AiController::class, 'showExercisePlan'])->where('id', '[0-9]+');
+});
+
+Route::middleware('api.session')->prefix('meal-plans')->group(function () {
+    Route::get('/', [AiController::class, 'listMealPlans']);
+    Route::get('/active', [AiController::class, 'activeMealPlan']);
+    Route::get('/{id}', [AiController::class, 'showMealPlan'])->where('id', '[0-9]+');
+});
+
+Route::middleware('api.session')->prefix('meal-likes')->group(function () {
+    Route::get('/', [AiController::class, 'listLikedMeals']);
+    Route::post('/', [AiController::class, 'likeMeal']);
+    Route::delete('/{id}', [AiController::class, 'unlikeMeal'])->where('id', '[0-9]+');
 });
 
 // Exercise dataset images — serves the animated GIF for an exercise_id
