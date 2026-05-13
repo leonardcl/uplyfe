@@ -5,7 +5,7 @@ __pycache__/
 .venv/
 
 # --- Local config ---
-.env
+# .env
 
 # --- Generated data ---
 data/chroma/            # rebuild with `erg-ingest exercises`
@@ -15,7 +15,7 @@ data/prompt_debug.jsonl # optional debug log
 # Textbook PDFs stay ignored — they're commercially published works
 # (ACSM via Wolters Kluwer, NSCA via Human Kinetics) so distributing
 # them on a public repo would be copyright infringement.
-rag_sources/*.pdf
+# rag_sources/*.pdf
 # The free-exercise-db dataset is MIT-licensed and committed.
 # (Images: ~11 MB / 1324 JPGs. Videos: ~125 MB / 1324 GIFs.)
 
