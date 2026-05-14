@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Uplyfe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -61,6 +62,21 @@
 </head>
 
 <body>
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
 
         <!-- Sidebar Navigation -->
@@ -112,7 +128,7 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -141,12 +157,6 @@
                     <h1 class="text-xl font-heading font-bold">Health Checkup</h1>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button
-                        class="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
-                        <iconify-icon icon="lucide:bell" class="text-xl"></iconify-icon>
-                        <span
-                            class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive border border-card"></span>
-                    </button>
                     <button
                         class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center gap-2"
                         onclick="openNewReportModal()">
@@ -358,7 +368,7 @@
                             Upload a lab report to see your top three health insights here — cholesterol, blood sugar, and vitamin D.
                         </div>
 
-                        <!-- Summary Column -->
+                        <!-- Summary Column (filled from the loaded report's `summary` field) -->
                         <div class="mt-6">
                             <div class="bg-card rounded-2xl p-6 border border-border shadow-sm">
                                 <div class="flex items-start gap-3">
@@ -367,10 +377,8 @@
                                     </div>
                                     <div class="flex-1">
                                         <h3 class="font-bold mb-2">Summary</h3>
-                                        <p class="text-sm text-muted-foreground leading-relaxed">
-                                            Overall health trend is positive. Cholesterol and fasting blood sugar are in a healthy range,
-                                            while Vitamin D still needs improvement. Continue your current diet and exercise routine,
-                                            and add daily sunlight exposure or Vitamin D-rich foods to close the gap.
+                                        <p id="hc-overview-summary" class="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                            Upload a lab report to see your personalized health summary here.
                                         </p>
                                     </div>
                                 </div>
@@ -716,6 +724,13 @@
                 const data = await res.json();
                 // Insights first — that's what the user asked to surface.
                 renderInsightsGrid(data.key_insights || []);
+                // Fill the overview "Summary" card from the report's own
+                // narrative summary instead of leaving the hardcoded dummy.
+                const overviewEl = document.getElementById('hc-overview-summary');
+                if (overviewEl) {
+                    overviewEl.textContent = data.summary
+                        || 'No summary available for this report.';
+                }
                 // Mirror the matching summary from the list into the page
                 // header (file name + size) so renderReport has something.
                 const meta = hcReports.find(r => r.id === id) || {};
@@ -1033,10 +1048,36 @@
             document.getElementById('new-plan-modal').classList.add('hidden');
         }
 
-        function generateNewPlan() {
-            // Here you would generate the new plan
-            alert('New plan generation functionality would be implemented here.');
-            closeNewPlanModal();
+        async function generateNewPlan() {
+            // Triggers BOTH a weekly meal plan regen and a workout regen
+            // by sending an explicit chat message — the LLM router then
+            // spawns the two artisan commands in the background.
+            const btn = event?.currentTarget;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Starting…';
+            }
+            try {
+                const r1 = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        message: 'Please regenerate both my weekly meal plan and my workout routine based on my latest health checkup.'
+                    }),
+                });
+                if (!r1.ok) throw new Error('HTTP ' + r1.status);
+                closeNewPlanModal();
+                alert("Got it — I'm regenerating your meal plan and workout in the background. Open /recipe and /exercise in a few minutes; they auto-refresh once ready.");
+            } catch (e) {
+                alert('Could not start regeneration: ' + (e?.message || e));
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<iconify-icon icon="lucide:refresh-cw" class="text-base"></iconify-icon> Generate Plan';
+                }
+            }
         }
     </script>
 </body>

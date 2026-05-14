@@ -62,6 +62,21 @@
 </head>
 
 <body>
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation (Same as Dashboard) -->
         <aside id="mobile-sidebar"
@@ -112,7 +127,7 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -139,10 +154,43 @@
                     <h1 class="text-xl font-heading font-bold">Nutrition & Recipes</h1>
                 </div>
                 <div class="flex items-center gap-3 relative">
-                    <div
-                        class="hidden sm:flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full text-sm font-medium">
-                        <iconify-icon icon="lucide:flame" class="text-orange-500"></iconify-icon>
-                        <span>2,150 kcal / day</span>
+                    <!-- Calorie goal badge — click to open popover -->
+                    <button id="calorie-goal-btn"
+                        class="flex items-center gap-1.5 bg-muted hover:bg-muted/80 px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer select-none"
+                        aria-label="Set daily calorie goal">
+                        <iconify-icon icon="lucide:flame" class="text-orange-500 text-base"></iconify-icon>
+                        <span id="daily-kcal-text">— kcal</span>
+                        <iconify-icon icon="lucide:chevron-down" id="calorie-goal-chevron" class="text-muted-foreground text-xs transition-transform"></iconify-icon>
+                    </button>
+                    <!-- Calorie goal popover bubble -->
+                    <div id="calorie-goal-popover"
+                        class="hidden absolute right-0 top-12 w-72 bg-card border border-border rounded-2xl shadow-xl z-50 p-4">
+                        <!-- Bubble arrow -->
+                        <div class="absolute -top-2 right-16 w-4 h-4 bg-card border-l border-t border-border rotate-45 rounded-sm"></div>
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-sm font-semibold">Calorie Goal</p>
+                            <div class="flex items-center gap-1.5">
+                                <span id="calorie-goal-display" class="text-sm font-bold tabular-nums">2000</span>
+                                <span class="text-xs text-muted-foreground">kcal</span>
+                                <span id="calorie-goal-label" class="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-semibold">Maintain</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted-foreground mb-4">Drag to set your target. Snaps to common goals.</p>
+                        <!-- Slider -->
+                        <input type="range" id="calorie-goal-slider"
+                            min="1000" max="3500" step="50" value="2000"
+                            class="w-full accent-orange-500 cursor-pointer">
+                        <!-- Labels row -->
+                        <div class="flex justify-between mt-2 text-[11px] text-muted-foreground">
+                            <span class="text-orange-500 font-medium">Diet</span>
+                            <span>Maintain</span>
+                            <span class="text-green-600 font-medium">Build</span>
+                        </div>
+                        <!-- Snap point hints -->
+                        <div class="flex justify-between mt-0.5 text-[10px] text-muted-foreground/50">
+                            <span>1200</span><span>1500</span><span>1800</span><span>2000</span><span>2500</span><span>3000</span>
+                        </div>
+                        <p id="calorie-goal-status" class="text-[11px] text-muted-foreground mt-3 text-right h-4"></p>
                     </div>
                     <button id="meal-history-toggle" title="Past meal plans"
                         class="bg-card border border-border px-3 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-muted transition-colors flex items-center gap-2">
@@ -156,7 +204,7 @@
                             <p class="text-xs text-muted-foreground px-3 py-4 text-center">Loading…</p>
                         </div>
                     </div>
-                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-8 h-8 rounded-full border border-border cursor-pointer">
                 </div>
             </header>
@@ -183,7 +231,7 @@
                                         <label class="text-sm font-bold mb-3 block">Diet Type</label>
                                         <div id="diet-type-chips" class="flex flex-wrap gap-2">
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
-                                                class="px-4 py-2 rounded-full border border-primary bg-primary/10 text-primary-foreground text-sm font-semibold transition-colors">Balanced</button>
+                                                class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Balanced</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
                                                 class="px-4 py-2 rounded-full border border-border bg-background text-muted-foreground hover:border-primary/50 text-sm font-medium transition-colors">Keto</button>
                                             <button type="button" data-chip-toggle="true" data-chip-group="diet"
@@ -327,6 +375,14 @@
                         <!-- Active food exclusions banner; populated by loadExclusionsBanner() -->
                         <div id="exclusions-banner"
                             class="hidden mb-4 flex items-center flex-wrap gap-2 text-xs bg-red-50 border border-red-200 rounded-xl px-3 py-2"></div>
+                        <!-- Regen-in-progress banner; shown while background menu regen is running -->
+                        <div id="regen-banner" class="hidden mb-4 flex items-center gap-2 text-sm bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-blue-700">
+                            <svg class="animate-spin h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                            </svg>
+                            <span>Generating your new weekly meal plan — this takes a few minutes…</span>
+                        </div>
                         <div id="recipe-feedback" class="mb-4 text-sm text-muted-foreground"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-grid">
 
@@ -814,6 +870,135 @@
             }).join(' ');
         }
 
+        // Regen banner helpers — driven by a localStorage flag set by the chat page.
+        const REGEN_FLAG = 'uplyfe_menu_regen';
+        const REGEN_TTL  = 15 * 60 * 1000; // 15 minutes
+
+        function showRegenBanner() {
+            const banner = document.getElementById('regen-banner');
+            if (banner) banner.classList.remove('hidden');
+        }
+        function hideRegenBanner() {
+            const banner = document.getElementById('regen-banner');
+            if (banner) banner.classList.add('hidden');
+            localStorage.removeItem(REGEN_FLAG);
+        }
+        function checkRegenBanner() {
+            const ts = parseInt(localStorage.getItem(REGEN_FLAG) || '0', 10);
+            if (ts && Date.now() - ts < REGEN_TTL) showRegenBanner();
+        }
+
+        // ---------- Calorie goal slider ----------
+        const SNAP_POINTS = [
+            { cal: 1200, label: 'Strict Diet' },
+            { cal: 1500, label: 'Weight Loss' },
+            { cal: 1800, label: 'Light Cut' },
+            { cal: 2000, label: 'Maintain' },
+            { cal: 2500, label: 'Active' },
+            { cal: 3000, label: 'Build' },
+        ];
+        const SNAP_RADIUS = 80;
+
+        function nearestSnap(val) {
+            let best = null, bestDist = Infinity;
+            for (const p of SNAP_POINTS) {
+                const d = Math.abs(val - p.cal);
+                if (d < bestDist) { bestDist = d; best = p; }
+            }
+            return bestDist <= SNAP_RADIUS ? best : null;
+        }
+
+        function applyCalorieGoal(cal) {
+            const snap = nearestSnap(cal) || { cal, label: 'Custom' };
+            const displayVal = snap.cal;
+            _savedCalorieGoal = displayVal; // keep buildRecipeRequest in sync
+            const el = document.getElementById('calorie-goal-display');
+            if (el) el.textContent = displayVal;
+            const labelEl = document.getElementById('calorie-goal-label');
+            if (labelEl) labelEl.textContent = snap.label;
+            const slider = document.getElementById('calorie-goal-slider');
+            if (slider) slider.value = displayVal;
+            return displayVal;
+        }
+
+        let calorieGoalSaveTimer = null;
+        async function saveCalorieGoal(cal) {
+            const status = document.getElementById('calorie-goal-status');
+            if (status) status.textContent = 'Saving…';
+            try {
+                const res = await fetch('/api/profile/me', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ calorie_goal: cal }),
+                });
+                if (status) status.textContent = res.ok ? 'Saved ✓' : 'Save failed';
+                setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+            } catch (_) {
+                if (status) status.textContent = 'Save failed';
+            }
+        }
+
+        function initCalorieSlider() {
+            const btn = document.getElementById('calorie-goal-btn');
+            const popover = document.getElementById('calorie-goal-popover');
+            const chevron = document.getElementById('calorie-goal-chevron');
+            const slider = document.getElementById('calorie-goal-slider');
+            if (!btn || !popover || !slider) return;
+
+            // Toggle popover on badge click
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = !popover.classList.contains('hidden');
+                popover.classList.toggle('hidden', isOpen);
+                chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!popover.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                    popover.classList.add('hidden');
+                    chevron.style.transform = '';
+                }
+            });
+
+            slider.addEventListener('input', () => {
+                const snapped = applyCalorieGoal(parseInt(slider.value, 10));
+                slider.value = snapped;
+            });
+
+            slider.addEventListener('change', () => {
+                const val = parseInt(slider.value, 10);
+                clearTimeout(calorieGoalSaveTimer);
+                calorieGoalSaveTimer = setTimeout(() => saveCalorieGoal(val), 400);
+            });
+
+            // Load saved calorie goal + diet preference from profile
+            fetch('/api/profile/me', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(r => r.ok ? r.json() : null)
+                .then(p => {
+                    if (!p) return;
+                    if (p.calorie_goal) applyCalorieGoal(p.calorie_goal);
+                    // Auto-select the diet chip matching the user's saved preference.
+                    const prefs = Array.isArray(p.dietary_preferences) ? p.dietary_preferences : [];
+                    const pref = (prefs[0] || '').toLowerCase().replace(/_/g, '-');
+                    if (!pref) return;
+                    const chips = document.querySelectorAll('#diet-type-chips [data-chip-toggle]');
+                    chips.forEach(chip => {
+                        const label = chip.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+                        const active = label === pref || label.replace('-', '') === pref.replace('-', '');
+                        chip.classList.toggle('border-primary', active);
+                        chip.classList.toggle('bg-primary/10', active);
+                        chip.classList.toggle('text-primary-foreground', active);
+                        chip.classList.toggle('border-border', !active);
+                        chip.classList.toggle('bg-background', !active);
+                        chip.classList.toggle('text-muted-foreground', !active);
+                    });
+                })
+                .catch(() => {});
+        }
+
         function setRecipeFeedback(message, type = 'info') {
             const feedback = document.getElementById('recipe-feedback');
             if (!feedback) return;
@@ -855,9 +1040,11 @@
             )).map(b => (b.textContent || '').trim()).filter(Boolean);
         }
 
+        let _savedCalorieGoal = 2000; // updated when profile loads
+
         function buildRecipeRequest() {
             return {
-                target_calories: 2000,
+                target_calories: _savedCalorieGoal,
                 servings: 1,
                 diet: 'none',
                 allergies: collectActiveChips('allergy'),
@@ -924,6 +1111,17 @@
                 return;
             }
             titleEl.textContent = `${labelDate}${plan.title ? ' · ' + titleCase(plan.title) : ''}`;
+            // Sum up real calories from the loaded day for the top-right badge.
+            const dayKcal = ['breakfast','lunch','dinner','snack'].reduce((sum, m) => {
+                const v = parseFloat((plan[m]?.calories ?? '0').toString());
+                return sum + (Number.isFinite(v) ? v : 0);
+            }, 0);
+            const kcalText = document.getElementById('daily-kcal-text');
+            if (kcalText) {
+                kcalText.textContent = dayKcal > 0
+                    ? `${Math.round(dayKcal).toLocaleString()} kcal`
+                    : '— kcal';
+            }
             updateRecipeCard('breakfast', plan.breakfast);
             updateRecipeCard('lunch', plan.lunch);
             updateRecipeCard('dinner', plan.dinner);
@@ -1423,18 +1621,22 @@
             document.getElementById('generate-recipes-btn')?.addEventListener('click', loadGeneratedMealPlans);
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
 
-            // Week-start date picker.
+            // Week-start date picker. Listen on BOTH `change` and `input`
+            // because some browsers (notably mobile Safari) only fire
+            // `change` on blur, making the picker feel broken.
             const dateInput = document.getElementById('week-start-date');
             if (dateInput) {
                 dateInput.value = weekStart;
-                dateInput.addEventListener('change', (e) => {
+                const onDateChange = (e) => {
                     if (!e.target.value) return;
                     weekStart = e.target.value;
                     dateIndex = 0;
                     buildDateStrip();
                     updateMealPlan();
                     updateNavigationButtons();
-                });
+                };
+                dateInput.addEventListener('change', onDateChange);
+                dateInput.addEventListener('input', onDateChange);
             }
             document.getElementById('reset-today-btn')?.addEventListener('click', () => {
                 weekStart = startOfTodayIso();
@@ -1459,6 +1661,8 @@
             updateMealPlan();
             updateNavigationButtons();
 
+            checkRegenBanner(); // show spinner if a chat-triggered regen is in flight
+            initCalorieSlider();
             setRecipeFeedback('Loading your latest meal plan…', 'info');
             // Auto-load from DB so the page shows real data, not a blank state.
             // After it lands, honor any ?day=&meal= deep-link from the URL.
@@ -1556,9 +1760,11 @@
                 // Only re-render if the plan id actually changed — avoids
                 // wiping the user's date selection on the polling refresh.
                 if (data.plan_id !== activePlanId) {
+                    const wasRegen = !!localStorage.getItem(REGEN_FLAG);
                     applySavedMealPlan({ ...data.payload, plan_id: data.plan_id, _plan_id: data.plan_id });
-                    if (silent) {
-                        setRecipeFeedback('Your meal plan was updated based on your latest preferences.', 'success');
+                    hideRegenBanner();
+                    if (silent || wasRegen) {
+                        setRecipeFeedback('✓ Your new meal plan is ready!', 'success');
                     }
                 }
                 return data;

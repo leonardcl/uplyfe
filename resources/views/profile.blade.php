@@ -64,6 +64,21 @@
 </head>
 
 <body class="min-h-screen bg-background font-sans text-foreground">
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
@@ -99,7 +114,7 @@
             </div>
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
+                    <img data-user-avatar src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -144,7 +159,7 @@
                             <section class="bg-card rounded-[2rem] border border-border shadow-sm p-6 space-y-6">
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                                     <div class="flex items-center gap-4">
-                                        <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                        <img data-user-avatar src="{{ $avatarSrc }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                                         <div>
                                             <h2 id="profile-display-name" class="text-2xl font-heading font-bold">{{ $user->first_name }} {{ $user->last_name }}</h2>
                                             <p class="text-sm text-muted-foreground mt-1">Member since {{ \Carbon\Carbon::parse($user->created_at)->format('F Y') }}</p>
@@ -155,11 +170,11 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div class="rounded-3xl border border-border bg-background p-5">
                                         <p class="text-sm text-muted-foreground">Health Goal</p>
-                                        <p class="mt-2 font-semibold">Improve Vitamin D & manage cholesterol</p>
+                                        <p id="profile-health-goal" class="mt-2 font-semibold">Loading latest health data…</p>
                                     </div>
                                     <div class="rounded-3xl border border-border bg-background p-5">
                                         <p class="text-sm text-muted-foreground">Weekly Progress</p>
-                                        <p class="mt-2 font-semibold">84% target completion</p>
+                                        <p id="profile-progress-summary" class="mt-2 font-semibold">Calculating setup progress…</p>
                                     </div>
                                 </div>
 
@@ -177,10 +192,10 @@
                                     <div class="rounded-3xl border border-border bg-background p-6 space-y-3">
                                         <h3 class="text-lg font-semibold">Health Summary</h3>
                                         <div class="grid gap-3 text-sm text-muted-foreground">
-                                            <div class="flex justify-between"><span>Last Checkup</span><span class="text-foreground font-medium">Apr 24, 2026</span></div>
-                                            <div class="flex justify-between"><span>Allergies</span><span class="text-foreground font-medium">Gluten, Dairy</span></div>
-                                            <div class="flex justify-between"><span>Preferred Diet</span><span id="profile-card-diet" class="text-foreground font-medium">Balanced</span></div>
-                                            <div class="flex justify-between"><span>Weekly Calories</span><span class="text-foreground font-medium">2,150 kcal</span></div>
+                                            <div class="flex justify-between"><span>Last Checkup</span><span id="profile-last-checkup" class="text-foreground font-medium">No report yet</span></div>
+                                            <div class="flex justify-between"><span>Food Exclusions</span><span id="profile-allergies" class="text-foreground font-medium">Loading…</span></div>
+                                            <div class="flex justify-between"><span>Preferred Diet</span><span id="profile-card-diet" class="text-foreground font-medium">—</span></div>
+                                            <div class="flex justify-between"><span>Daily Calories</span><span id="profile-card-calories" class="text-foreground font-medium">{{ (int) ($user->calorie_goal ?? 2000) }} kcal</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -302,7 +317,7 @@
                         <!-- Profile Picture -->
                         <div class="flex flex-col items-center space-y-4">
                             <div class="relative">
-                                <img id="profile-picture-preview" src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
+                                <img id="profile-picture-preview" src="{{ $avatarSrc }}" alt="Profile avatar" class="w-24 h-24 rounded-3xl border border-border shadow-sm object-cover">
                                 <button id="profile-picture-change-btn" type="button" class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-sm hover:bg-primary/80 transition-colors">
                                     <iconify-icon icon="lucide:camera" class="text-sm"></iconify-icon>
                                 </button>
@@ -367,6 +382,11 @@
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Weight (kg)</label>
                                     <input id="profile-weight" type="number" step="0.1" value="{{ $user->weight }}" placeholder="68.5"
+                                        class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Daily Calorie Goal</label>
+                                    <input id="profile-calorie-goal" type="number" min="800" max="5000" step="50" value="{{ (int) ($user->calorie_goal ?? 2000) }}" placeholder="2000"
                                         class="w-full bg-background border border-border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary" />
                                 </div>
                             </div>
@@ -561,6 +581,7 @@
             document.getElementById('profile-gender').value = currentUserData.gender ?? '';
             document.getElementById('profile-height').value = currentUserData.height ?? '';
             document.getElementById('profile-weight').value = currentUserData.weight ?? '';
+            document.getElementById('profile-calorie-goal').value = currentUserData.calorie_goal ?? 2000;
 
             const dietaryPrefs = currentUserData.dietary_preferences || [];
             const notifPrefs = currentUserData.notification_preferences || [];
@@ -714,6 +735,110 @@
 
         let currentUserData = @json($user);
 
+        function profileEscapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function profileLabel(value) {
+            return String(value ?? '')
+                .trim()
+                .split(/[\s_-]+/)
+                .filter(Boolean)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        async function fetchJson(url) {
+            const res = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!res.ok) return null;
+            return res.json();
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function summarizeHealthGoal(reportDetail, reportListItem) {
+            if (!reportListItem) {
+                return 'Upload a health checkup to personalize your health focus.';
+            }
+            const findings = Array.isArray(reportDetail?.abnormal_findings)
+                ? reportDetail.abnormal_findings
+                : [];
+            const names = findings
+                .map(f => f.biomarker || f.name)
+                .filter(Boolean)
+                .slice(0, 3);
+            if (names.length) {
+                return `Focus: ${names.join(', ')}`;
+            }
+            if (reportListItem.summary) {
+                const summary = String(reportListItem.summary);
+                return summary.length > 90 ? `${summary.slice(0, 87).trim()}...` : summary;
+            }
+            return 'Latest report saved. No abnormal findings surfaced in the summary.';
+        }
+
+        function computeSetupProgress(profile, hasReport, hasMealPlan, hasExercisePlan) {
+            const checks = [
+                profile.first_name,
+                profile.last_name,
+                profile.email,
+                profile.age,
+                profile.height,
+                profile.weight,
+                profile.calorie_goal,
+                (profile.dietary_preferences || []).length,
+                hasReport,
+                hasMealPlan,
+                hasExercisePlan,
+            ];
+            const done = checks.filter(Boolean).length;
+            return Math.round((done / checks.length) * 100);
+        }
+
+        async function hydrateProfileDashboard() {
+            const [profile, reportsData, mealData, exerciseData] = await Promise.all([
+                fetchJson('/api/profile/me'),
+                fetchJson('/api/health-reports'),
+                fetchJson('/api/meal-plans/active'),
+                fetchJson('/api/exercise-plans'),
+            ]);
+
+            const p = profile || currentUserData || {};
+            currentUserData = { ...currentUserData, ...p };
+
+            const reports = reportsData?.reports || [];
+            const latestReport = reports[0] || null;
+            const latestReportDetail = latestReport ? await fetchJson(`/api/health-reports/${latestReport.id}`) : null;
+            const hasMealPlan = !!mealData?.payload;
+            const hasExercisePlan = !!(exerciseData?.plans || []).length;
+
+            setText('profile-health-goal', summarizeHealthGoal(latestReportDetail, latestReport));
+            setText(
+                'profile-progress-summary',
+                `${computeSetupProgress(p, !!latestReport, hasMealPlan, hasExercisePlan)}% setup complete`
+            );
+            setText(
+                'profile-last-checkup',
+                latestReport?.created_at ? new Date(latestReport.created_at).toLocaleDateString() : 'No report yet'
+            );
+
+            const exclusions = p.food_exclusions || [];
+            setText('profile-allergies', exclusions.length ? exclusions.map(profileLabel).join(', ') : 'No exclusions');
+
+            const diet = p.dietary_preferences || [];
+            setText('profile-card-diet', diet.length ? diet.map(profileLabel).join(', ') : 'No preference');
+            setText('profile-card-calories', `${p.calorie_goal || 2000} kcal`);
+        }
+
         async function saveProfileChanges() {
             const userId = @json($user->id);
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -746,6 +871,7 @@
             formData.append('gender', document.getElementById('profile-gender').value);
             formData.append('height', document.getElementById('profile-height').value);
             formData.append('weight', document.getElementById('profile-weight').value);
+            formData.append('calorie_goal', document.getElementById('profile-calorie-goal').value || 2000);
 
             const dietaryPreferences = Array.from(
                 document.querySelectorAll('input[name="diet-preferences"]:checked')
@@ -797,6 +923,7 @@
             document.getElementById('profile-gender').value = saved.gender ?? '';
             document.getElementById('profile-height').value = saved.height ?? '';
             document.getElementById('profile-weight').value = saved.weight ?? '';
+            document.getElementById('profile-calorie-goal').value = saved.calorie_goal ?? 2000;
 
             const dietaryPrefs = currentUserData.dietary_preferences || [];
             const notifPrefs = currentUserData.notification_preferences || [];
@@ -820,6 +947,11 @@
             document.getElementById('profile-card-phone').textContent = saved.phone_number ?? 'Phone not set';
             document.getElementById('profile-card-height').textContent = saved.height ?? 'Height not set';
             document.getElementById('profile-card-weight').textContent = saved.weight ?? 'Weight not set';
+            document.getElementById('profile-card-calories').textContent = `${saved.calorie_goal ?? 2000} kcal`;
+            if (saved.profile_photo) {
+                document.querySelectorAll('[data-user-avatar]').forEach(img => { img.src = saved.profile_photo; });
+                document.getElementById('profile-picture-preview').src = saved.profile_photo;
+            }
             
             const formatPreferenceLabel = (value) => value
                 .split('-')
@@ -863,6 +995,7 @@
 
             alert('Profile updated successfully!');
             closeEditProfileModal();
+            hydrateProfileDashboard().catch(() => {});
         }
 
         // Profile Picture Functions
@@ -935,6 +1068,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            hydrateProfileDashboard().catch(() => {});
+
             // Mobile sidebar
             document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
             document.getElementById('mobile-sidebar-backdrop')?.addEventListener('click', () => toggleSidebar(false));

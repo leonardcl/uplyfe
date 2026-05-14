@@ -61,6 +61,21 @@
 </head>
 
 <body>
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
 
         <!-- Sidebar Navigation -->
@@ -112,16 +127,15 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
-                        <p class="text-xs text-muted-foreground truncate">Free Plan</p>
+                        <p class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
                     </div>
-                    <button
+                    <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors">
                         <iconify-icon icon="lucide:settings" class="text-lg"></iconify-icon>
-                    </button>
+                    </a>
                 </div>
             </div>
         </aside>

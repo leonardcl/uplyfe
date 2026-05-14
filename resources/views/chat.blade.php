@@ -62,6 +62,21 @@
 </head>
 
 <body>
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation -->
         <aside id="mobile-sidebar"
@@ -112,7 +127,7 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -210,6 +225,7 @@
     </div>
 
     <script>
+        const USER_AVATAR_SRC = @json($avatarSrc);
         const chatHistory = [];
         // Server-assigned conversation id. Persisted in localStorage so it
         // survives page navigation — when the user comes back to /chat, we
@@ -315,7 +331,7 @@
         function renderUserMessage(message) {
             return `
                 <div class="flex gap-4 max-w-3xl ml-auto flex-row-reverse animate-[fadeIn_0.3s_ease-out]">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="w-8 h-8 rounded-full border border-border flex-shrink-0 mt-1">
+                    <img src="${USER_AVATAR_SRC}" alt="User" class="w-8 h-8 rounded-full border border-border flex-shrink-0 mt-1">
                     <div class="flex flex-col gap-1 items-end">
                         <span class="text-xs font-bold text-muted-foreground mr-1">You</span>
                         <div class="bg-primary text-primary-foreground rounded-2xl rounded-tr-none p-4 shadow-sm text-sm leading-relaxed">
@@ -666,6 +682,14 @@
                         // Refresh history dropdown so the new conversation
                         // (and its auto-generated title) shows up immediately.
                         loadConversationList();
+                    }
+                    // Signal to /recipe and /exercise pages that a background
+                    // regen is in flight so they can show a loading banner.
+                    if (data.menu_regen) {
+                        localStorage.setItem('uplyfe_menu_regen', Date.now());
+                    }
+                    if (data.workout_regen) {
+                        localStorage.setItem('uplyfe_workout_regen', Date.now());
                     }
                     chatHistory.push({ role: 'user', content: message });
                     chatHistory.push({ role: 'assistant', content: reply });

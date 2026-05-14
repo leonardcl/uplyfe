@@ -98,13 +98,23 @@ _DISALLOW_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
 }
 
-# Per-meal calorie caps so we don't slot a 2900-kcal "date bar" as breakfast.
-_MEAL_CAL_CAPS: dict[str, int] = {
-    "breakfast": 700,
-    "lunch": 900,
-    "dinner": 1100,
-    "snack": 400,
+# Base per-meal calorie fractions (sum ~1.0) used to scale caps with the
+# user's target. A 20% headroom lets recipes slightly over the per-meal
+# share still qualify while keeping obviously oversized ones out.
+_MEAL_FRACTIONS: dict[str, float] = {
+    "breakfast": 0.25,
+    "lunch": 0.30,
+    "dinner": 0.35,
+    "snack": 0.10,
 }
+_HEADROOM = 1.30  # allow up to 30% over the per-meal share
+
+
+def _meal_cal_caps(target_calories: int) -> dict[str, int]:
+    return {
+        slot: int(target_calories * frac * _HEADROOM)
+        for slot, frac in _MEAL_FRACTIONS.items()
+    }
 
 
 def _name_for(recipe: RecipeMatch) -> str:
@@ -122,12 +132,12 @@ def _calories_of(recipe: RecipeMatch) -> Optional[float]:
         return None
 
 
-def _slot_ok(recipe: RecipeMatch, meal_type: str) -> bool:
+def _slot_ok(recipe: RecipeMatch, meal_type: str, caps: dict[str, int] | None = None) -> bool:
     name = _name_for(recipe)
     for kw in _DISALLOW_KEYWORDS.get(meal_type, ()):
         if kw in name:
             return False
-    cap = _MEAL_CAL_CAPS.get(meal_type)
+    cap = (caps or {}).get(meal_type)
     cals = _calories_of(recipe)
     if cap and cals is not None and cals > cap:
         return False
@@ -145,7 +155,8 @@ def _slot_matches_metadata(recipe: RecipeMatch, meal_type: str) -> bool:
     return str(meta.get("meal_type", "")).lower() == meal_type.lower()
 
 
-def _pick(candidates: list[RecipeMatch], used: set[str], meal_type: Optional[str] = None) -> RecipeMatch:
+def _pick(candidates: list[RecipeMatch], used: set[str], meal_type: Optional[str] = None,
+          caps: dict[str, int] | None = None) -> RecipeMatch:
     """Random pick avoiding repeats and (optionally) respecting meal-slot
     constraints. Tiered preference order so good recipes win when present:
        1. curated + matching meal_type metadata
@@ -164,7 +175,7 @@ def _pick(candidates: list[RecipeMatch], used: set[str], meal_type: Optional[str
     for c in candidates:
         curated = _is_curated(c)
         meta_ok = bool(meal_type) and _slot_matches_metadata(c, meal_type)
-        slot_ok = (not meal_type) or _slot_ok(c, meal_type)
+        slot_ok = (not meal_type) or _slot_ok(c, meal_type, caps=caps)
         if curated and meta_ok:
             tier1.append(c)
         if curated:
@@ -293,12 +304,13 @@ def _meal_fallback(recipe: RecipeMatch, meal_type: str) -> Meal:
     )
 
 
-def _build_day(candidates: list[RecipeMatch], used: set[str]) -> DayPlan:
+def _build_day(candidates: list[RecipeMatch], used: set[str],
+               caps: dict[str, int] | None = None) -> DayPlan:
     """Build a 4-meal day (breakfast, lunch, dinner, snack) avoiding repeats
     and using meal-slot filters (e.g. no 2900-kcal "date bars" for breakfast)."""
     picks: dict[str, Meal] = {}
     for meal in ("breakfast", "lunch", "dinner", "snack"):
-        recipe = _pick(candidates, used, meal_type=meal)
+        recipe = _pick(candidates, used, meal_type=meal, caps=caps)
         used.add(recipe.metadata.get("name", "") or recipe.document[:40])
         picks[meal] = _meal_from_recipe(recipe, meal)
     title = picks["dinner"].title or picks["lunch"].title
@@ -337,10 +349,11 @@ def build_meal_plan(req: MealPlanRequest) -> MealPlanResponse:
     if req.days <= 7 and req.days > 0 and len(days_label) != req.days:
         days_label = _WEEKDAYS[: req.days] if req.days <= 7 else days_label
 
+    caps = _meal_cal_caps(req.target_calories or 2000)
     plan: dict[str, DayPlan] = {}
     used: set[str] = set()
     for label in days_label[: req.days]:
-        plan[label] = _build_day(candidates, used)
+        plan[label] = _build_day(candidates, used, caps=caps)
 
     summary = (
         f"{req.days}-day plan from your recipe collection, targeting "

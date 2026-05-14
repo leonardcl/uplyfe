@@ -262,8 +262,10 @@
                                     <iconify-icon icon="lucide:activity" class="text-2xl"></iconify-icon>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-muted-foreground font-medium">Health Score</p>
-                                    <p class="text-lg font-bold text-foreground">94/100</p>
+                                    <p class="text-xs text-muted-foreground font-medium" id="hero-card-1-label">Health Score</p>
+                                    <p class="text-lg font-bold text-foreground" id="hero-card-1-value">
+                                        @if(session('user'))—@else94/100@endif
+                                    </p>
                                 </div>
                             </div>
 
@@ -275,7 +277,9 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-muted-foreground font-medium">Daily Calories</p>
-                                    <p class="text-lg font-bold text-foreground">2,150 kcal</p>
+                                    <p class="text-lg font-bold text-foreground" id="hero-card-2-value">
+                                        @if(session('user'))—@else2,150 kcal@endif
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -376,6 +380,46 @@
             const mobileMenu = document.getElementById('mobile-dashboard-menu');
             if (mobileMenu) mobileMenu.classList.toggle('hidden');
         }
+
+        @if(session('user'))
+        // For logged-in users: replace hero card placeholders with real data.
+        (async function () {
+            try {
+                const [profileRes, reportsRes] = await Promise.all([
+                    fetch('/api/profile/me', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' }),
+                    fetch('/api/health-reports', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' }),
+                ]);
+                if (profileRes.ok) {
+                    const p = await profileRes.json();
+                    const cal = p?.calorie_goal;
+                    if (cal) {
+                        const el = document.getElementById('hero-card-2-value');
+                        if (el) el.textContent = cal.toLocaleString() + ' kcal';
+                    }
+                }
+                if (reportsRes.ok) {
+                    const d = await reportsRes.json();
+                    const head = (d?.reports || [])[0];
+                    const el = document.getElementById('hero-card-1-value');
+                    if (el) {
+                        if (head) {
+                            const sev = (head.overall_severity || '').toLowerCase();
+                            const label = sev === 'normal' ? 'All Clear' :
+                                          sev === 'warning' ? 'Watch' :
+                                          sev === 'critical' ? 'Critical' : 'Checked';
+                            const label2 = document.getElementById('hero-card-1-label');
+                            if (label2) label2.textContent = 'Latest Report';
+                            el.textContent = label;
+                        } else {
+                            el.textContent = 'No report yet';
+                            const label2 = document.getElementById('hero-card-1-label');
+                            if (label2) label2.textContent = 'Health Report';
+                        }
+                    }
+                }
+            } catch (_) {}
+        })();
+        @endif
     </script>
 </body>
 

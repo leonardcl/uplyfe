@@ -112,6 +112,7 @@ class UserController extends Controller
             'notification_preferences' => ['nullable', 'array'],
             'food_exclusions' => ['nullable', 'array'],
             'food_exclusions.*' => ['string', 'max:64'],
+            'calorie_goal' => ['nullable', 'integer', 'min:800', 'max:5000'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
@@ -132,6 +133,7 @@ class UserController extends Controller
         $user->weight = $validated['weight'] ?? $user->weight;
         $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;
         $user->notification_preferences = $validated['notification_preferences'] ?? $user->notification_preferences;
+        $user->calorie_goal = $validated['calorie_goal'] ?? $user->calorie_goal;
         // food_exclusions: empty array means "clear" — preserve the explicit
         // [] over the null-fallback so users can wipe the list.
         if (array_key_exists('food_exclusions', $validated)) {
@@ -172,6 +174,7 @@ class UserController extends Controller
                 'dietary_preferences' => $user->dietary_preferences,
                 'notification_preferences' => $user->notification_preferences,
                 'food_exclusions' => $user->food_exclusions,
+                'calorie_goal' => $user->calorie_goal,
                 'profile_photo' => $user->profile_photo,
             ],
         ]);

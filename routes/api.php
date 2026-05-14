@@ -75,6 +75,7 @@ Route::middleware('api.session')->prefix('meal-likes')->group(function () {
 // Small profile endpoint so client-side views can read the session user
 // without depending on Sanctum bearer tokens.
 Route::middleware('api.session')->get('/profile/me', [AiController::class, 'profileMe']);
+Route::middleware('api.session')->patch('/profile/me', [AiController::class, 'updateProfile']);
 
 // Exercise dataset images — serves the animated GIF for an exercise_id
 // (or the still JPG via ?kind=jpg). No auth — these are reference images

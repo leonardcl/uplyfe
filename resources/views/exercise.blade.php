@@ -62,6 +62,21 @@
 </head>
 
 <body>
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <!-- Sidebar Navigation -->
         <aside id="mobile-sidebar"
@@ -112,7 +127,7 @@
 
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="{{ $user->profile_photo ?? 'https://randomuser.me/api/portraits/women/44.jpg' }}" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
                         <p id="sidebar-user-name" class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
@@ -161,6 +176,12 @@
             <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                 <div class="max-w-5xl mx-auto space-y-8">
+                    <div id="workout-regen-banner"
+                        class="hidden rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
+                        <iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon>
+                        <span>A fresh workout is being generated in the background. This page will update when it is ready.</span>
+                    </div>
+
                     <div id="weekly-view-panel" class="hidden space-y-6">
                         <div class="bg-card rounded-3xl border border-border p-8 shadow-sm">
                             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -174,41 +195,41 @@
                             </div>
 
                             <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <article data-workout-day="0" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Monday</p>
-                                    <h3 class="font-bold mb-2">Cardio Blast</h3>
-                                    <p class="text-sm text-muted-foreground">30 mins interval training</p>
-                                </article>
-                                <article data-workout-day="1" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Tuesday</p>
-                                    <h3 class="font-bold mb-2">Strength Focus</h3>
-                                    <p class="text-sm text-muted-foreground">Lower body resistance training</p>
-                                </article>
-                                <article data-workout-day="2" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Wednesday</p>
-                                    <h3 class="font-bold mb-2">Rest & Recovery</h3>
-                                    <p class="text-sm text-muted-foreground">Mobility and stretching routine</p>
-                                </article>
-                                <article data-workout-day="3" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Thursday</p>
-                                    <h3 class="font-bold mb-2">Full Body Flow</h3>
-                                    <p class="text-sm text-muted-foreground">Balanced cardio and strength</p>
-                                </article>
-                                <article data-workout-day="4" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Friday</p>
-                                    <h3 class="font-bold mb-2">Core & Stability</h3>
-                                    <p class="text-sm text-muted-foreground">Core sequences and balance work</p>
-                                </article>
-                                <article data-workout-day="5" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Saturday</p>
-                                    <h3 class="font-bold mb-2">Active Recovery</h3>
-                                    <p class="text-sm text-muted-foreground">Light walk or yoga session</p>
-                                </article>
-                                <article data-workout-day="6" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Sunday</p>
-                                    <h3 class="font-bold mb-2">Weekly Reset</h3>
-                                    <p class="text-sm text-muted-foreground">Full body mobility and conditioning</p>
-                                </article>
+	                                <article data-workout-day="0" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Monday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="1" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Tuesday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="2" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Wednesday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="3" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Thursday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="4" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Friday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="5" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Saturday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
+	                                <article data-workout-day="6" class="bg-background rounded-3xl border border-border p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+	                                    <p class="text-xs uppercase tracking-wider text-muted-foreground mb-3">Sunday</p>
+	                                    <h3 class="font-bold mb-2">No plan yet</h3>
+	                                    <p class="text-sm text-muted-foreground">Generate a routine to fill this day</p>
+	                                </article>
                             </div>
                         </div>
                     </div>
@@ -250,23 +271,23 @@
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Exercise Preference</p>
-                                    <p class="font-bold text-sm" id="profile-exercise-pref">Cardio & Strength</p>
+                                    <p class="font-bold text-sm" id="profile-exercise-pref">No plan yet</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Time Available</p>
-                                    <p class="font-bold text-sm" id="profile-time">45-60 mins</p>
+                                    <p class="font-bold text-sm" id="profile-time">No plan yet</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Available Days</p>
-                                    <p class="font-bold text-sm" id="profile-days">4 days/week</p>
+                                    <p class="font-bold text-sm" id="profile-days">No plan yet</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Equipment</p>
-                                    <p class="font-bold text-sm" id="profile-equipment">Dumbbells, Mat</p>
+                                    <p class="font-bold text-sm" id="profile-equipment">No plan yet</p>
                                 </div>
                                 <div class="bg-background rounded-xl p-4 border border-border">
                                     <p class="text-xs text-muted-foreground mb-1">Fitness Goals</p>
-                                    <p class="font-bold text-sm" id="profile-goals">Weight Loss</p>
+                                    <p class="font-bold text-sm" id="profile-goals">No plan yet</p>
                                 </div>
                             </div>
                         </div>
@@ -280,9 +301,9 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-bold mb-1">Medical Alignment</p>
-                                    <p class="text-xs text-muted-foreground leading-relaxed">AI has prioritized
-                                        low-impact cardio to support healthy cholesterol levels while avoiding joint
-                                        strain.</p>
+                                    <p id="medical-alignment-text" class="text-xs text-muted-foreground leading-relaxed">
+                                        Generate a routine to see how your saved profile and latest health context shape the plan.
+                                    </p>
                                 </div>
                             </div>
                             <button id="generate-routine-btn" onclick="generateNewRoutine()"
@@ -296,7 +317,7 @@
                     <!-- Today's Workout -->
                     <section>
                         <div class="flex items-center justify-between gap-4 mb-6">
-                            <h2 id="workout-heading" class="text-2xl font-heading font-bold">Today's Workout: Full Body Flow</h2>
+	                            <h2 id="workout-heading" class="text-2xl font-heading font-bold">No workout plan yet</h2>
                             <div class="flex items-center gap-2">
                                 <button id="workout-prev-day-btn" type="button" class="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors" aria-label="Previous day workout">
                                     <iconify-icon icon="lucide:chevron-left"></iconify-icon>
@@ -324,93 +345,24 @@
                                         <span
                                             class="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-bold">Low
                                             Impact</span>
-                                        <span id="workout-duration-badge"
-                                            class="px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-xs font-bold">45
-                                            Mins</span>
-                                    </div>
-                                    <h3 id="workout-title" class="text-xl font-bold mb-2">Cardio & Mobility Flow</h3>
-                                    <p id="workout-description" class="text-sm text-muted-foreground mb-6">A balanced routine designed to elevate
-                                        heart rate safely while improving joint mobility. Perfect for your current
-                                        health markers.</p>
+	                                        <span id="workout-duration-badge"
+	                                            class="px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-xs font-bold">0 Mins</span>
+	                                    </div>
+	                                    <h3 id="workout-title" class="text-xl font-bold mb-2">Generate your AI workout</h3>
+	                                    <p id="workout-description" class="text-sm text-muted-foreground mb-6">Your saved routine will appear here after generation.</p>
 
-                                    <div class="flex gap-4">
-                                        <button
-                                            class="flex-1 bg-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                                            Start Workout
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
 
                             <div class="bg-background p-6 sm:px-8">
-                                <h4 id="workout-exercises-title" class="font-bold text-sm mb-4 uppercase tracking-wider text-muted-foreground">
-                                    Exercises (4)</h4>
+	                                <h4 id="workout-exercises-title" class="font-bold text-sm mb-4 uppercase tracking-wider text-muted-foreground">
+	                                    Exercises (0)</h4>
 
-                                <div id="workout-exercise-list" class="space-y-3">
-                                    <!-- Exercise 1 -->
-                                    <div
-                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-start gap-4 flex-1 min-w-0">
-                                            <div
-                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                                                1</div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-sm">Dynamic Stretching</p>
-                                                <p class="text-xs text-muted-foreground">Warm up</p>
-                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to warm up your muscles and get your heart rate up.</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-sm font-semibold whitespace-nowrap shrink-0">5 mins</div>
-                                    </div>
-
-                                    <!-- Exercise 2 -->
-                                    <div
-                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-start gap-4 flex-1 min-w-0">
-                                            <div
-                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                                                2</div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-sm">Dumbbell Goblet Squats</p>
-                                                <p class="text-xs text-muted-foreground">3 sets x 12 reps</p>
-                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-sm font-semibold whitespace-nowrap shrink-0">10 mins</div>
-                                    </div>
-
-                                    <!-- Exercise 3 -->
-                                    <div
-                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-start gap-4 flex-1 min-w-0">
-                                            <div
-                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                                                3</div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-sm">Plank Variations</p>
-                                                <p class="text-xs text-muted-foreground">3 sets x 45 secs</p>
-                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to work your core and improve your balance and stability.</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-sm font-semibold whitespace-nowrap shrink-0">8 mins</div>
-                                    </div>
-
-                                    <!-- Exercise 4 -->
-                                    <div
-                                        class="flex items-start justify-between gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors cursor-pointer group">
-                                        <div class="flex items-start gap-4 flex-1 min-w-0">
-                                            <div
-                                                class="w-10 h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                                                4</div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-sm">Low-Intensity Steady State (LISS)</p>
-                                                <p class="text-xs text-muted-foreground">Brisk walking or cycling</p>
-                                                <p class="text-xs text-muted-foreground leading-relaxed break-words">This exercise is a great way to improve your cardiovascular health and endurance.</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-sm font-semibold whitespace-nowrap shrink-0">22 mins</div>
-                                    </div>
-                                </div>
+	                                <div id="workout-exercise-list" class="space-y-3">
+	                                    <div class="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+	                                        Generate a routine to see exercise details.
+	                                    </div>
+	                                </div>
                             </div>
                         </div>
                     </section>
@@ -762,102 +714,94 @@
         }
         document.getElementById('mobile-menu-button')?.addEventListener('click', () => toggleSidebar());
 
-        // `let` (not `const`) so the AI-generated plan can replace this in-place.
-        // The initial value below is the static placeholder shown before the user
-        // clicks Generate.
-        let weeklyWorkoutPlans = [
-            {
-                dayLabel: "Today's Workout",
-                heading: "Full Body Flow",
-                title: "Cardio & Mobility Flow",
-                duration: "45 Mins",
-                description: "A balanced routine designed to elevate heart rate safely while improving joint mobility. Perfect for your current health markers.",
-                exercises: [
-                    { name: "Dynamic Stretching", detail: "Warm up", description: "This exercise is a great way to warm up your muscles and get your heart rate up.", duration: "5 mins" },
-                    { name: "Dumbbell Goblet Squats", detail: "3 sets x 12 reps", description: "This exercise is a great way to work your legs and glutes. It is a compound exercise that works multiple muscle groups at once.", duration: "10 mins" },
-                    { name: "Plank Variations", detail: "3 sets x 45 secs", description: "This exercise is a great way to work your core and improve your balance and stability.", duration: "8 mins" },
-                    { name: "Low-Intensity Steady State (LISS)", detail: "Brisk walking or cycling", description: "This exercise is a great way to improve your cardiovascular health and endurance.", duration: "22 mins" }
-                ]
-            },
-            {
-                dayLabel: "Tomorrow's Workout",
-                heading: "Lower Body Strength",
-                title: "Leg Power Builder",
-                duration: "50 Mins",
-                description: "A lower body strength session focused on controlled tempo and progressive overload for better metabolic health.",
-                exercises: [
-                    { name: "Bodyweight Lunges", detail: "3 sets x 12 reps/side", description: "Improves unilateral strength and hip stability for daily movement quality.", duration: "10 mins" },
-                    { name: "Romanian Deadlift", detail: "3 sets x 10 reps", description: "Targets posterior chain and helps improve posture and lower back resilience.", duration: "12 mins" },
-                    { name: "Glute Bridge Hold", detail: "3 sets x 40 secs", description: "Activates glutes and core while supporting pelvic stability.", duration: "8 mins" },
-                    { name: "Stepper March", detail: "Moderate pace", description: "A low-impact cardio finisher to increase endurance without joint overload.", duration: "20 mins" }
-                ]
-            },
-            {
-                dayLabel: "Day 3 Workout",
-                heading: "Core & Stability",
-                title: "Balance Core Session",
-                duration: "40 Mins",
-                description: "Core-focused training to improve trunk stability, posture, and movement efficiency.",
-                exercises: [
-                    { name: "Cat-Cow Mobility", detail: "2 sets x 10 reps", description: "Prepares the spine for core training and reduces stiffness.", duration: "5 mins" },
-                    { name: "Dead Bug", detail: "3 sets x 12 reps", description: "Builds deep core control while protecting the lower back.", duration: "10 mins" },
-                    { name: "Side Plank", detail: "3 sets x 30 secs/side", description: "Strengthens obliques and improves anti-rotation control.", duration: "10 mins" },
-                    { name: "Bird Dog", detail: "3 sets x 12 reps", description: "Integrates core and hip coordination for better stability.", duration: "15 mins" }
-                ]
-            },
-            {
-                dayLabel: "Day 4 Workout",
-                heading: "Upper Body Strength",
-                title: "Push Pull Circuit",
-                duration: "48 Mins",
-                description: "Build upper-body endurance and strength with low-risk movements tailored for consistency.",
-                exercises: [
-                    { name: "Resistance Band Rows", detail: "3 sets x 15 reps", description: "Improves posture and upper back strength.", duration: "10 mins" },
-                    { name: "Incline Push-Ups", detail: "3 sets x 12 reps", description: "Builds chest and triceps strength with manageable intensity.", duration: "10 mins" },
-                    { name: "Dumbbell Shoulder Press", detail: "3 sets x 10 reps", description: "Develops shoulder strength and overhead control.", duration: "10 mins" },
-                    { name: "Arm Ergometer Cardio", detail: "Steady pace", description: "Raises heart rate while reducing lower-body load.", duration: "18 mins" }
-                ]
-            },
-            {
-                dayLabel: "Day 5 Workout",
-                heading: "Active Recovery",
-                title: "Mobility & Stretch Flow",
-                duration: "35 Mins",
-                description: "Low-intensity recovery routine to improve flexibility and keep your training streak sustainable.",
-                exercises: [
-                    { name: "Neck and Shoulder Rolls", detail: "2 sets x 12 reps", description: "Releases upper body tension from daily posture.", duration: "5 mins" },
-                    { name: "Hip Opener Sequence", detail: "2 sets", description: "Improves hip range of motion and reduces stiffness.", duration: "8 mins" },
-                    { name: "Hamstring Stretch", detail: "3 sets x 30 secs", description: "Supports posterior chain recovery and mobility.", duration: "7 mins" },
-                    { name: "Guided Breathing Walk", detail: "Easy pace", description: "Promotes active recovery and stress regulation.", duration: "15 mins" }
-                ]
-            },
-            {
-                dayLabel: "Day 6 Workout",
-                heading: "Cardio Endurance",
-                title: "Heart Health Builder",
-                duration: "42 Mins",
-                description: "Steady cardio blocks to improve endurance capacity while maintaining safe exertion levels.",
-                exercises: [
-                    { name: "March In Place", detail: "Warm up", description: "Gradually increases heart rate and circulation.", duration: "6 mins" },
-                    { name: "Low-Impact Intervals", detail: "6 rounds", description: "Alternates effort and recovery for aerobic adaptation.", duration: "16 mins" },
-                    { name: "Stationary Cycling", detail: "Moderate pace", description: "Builds stamina with minimal joint stress.", duration: "12 mins" },
-                    { name: "Cooldown Walk", detail: "Easy pace", description: "Returns heart rate to baseline safely.", duration: "8 mins" }
-                ]
-            },
-            {
-                dayLabel: "Day 7 Workout",
-                heading: "Full Body Reset",
-                title: "Weekly Wrap-Up Session",
-                duration: "45 Mins",
-                description: "A final balanced session combining mobility, strength, and light cardio to close the week strong.",
-                exercises: [
-                    { name: "Joint Mobility Drill", detail: "Warm up", description: "Prepares major joints for full-body movement.", duration: "7 mins" },
-                    { name: "Bodyweight Squat + Reach", detail: "3 sets x 12 reps", description: "Trains lower body strength and thoracic mobility together.", duration: "10 mins" },
-                    { name: "Standing Core Twists", detail: "3 sets x 20 reps", description: "Improves core engagement and rotational control.", duration: "8 mins" },
-                    { name: "Brisk Walk Cooldown", detail: "Low intensity", description: "Completes the week with controlled aerobic work.", duration: "20 mins" }
-                ]
+        const WORKOUT_REGEN_FLAG = 'uplyfe_workout_regen';
+        const WORKOUT_REGEN_TTL = 15 * 60 * 1000;
+        let activeExercisePlanId = null;
+
+        function showWorkoutRegenBanner() {
+            document.getElementById('workout-regen-banner')?.classList.remove('hidden');
+        }
+
+        function hideWorkoutRegenBanner() {
+            document.getElementById('workout-regen-banner')?.classList.add('hidden');
+            localStorage.removeItem(WORKOUT_REGEN_FLAG);
+        }
+
+        function checkWorkoutRegenBanner() {
+            const ts = parseInt(localStorage.getItem(WORKOUT_REGEN_FLAG) || '0', 10);
+            if (ts && Date.now() - ts < WORKOUT_REGEN_TTL) {
+                showWorkoutRegenBanner();
+            } else if (ts) {
+                localStorage.removeItem(WORKOUT_REGEN_FLAG);
             }
-        ];
+        }
+
+        function isWorkoutRegenSatisfied(createdAt) {
+            const ts = parseInt(localStorage.getItem(WORKOUT_REGEN_FLAG) || '0', 10);
+            if (!ts || !createdAt) return false;
+            const createdMs = new Date(createdAt).getTime();
+            return Number.isFinite(createdMs) && createdMs >= ts - 5000;
+        }
+
+        function labelize(value, fallback = 'Not set') {
+            const raw = Array.isArray(value) ? value.join(', ') : String(value ?? '').trim();
+            if (!raw) return fallback;
+            return raw
+                .split(/([,\s/]+)/)
+                .map(part => /^\d+(?:-\d+)?$/.test(part)
+                    ? part
+                    : /^[a-z0-9-]+$/i.test(part)
+                    ? part.replace(/-/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
+                    : part)
+                .join('')
+                .replace(/\s+,/g, ',')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+        }
+
+        function setProfileTile(id, value, fallback = 'Not set') {
+            const el = document.getElementById(id);
+            if (el) el.textContent = labelize(value, fallback);
+        }
+
+        function applyExerciseRequestProfile(profile = {}) {
+            setProfileTile('profile-exercise-pref', profile.exercise_preference);
+            const time = profile.time_available
+                ? `${String(profile.time_available).replace(/\s*mins?$/i, '')} mins`
+                : null;
+            setProfileTile('profile-time', time);
+            const days = profile.available_days
+                ? `${String(profile.available_days).replace(/\s*days?(\/week)?$/i, '')} days/week`
+                : null;
+            setProfileTile('profile-days', days);
+            setProfileTile('profile-equipment', profile.equipment_available);
+            setProfileTile('profile-goals', profile.fitness_goals);
+        }
+
+        function updateMedicalAlignment(assessment, createdAt = null) {
+            const el = document.getElementById('medical-alignment-text');
+            if (!el) return;
+            const text = String(assessment || '').trim();
+            if (!text) {
+                el.textContent = 'Generate a routine to see how your saved profile and latest health context shape the plan.';
+                return;
+            }
+            const short = text.length > 240 ? `${text.slice(0, 237).trim()}...` : text;
+            const when = createdAt ? ` Updated ${new Date(createdAt).toLocaleDateString()}.` : '';
+            el.textContent = `${short}${when}`;
+        }
+
+	        // `let` (not `const`) so the saved or AI-generated plan can replace this in-place.
+	        let weeklyWorkoutPlans = [
+	            {
+	                dayLabel: "Workout",
+	                heading: "No plan yet",
+	                title: "Generate your AI workout",
+	                duration: "0 Mins",
+	                description: "Your saved routine will appear here after generation.",
+	                exercises: []
+	            }
+	        ];
 
         let currentWorkoutDayIndex = 0;
 
@@ -971,10 +915,19 @@
             title.textContent = plan.title;
             description.textContent = plan.description;
             durationBadge.textContent = plan.duration;
-            exercisesTitle.textContent = `Exercises (${plan.exercises.length})`;
+	            const exercises = Array.isArray(plan.exercises) ? plan.exercises : [];
+	            exercisesTitle.textContent = `Exercises (${exercises.length})`;
 
-            exerciseList.innerHTML = plan.exercises
-                .map((exercise, idx) => {
+	            if (!exercises.length) {
+	                exerciseList.innerHTML = `
+	                    <div class="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+	                        Generate a routine to see exercise details.
+	                    </div>`;
+	                return;
+	            }
+
+	            exerciseList.innerHTML = exercises
+	                .map((exercise, idx) => {
                     // When the exercise has a dataset id, show a small animated
                     // GIF thumbnail in place of the numbered badge — much more
                     // useful for "what does this exercise look like?".
@@ -1068,9 +1021,8 @@
         }
 
         // Pull the user's most recent saved exercise plan from the API and
-        // render it. Without this the page always opens with the hardcoded
-        // "Full Body Flow" placeholder, which makes a freshly-generated
-        // plan appear to vanish on the next page visit.
+	        // render it. Without this a freshly-generated plan would not persist
+	        // visually across page visits.
         async function loadActiveExercisePlan() {
             try {
                 const list = await fetch('/api/exercise-plans', {
@@ -1089,9 +1041,18 @@
                 });
                 if (!detail.ok) return;
                 const payload = await detail.json();
+                activeExercisePlanId = payload._plan_id || plans[0].id;
+                lastSeenExercisePlanId = activeExercisePlanId;
                 applyAiPlanToExistingUi(payload);
+                if (payload._request_payload?.profile) {
+                    applyExerciseRequestProfile(payload._request_payload.profile);
+                }
+                updateMedicalAlignment(payload.assessment, payload._created_at);
                 if (typeof stashCoachAssessment === 'function' && payload.assessment) {
                     stashCoachAssessment(payload.assessment, payload.equipment_resolved || []);
+                }
+                if (isWorkoutRegenSatisfied(payload._created_at)) {
+                    hideWorkoutRegenBanner();
                 }
             } catch (e) {
                 console.warn('loadActiveExercisePlan failed:', e);
@@ -1128,6 +1089,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // ORDER MATTERS: load the saved plan first, then honor any
             // ?day= deep-link against the freshly-loaded weeklyWorkoutPlans.
+            checkWorkoutRegenBanner();
             await loadActiveExercisePlan();
             applyExerciseDeepLink();
             if (exercisePlanPollHandle) clearInterval(exercisePlanPollHandle);
@@ -1535,6 +1497,7 @@
             }));
 
             currentWorkoutDayIndex = 0;
+            activeExercisePlanId = aiPlan._plan_id || activeExercisePlanId;
 
             // Update the 7-day weekly-view cards (only the ones that map to a
             // generated day; leave the rest as "Rest day" stubs).
@@ -1547,32 +1510,44 @@
             if (aiPlan.assessment) {
                 stashCoachAssessment(aiPlan.assessment, aiPlan.equipment_resolved || []);
             }
+            if (aiPlan._request_payload?.profile) {
+                applyExerciseRequestProfile(aiPlan._request_payload.profile);
+            }
+            updateMedicalAlignment(aiPlan.assessment, aiPlan._created_at);
+            if (isWorkoutRegenSatisfied(aiPlan._created_at)) {
+                hideWorkoutRegenBanner();
+            }
 
             // Scroll the user to the freshly-rendered routine.
             document.getElementById('daily-view-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // The page ships with 7 hardcoded day cards in #weekly-view-panel
-        // (data-workout-day="0"..."6"). Update each one's text so the
-        // weekly view reflects the new plan instead of the placeholder.
+	        // The page ships with 7 pre-rendered day slots in #weekly-view-panel
+	        // (data-workout-day="0"..."6"). Update each one's text so the
+	        // weekly view reflects the saved/generated plan.
         function updateWeeklyViewCards() {
             document.querySelectorAll('[data-workout-day]').forEach(card => {
                 const idx = Number(card.dataset.workoutDay);
                 const day = weeklyWorkoutPlans[idx];
-                // Each card has its own internal layout — find the title / focus
-                // text nodes and update them. We use a simple heuristic: rewrite
-                // the first <h3> (or strong/p.font-bold) inside the card.
-                const titleEl = card.querySelector('h3, .font-bold, p strong');
+                const labelEl = card.querySelector('p:first-child');
+                const titleEl = card.querySelector('h3');
                 const subEl = card.querySelectorAll('p')[1] || card.querySelector('p.text-muted-foreground');
                 if (!day) {
+                    if (labelEl) labelEl.textContent = `Day ${idx + 1}`;
                     if (titleEl) titleEl.textContent = 'Rest day';
-                    if (subEl)   subEl.textContent = '—';
+                    if (subEl) subEl.textContent = 'No scheduled workout';
                     card.classList.add('opacity-60');
                     return;
                 }
                 card.classList.remove('opacity-60');
-                if (titleEl) titleEl.textContent = day.dayLabel;
-                if (subEl)   subEl.textContent = day.title || day.heading;
+                if (labelEl) labelEl.textContent = day.dayLabel || `Day ${idx + 1}`;
+                if (titleEl) titleEl.textContent = day.title || day.heading || 'Workout';
+                if (subEl) {
+                    const count = Array.isArray(day.exercises) ? day.exercises.length : 0;
+                    subEl.textContent = [day.duration, count ? `${count} exercises` : null]
+                        .filter(Boolean)
+                        .join(' · ') || (day.description || 'Workout scheduled');
+                }
             });
         }
 

@@ -61,6 +61,21 @@
 </head>
 
 <body class="min-h-screen bg-background font-sans text-foreground">
+    @php
+        $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
+            ->filter()
+            ->map(fn ($part) => mb_strtoupper(mb_substr(trim($part), 0, 1)))
+            ->take(2)
+            ->implode('') ?: 'U';
+        $avatarSvg = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' .
+            '<rect width="96" height="96" rx="24" fill="#90ee90"/>' .
+            '<text x="50%" y="56%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">' .
+            e($avatarInitials) .
+            '</text></svg>'
+        );
+        $avatarSrc = $user->profile_photo ?: $avatarSvg;
+    @endphp
     <div class="min-h-screen w-full bg-background flex flex-col md:flex-row relative font-sans text-foreground">
         <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 lg:w-72 -translate-x-full md:relative md:translate-x-0 md:flex bg-card border-r border-border flex-shrink-0 flex-col transition-transform duration-300 shadow-xl md:shadow-none">
             <div class="h-16 flex items-center px-6 border-b border-border">
@@ -96,10 +111,10 @@
             </div>
             <div class="p-4 border-t border-border">
                 <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                    <img src="{{ $avatarSrc }}" alt="User"
                         class="w-10 h-10 rounded-full border border-border">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold truncate">Sarah Jenkins</p>
+                        <p class="text-sm font-bold truncate">{{ $user->first_name }} {{ $user->last_name }}</p>
                     </div>
                     <a href="/profile"
                         class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors inline-flex items-center justify-center">
@@ -249,64 +264,6 @@
             renderFavoriteRecipes();
         }
 
-        const DUMMY_FAVORITE_RECIPES = [{
-                recipe: {
-                    title: 'Greek Yogurt Berry Bowl',
-                    subtitle: 'Protein-rich quick breakfast',
-                    calories: '380',
-                    protein: '24g',
-                    carbs: '42g',
-                    description: 'Creamy Greek yogurt topped with berries, chia seeds, and granola for sustained morning energy.',
-                    tags: [{
-                        text: 'High Protein'
-                    }, {
-                        text: 'Gut Friendly'
-                    }],
-                    benefits: ['Supports muscle recovery', 'Rich in probiotics', 'Steady morning energy'],
-                    ingredients: ['1 cup Greek yogurt', '1/2 cup mixed berries', '1 tbsp chia seeds', '1/4 cup granola', '1 tsp honey'],
-                    instructions: ['Add yogurt into a bowl.', 'Top with berries, chia seeds, and granola.', 'Drizzle honey and serve immediately.'],
-                    tips: 'Prepare toppings in small containers the night before for a faster morning routine.'
-                }
-            },
-            {
-                recipe: {
-                    title: 'Salmon Quinoa Power Salad',
-                    subtitle: 'Heart healthy midday meal',
-                    calories: '540',
-                    protein: '34g',
-                    carbs: '45g',
-                    description: 'A balanced lunch with baked salmon, quinoa, leafy greens, cucumber, and lemon dressing.',
-                    tags: [{
-                        text: 'Omega-3'
-                    }, {
-                        text: 'Heart Healthy'
-                    }],
-                    benefits: ['Supports heart health', 'Anti-inflammatory nutrients', 'High satiety'],
-                    ingredients: ['120g salmon fillet', '1/2 cup cooked quinoa', '2 cups mixed greens', '1/2 cucumber', '1 tbsp olive oil', '1 tbsp lemon juice'],
-                    instructions: ['Bake salmon until cooked through.', 'Combine quinoa, greens, and cucumber.', 'Flake salmon on top and drizzle dressing.'],
-                    tips: 'Use leftover salmon to make this in under 10 minutes.'
-                }
-            },
-            {
-                recipe: {
-                    title: 'Lemon Herb Chicken & Veggies',
-                    subtitle: 'Light and filling dinner',
-                    calories: '490',
-                    protein: '40g',
-                    carbs: '28g',
-                    description: 'Grilled chicken breast with roasted broccoli, carrots, and a zesty lemon-herb finish.',
-                    tags: [{
-                        text: 'Low Glycemic'
-                    }, {
-                        text: 'Lean Protein'
-                    }],
-                    benefits: ['Supports blood sugar control', 'High protein recovery meal', 'Micronutrient dense'],
-                    ingredients: ['150g chicken breast', '1 cup broccoli', '1 cup carrots', '1 tbsp olive oil', '1 tsp mixed herbs', '1/2 lemon'],
-                    instructions: ['Season chicken and grill until done.', 'Roast vegetables with olive oil and herbs.', 'Serve with lemon squeezed on top.'],
-                    tips: 'Marinate the chicken for 30 minutes to boost flavor and tenderness.'
-                }
-            }
-        ];
         function renderFavoriteRecipes() {
             const grid = document.getElementById('favorite-recipe-grid');
             const empty = document.getElementById('favorite-empty');

@@ -48,19 +48,24 @@ SYSTEM_PROMPT = (
     '  "intent": {\n'
     '    "wants_recipe": <true|false>,\n'
     '    "meal_type": "<breakfast|lunch|dinner|snack|null>",\n'
+    '    "target_day": "<monday|tuesday|wednesday|thursday|friday|saturday|sunday|null>",\n'
     '    "wants_workout": <true|false>,\n'
     '    "regenerate_workout": <true|false>,\n'
+    '    "regenerate_menu": <true|false>,\n'
+    '    "show_week": <true|false>,\n'
     '    "dietary_change": {\n'
     '       "exclude": [<FOODS the user just said they cannot/will not eat>],\n'
     '       "include": [<FOODS the user just said they can eat again>]\n'
-    "    }\n"
+    "    },\n"
+    '    "diet_type": "<vegan|vegetarian|pescatarian|halal|kosher|keto|low_carb|null>"\n'
     '  }\n'
     "}\n\n"
     "INTENT ROUTING RULES (strict — route the user's message to the right "
     "backend action):\n"
     "* `wants_recipe`: true ONLY when the user is asking to see or pick a "
     "meal/recipe/dish from their plan. False for general nutrition questions "
-    "('is fish healthy?').\n"
+    "('is fish healthy?'). IMPORTANT: set to false when regenerate_menu is "
+    "true — do NOT combine them.\n"
     "* `wants_workout`: true when the user is asking to see today's workout "
     "or pick from the plan (NOT for regen — see next field).\n"
     "* `regenerate_workout`: true when the user asks for a NEW / FRESH / "
@@ -69,7 +74,21 @@ SYSTEM_PROMPT = (
     "should set this true: 'give me a new workout', 'change my routine', "
     "'I want different exercises', 'add some more exercises'. False for "
     "passive questions like 'what's my workout today'.\n"
+    "* `regenerate_menu`: true when the user asks for a NEW / FRESH meal "
+    "plan, week, or recipes refreshed. Examples: 'regenerate my menu', "
+    "'I want a fresh week of meals', 'redo my meal plan'. False for "
+    "'what's for dinner' or dietary changes (those go through "
+    "dietary_change).\n"
+    "* `show_week`: true when the user asks to see their ENTIRE week's "
+    "meals or workouts at once (not just one day). Examples: 'show me "
+    "all my meals this week', 'what's my plan for the week', 'show my "
+    "full weekly menu', 'all my workouts'. False for single-day asks "
+    "like 'what's my dinner today' or 'show me Monday's workout'.\n"
     "* `meal_type`: the specific slot the user mentioned, or null.\n"
+    "* `target_day`: when the user asks about a specific day (tomorrow, "
+    "monday, next friday), set this to the WEEKDAY NAME the day refers to. "
+    "Resolve 'tomorrow' to the actual weekday name. If no day is mentioned, "
+    "set to null.\n"
     "* `dietary_change.exclude`: ONLY actual foods the user JUST DECLARED "
     "they cannot/will not eat. Examples to populate: 'I can't eat fish', "
     "'no dairy please', 'I'm allergic to peanuts', 'remove pork'. Examples "
@@ -78,6 +97,10 @@ SYSTEM_PROMPT = (
     "category names: fish, shellfish, dairy, gluten, peanuts, eggs, beef, "
     "pork, chicken, soy, nuts. Never include 'workout', 'routine', 'plan'.\n"
     "* `dietary_change.include`: foods the user said they CAN eat again.\n"
+    "* `diet_type`: set when the user DECLARES a whole-diet identity — 'I'm "
+    "vegan', 'I went vegetarian', 'I follow a keto diet'. Use the canonical "
+    "value (vegan, vegetarian, pescatarian, halal, kosher, keto, low_carb). "
+    "Leave null for passive questions or single-food exclusions.\n"
     "* When in doubt, leave the field empty/false. False positives are MUCH "
     "worse than false negatives — we have a regex fallback."
 )
@@ -139,11 +162,25 @@ def chat(req: ChatRequest) -> ChatResponse:
             "include": _str_list(raw_diet.get("include")),
         }
 
+        WEEKDAYS = ("monday","tuesday","wednesday","thursday","friday","saturday","sunday")
+        td = raw_intent.get("target_day")
+        td = td.lower() if isinstance(td, str) else None
+        if td not in WEEKDAYS:
+            td = None
+        _DIET_TYPES = ("vegan","vegetarian","pescatarian","halal","kosher","keto","low_carb")
+        raw_dt = raw_intent.get("diet_type")
+        diet_type = raw_dt.lower().replace("-", "_") if isinstance(raw_dt, str) else None
+        if diet_type not in _DIET_TYPES:
+            diet_type = None
         intent = {
             "wants_recipe": bool(raw_intent.get("wants_recipe")),
             "meal_type": slot,
+            "target_day": td,
             "wants_workout": bool(raw_intent.get("wants_workout")),
             "regenerate_workout": bool(raw_intent.get("regenerate_workout")),
+            "regenerate_menu": bool(raw_intent.get("regenerate_menu")),
+            "show_week": bool(raw_intent.get("show_week")),
             "dietary_change": dietary_change,
+            "diet_type": diet_type,
         }
     return ChatResponse(reply=reply, intent=intent)

@@ -73,10 +73,12 @@ class RecommendationIntentDetector
                 // message. Safe because we only reach here if a recipe verb
                 // already matched.
                 $mealType = mb_strtolower($m2[1]);
-            } elseif (preg_match('/\btonight\b/i', $msg)) {
+            } elseif (preg_match('/\btonight\b|\bthis\s+evening\b/i', $msg)) {
                 $mealType = 'dinner';
             } elseif (preg_match('/\bthis\s+morning\b/i', $msg)) {
                 $mealType = 'breakfast';
+            } elseif (preg_match('/\bthis\s+afternoon\b|\blunchtime\b|\bat\s+lunch\b/i', $msg)) {
+                $mealType = 'lunch';
             }
         }
         // Catch "what should I eat tonight / for dinner" style too.
@@ -95,10 +97,23 @@ class RecommendationIntentDetector
             $exercise = true;
         }
 
+        $showWeek = false;
+        if (preg_match('/\b(?:all|full|entire|whole|every)\s+(?:my\s+)?(?:week|days|plan)\b/i', $msg)
+            || preg_match('/\b(?:this|my|the)\s+(?:full\s+|entire\s+|whole\s+)?week(?:\'s)?\s*(?:meal|menu|workout|exercise|plan|routine|schedule)?\b/i', $msg)
+            || preg_match('/\bweekly\s+(?:meal|menu|workout|exercise|plan|routine|schedule)\b/i', $msg)
+            || preg_match('/\ball\s+(?:my\s+)?(?:meal|menu|workout|exercise|recipe)s?\b/i', $msg)
+        ) {
+            $showWeek = true;
+            if (!$recipe && !$exercise) {
+                $recipe = true;
+            }
+        }
+
         return [
             'recipe' => $recipe,
             'meal_type' => $mealType,
             'exercise' => $exercise,
+            'show_week' => $showWeek,
         ];
     }
 }

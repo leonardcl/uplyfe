@@ -27,11 +27,11 @@ class RegenerateUserMenu extends Command
         // Build a request that mirrors what the /api/ai/recipe/weekly-menu
         // controller would have sent, but pulls exclusions from the user.
         $request = [
-            'target_calories' => 2000,
+            'target_calories' => (int) ($user->calorie_goal ?? 2000),
             'servings' => 1,
-            'diet' => is_array($user->dietary_preferences) && !empty($user->dietary_preferences)
+            'diet' => is_array($user->dietary_preferences)
                 ? (string) ($user->dietary_preferences[0] ?? 'none')
-                : (string) ($user->dietary_preferences ?? 'none'),
+                : (is_string($user->dietary_preferences) ? $user->dietary_preferences : 'none'),
             'allergies' => AiController::expandExclusionSynonyms(
                 is_array($user->food_exclusions) ? $user->food_exclusions : []
             ),

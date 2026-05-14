@@ -111,7 +111,10 @@ Route::middleware(['checklogin'])->group(function () {
     });
 
     Route::get('/full-analysis', function () {
-        return view('fullanalysis');
+        $user = User::find(session('user')->id);
+        session(['user' => $user]);
+
+        return view('fullanalysis', ['user' => $user]);
     });
     
     Route::get('/profile', function () {
@@ -124,7 +127,10 @@ Route::middleware(['checklogin'])->group(function () {
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/favorite-recipes', function () {
-        return view('favoriterecipes');
+        $user = User::find(session('user')->id);
+        session(['user' => $user]);
+
+        return view('favoriterecipes', ['user' => $user]);
     });
 
     Route::resource('users', UserController::class)->only(['update']);

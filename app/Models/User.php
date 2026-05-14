@@ -32,6 +32,7 @@ class User extends Authenticatable
         'dietary_preferences',
         'notification_preferences',
         'food_exclusions',
+        'calorie_goal',
         'password_changed_at',
     ];
 
