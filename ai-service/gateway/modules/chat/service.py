@@ -53,6 +53,7 @@ SYSTEM_PROMPT = (
     '    "regenerate_workout": <true|false>,\n'
     '    "regenerate_menu": <true|false>,\n'
     '    "show_week": <true|false>,\n'
+    '    "cuisine_request": "<e.g. indonesian|italian|japanese|thai|chinese|indian|mexican|null>",\n'
     '    "dietary_change": {\n'
     '       "exclude": [<FOODS the user just said they cannot/will not eat>],\n'
     '       "include": [<FOODS the user just said they can eat again>]\n'
@@ -74,11 +75,14 @@ SYSTEM_PROMPT = (
     "should set this true: 'give me a new workout', 'change my routine', "
     "'I want different exercises', 'add some more exercises'. False for "
     "passive questions like 'what's my workout today'.\n"
-    "* `regenerate_menu`: true when the user asks for a NEW / FRESH meal "
-    "plan, week, or recipes refreshed. Examples: 'regenerate my menu', "
-    "'I want a fresh week of meals', 'redo my meal plan'. False for "
-    "'what's for dinner' or dietary changes (those go through "
-    "dietary_change).\n"
+    "* `regenerate_menu`: true ONLY when the user explicitly asks to CREATE "
+    "a brand-new weekly meal plan from scratch. Trigger words: 'regenerate', "
+    "'redo my plan', 'give me a new plan', 'fresh week of meals', 'rebuild "
+    "my menu'. Do NOT set this true just because the user mentions a cuisine "
+    "('I want Indonesian food', 'can we have Italian today') or wants to see "
+    "meals for one day — those are `wants_recipe: true` with `cuisine_request`. "
+    "Even 'I want Indonesian food this week' is wants_recipe + cuisine_request, "
+    "NOT regenerate_menu, unless they explicitly say 'new plan'.\n"
     "* `show_week`: true when the user asks to see their ENTIRE week's "
     "meals or workouts at once (not just one day). Examples: 'show me "
     "all my meals this week', 'what's my plan for the week', 'show my "
@@ -101,6 +105,12 @@ SYSTEM_PROMPT = (
     "vegan', 'I went vegetarian', 'I follow a keto diet'. Use the canonical "
     "value (vegan, vegetarian, pescatarian, halal, kosher, keto, low_carb). "
     "Leave null for passive questions or single-food exclusions.\n"
+    "* `cuisine_request`: set to the cuisine keyword (lowercase, e.g. "
+    "'indonesian', 'italian', 'japanese', 'thai', 'chinese', 'indian', "
+    "'mexican') when the user asks for food of a specific ethnic cuisine. "
+    "Set this alongside wants_recipe when they want to SEE matching meals, "
+    "or alongside regenerate_menu when they want a new plan of that cuisine. "
+    "Leave null when no specific cuisine is mentioned.\n"
     "* When in doubt, leave the field empty/false. False positives are MUCH "
     "worse than false negatives — we have a regex fallback."
 )
@@ -135,15 +145,95 @@ def _build_system(req: ChatRequest) -> str:
     )
 
 
+import logging
+import re as _re
+
+_logger = logging.getLogger(__name__)
+
+
+def _normalize_key(k: str) -> str:
+    """Strip anything that isn't a letter so 'reply: ' → 'reply'."""
+    return _re.sub(r'[^a-z]', '', k.lower())
+
+
+def _strip_preamble(text: str) -> str:
+    """Remove model self-talk / code-comment preamble that sometimes leaks
+    before the real answer.
+
+    Patterns seen in the wild:
+      '); // Note: <internal thought>\n\n<actual reply>
+      // I should answer...\n\n<actual reply>
+      <think>...</think>\n\n<actual reply>
+    """
+    text = text.strip()
+    # Strip <think>...</think> blocks the model sometimes emits.
+    text = _re.sub(r'<think>.*?</think>', '', text, flags=_re.DOTALL).strip()
+    # If the first "paragraph" (before \n\n) contains only code-comment-style
+    # content (starts with '); or // or /* or is all whitespace/punctuation),
+    # drop it and keep everything after.
+    if '\n\n' in text:
+        before, after = text.split('\n\n', 1)
+        before_stripped = before.strip()
+        if (
+            _re.match(r"^[');\s/*]+", before_stripped)          # starts with junk chars
+            or before_stripped.startswith('//')                  # JS comment
+            or before_stripped.startswith('/*')                  # block comment
+            or (len(before_stripped) < 200 and not _re.search(r'[a-zA-Z]{4}', before_stripped))
+        ):
+            text = after.strip()
+    return text
+
+
+def _extract_reply_and_intent(data: dict) -> tuple[str, dict | None]:
+    """Robustly extract (reply, intent) from whatever the model emitted.
+
+    The model is prone to several bad habits:
+    1. Using "reply: " (with extra colon/space) instead of "reply" as a key.
+    2. Nesting the entire response one level deeper:
+         {"reply: ": {"reply": "...", "intent": {...}}}
+    3. Putting a code-comment preamble before the real text.
+    4. Putting intent at the top level even when reply is nested.
+
+    Strategy: normalise every key to letters-only, find the "reply" slot,
+    unwrap nesting, strip preamble, then find the "intent" slot.
+    """
+    # Build a normalised lookup: stripped-key → (original_key, value)
+    norm_map = {_normalize_key(k): (k, v) for k, v in data.items()}
+
+    reply = ""
+    intent_raw = None
+
+    # --- Find the reply slot ---
+    reply_val = norm_map.get("reply", (None, None))[1]
+
+    if isinstance(reply_val, dict):
+        # Whole response is nested one level deeper — unwrap and recurse once.
+        inner_norm = {_normalize_key(k): (k, v) for k, v in reply_val.items()}
+        inner_reply = inner_norm.get("reply", (None, None))[1]
+        reply = _strip_preamble(str(inner_reply)) if inner_reply else ""
+        intent_raw = inner_norm.get("intent", (None, None))[1]
+    elif isinstance(reply_val, str):
+        reply = _strip_preamble(reply_val)
+    # If reply_val is None, reply stays ""
+
+    # --- Find intent (may live at top level even when reply was nested) ---
+    if not isinstance(intent_raw, dict):
+        intent_raw = norm_map.get("intent", (None, None))[1]
+        if not isinstance(intent_raw, dict):
+            intent_raw = None
+
+    return reply, intent_raw
+
+
 def chat(req: ChatRequest) -> ChatResponse:
     prompt = f"{_format_history(req)}User: {req.message}\nUplyfe:"
-    # Lower temperature than the previous 0.3 — pushes the model toward
-    # quoting facts from the context instead of inventing them.
-    data = generate_json(prompt, system=_build_system(req), temperature=0.15)
-    reply = str(data.get("reply", "")).strip()
+    data = generate_json(prompt, system=_build_system(req), temperature=0.15, num_predict=4096)
+
+    reply, raw_intent = _extract_reply_and_intent(data)
+
     if not reply:
+        _logger.warning("Chat LLM returned empty reply. Full data: %s", data)
         reply = "Sorry, I didn't catch that. Could you rephrase?"
-    raw_intent = data.get("intent") if isinstance(data.get("intent"), dict) else None
     intent: dict | None = None
     if raw_intent:
         # Normalise/whitelist fields so callers can trust the shape.
@@ -172,15 +262,22 @@ def chat(req: ChatRequest) -> ChatResponse:
         diet_type = raw_dt.lower().replace("-", "_") if isinstance(raw_dt, str) else None
         if diet_type not in _DIET_TYPES:
             diet_type = None
+        raw_cr = raw_intent.get("cuisine_request")
+        cuisine_request = raw_cr.lower().strip() if isinstance(raw_cr, str) and raw_cr.strip() else None
+        # Hard-enforce: if regenerate_menu is true, wants_recipe must be false.
+        # The LLM is instructed to do this but sometimes disobeys.
+        regen_menu = bool(raw_intent.get("regenerate_menu"))
+        wants_recipe = bool(raw_intent.get("wants_recipe")) and not regen_menu
         intent = {
-            "wants_recipe": bool(raw_intent.get("wants_recipe")),
+            "wants_recipe": wants_recipe,
             "meal_type": slot,
             "target_day": td,
             "wants_workout": bool(raw_intent.get("wants_workout")),
             "regenerate_workout": bool(raw_intent.get("regenerate_workout")),
-            "regenerate_menu": bool(raw_intent.get("regenerate_menu")),
+            "regenerate_menu": regen_menu,
             "show_week": bool(raw_intent.get("show_week")),
             "dietary_change": dietary_change,
             "diet_type": diet_type,
+            "cuisine_request": cuisine_request,
         }
     return ChatResponse(reply=reply, intent=intent)

@@ -6,6 +6,7 @@ it here so the gateway stays decoupled from that module's internals.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import httpx
@@ -23,6 +24,7 @@ def generate_json(
     system: str | None = None,
     temperature: float = 0.4,
     model: str | None = None,
+    num_predict: int = 2048,
 ) -> dict[str, Any]:
     """Call Ollama and return the parsed JSON object the model produced.
 
@@ -44,7 +46,7 @@ def generate_json(
             "temperature": temperature,
             # num_predict caps generation length; gemma-family models can
             # wander into long loops that hit our HTTP timeout.
-            "num_predict": 2048,
+            "num_predict": num_predict,
             # Defensive against token-level degeneration on longer outputs.
             "repeat_penalty": 1.15,
             "top_p": 0.9,
@@ -67,10 +69,22 @@ def generate_json(
     if not raw:
         raise OllamaError("Ollama returned an empty response.")
 
+    # --- Attempt 1: parse as-is ---
     try:
         return json.loads(raw)
-    except json.JSONDecodeError as e:
-        raise OllamaError(f"Ollama did not return valid JSON: {raw[:300]}") from e
+    except json.JSONDecodeError:
+        pass
+
+    # --- Attempt 2: extract the first {...} block the model may have buried
+    # inside markdown fences, preamble text, or trailing junk. ---
+    json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if json_match:
+        try:
+            return json.loads(json_match.group())
+        except json.JSONDecodeError:
+            pass
+
+    raise OllamaError(f"Ollama did not return valid JSON: {raw[:300]}")
 
 
 def is_available() -> bool:

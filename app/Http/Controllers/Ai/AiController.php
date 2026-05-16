@@ -586,6 +586,16 @@ class AiController extends Controller
         // workout regen is in flight (the dinner card is from the meal plan,
         // which didn't change).
         $llmIntent = is_array($result['intent'] ?? null) ? $result['intent'] : null;
+        // Hard-enforce mutual exclusivity that the LLM is supposed to honour
+        // but sometimes violates: showing recipe cards from the OLD plan while
+        // a regen is in-flight is never correct. Python does this too — PHP is
+        // a second safety net.
+        if (!empty($result['menu_regen']) && is_array($llmIntent)) {
+            $llmIntent['wants_recipe'] = false;
+        }
+        if (!empty($result['workout_regen']) && is_array($llmIntent)) {
+            $llmIntent['wants_workout'] = false;
+        }
         $justRegenned = !empty($result['menu_regen']) || !empty($result['workout_regen']);
         $alsoWantsCard = ($llmIntent['wants_recipe'] ?? false) || ($llmIntent['wants_workout'] ?? false)
             || ($llmIntent['show_week'] ?? false);
@@ -1184,6 +1194,9 @@ class AiController extends Controller
         $mealType = $regex['meal_type'] ?? ($llmIntent['meal_type'] ?? null);
         $wantsExercise = $regex['exercise'] || ($llmIntent['wants_workout'] ?? false);
         $showWeek = ($regex['show_week'] ?? false) || ($llmIntent['show_week'] ?? false);
+        $cuisineRequest = isset($llmIntent['cuisine_request']) && is_string($llmIntent['cuisine_request'])
+            ? mb_strtolower(trim($llmIntent['cuisine_request']))
+            : null;
 
         // Resolve target day from BOTH sources. The LLM is best at "next
         // Friday"; regex catches "tomorrow / today / yesterday" reliably.
@@ -1212,7 +1225,7 @@ class AiController extends Controller
 
         $cards = [];
         if ($wantsRecipe) {
-            $card = $this->pickRecipeCard($userId, $mealType, $targetDay);
+            $card = $this->pickRecipeCard($userId, $mealType, $targetDay, $cuisineRequest);
             if ($card) $cards[] = $card;
         }
         if ($wantsExercise) {
@@ -1277,7 +1290,7 @@ class AiController extends Controller
      * the current time-of-day. The card includes `requested_meal_type`
      * and `note` so the UI can show why the fallback kicked in.
      */
-    protected function pickRecipeCard(int $userId, ?string $mealType, ?string $targetDay = null): ?array
+    protected function pickRecipeCard(int $userId, ?string $mealType, ?string $targetDay = null, ?string $cuisineRequest = null): ?array
     {
         $plan = MealPlan::where('user_id', $userId)
             ->orderByDesc('created_at')
@@ -1286,6 +1299,49 @@ class AiController extends Controller
         $payload = $plan->payload ?? [];
         $plans = $payload['plan'] ?? [];
         if (!$plans) return null;
+
+        // When the user requested a specific cuisine, try to find any meal in
+        // the plan whose title / description / tags mention that cuisine before
+        // falling through to the normal day/slot resolution.
+        if ($cuisineRequest) {
+            $cuisineLower = mb_strtolower($cuisineRequest);
+            foreach (['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as $dk) {
+                if (!is_array($plans[$dk] ?? null)) continue;
+                foreach (['breakfast','lunch','dinner','snack'] as $sk) {
+                    $m = $plans[$dk][$sk] ?? null;
+                    if (!is_array($m)) continue;
+                    $haystack = mb_strtolower(
+                        ($m['title'] ?? '') . ' ' .
+                        ($m['description'] ?? '') . ' ' .
+                        implode(' ', array_map(fn ($t) => is_array($t) ? ($t['text'] ?? '') : (string) $t, $m['tags'] ?? []))
+                    );
+                    if (mb_strpos($haystack, $cuisineLower) !== false) {
+                        return [
+                            'type' => 'recipe',
+                            'meal_type' => $sk,
+                            'requested_meal_type' => $mealType,
+                            'day_key' => $dk,
+                            'meal_plan_id' => $plan->id,
+                            'title' => (string) ($m['title'] ?? ucfirst($sk)),
+                            'subtitle' => (string) ($m['subtitle'] ?? ucfirst($sk)),
+                            'description' => (string) ($m['description'] ?? ''),
+                            'calories' => (string) ($m['calories'] ?? ''),
+                            'protein' => (string) ($m['protein'] ?? ''),
+                            'carbs' => (string) ($m['carbs'] ?? ''),
+                            'tags' => array_map(
+                                fn ($t) => is_array($t) ? ($t['text'] ?? '') : (string) $t,
+                                $m['tags'] ?? []
+                            ),
+                            'ingredient_count' => is_array($m['ingredients'] ?? null) ? count($m['ingredients']) : 0,
+                            'note' => null,
+                            'snapshot' => $m,
+                        ];
+                    }
+                }
+            }
+            // No matching cuisine found in the plan — fall through to normal
+            // selection; the chat reply can explain why it doesn't match.
+        }
 
         // Honour an explicit weekday request ("tomorrow" → tuesday) when
         // provided; otherwise default to today's weekday.
