@@ -1,23 +1,18 @@
-"""Local-first LLM client targeting Ollama.
+"""LLM client for health-checkup — uses OpenRouter for generation.
 
-Why Ollama? The user's spec asks for a local model (gemma family). Ollama is
-the simplest stable local-LLM runner; pull the model once, then HTTP it.
-
-The client is intentionally minimal:
-  * .generate(prompt) → str
-  * format_json=True nudges the model to emit JSON when supported (Ollama exposes
-    a "format": "json" field that constrains decoding).
-  * Never raises on connect failure during normal use — instead we raise
-    LLMUnavailableError so callers can fall back to deterministic-only mode.
+Keeps the same OllamaClient class interface so all callers remain unchanged.
 """
 from __future__ import annotations
 
+import json
+import re
 from typing import Optional
 
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import Settings
+
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 class LLMUnavailableError(RuntimeError):
@@ -25,31 +20,24 @@ class LLMUnavailableError(RuntimeError):
 
 
 class OllamaClient:
+    """Drop-in replacement — same public interface, now backed by OpenRouter."""
+
     def __init__(self, settings: Settings):
-        self.base_url = settings.ollama_base_url.rstrip("/")
-        self.model = settings.ollama_model
+        self.api_key = settings.openrouter_api_key
+        self.model = settings.openrouter_model
         self.timeout = settings.llm_timeout_seconds
         self.temperature = settings.llm_temperature
 
     def is_available(self) -> bool:
         try:
-            with httpx.Client(timeout=3.0) as c:
-                r = c.get(f"{self.base_url}/api/tags")
+            with httpx.Client(timeout=5.0) as c:
+                r = c.get(
+                    "https://openrouter.ai/api/v1/models",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                )
                 return r.status_code == 200
         except Exception:
             return False
-
-    @retry(
-        retry=retry_if_exception_type((httpx.ConnectError, httpx.ReadTimeout)),
-        wait=wait_exponential(multiplier=0.5, min=0.5, max=4),
-        stop=stop_after_attempt(3),
-        reraise=True,
-    )
-    def _post(self, payload: dict) -> dict:
-        with httpx.Client(timeout=self.timeout) as c:
-            r = c.post(f"{self.base_url}/api/generate", json=payload)
-            r.raise_for_status()
-            return r.json()
 
     def generate(
         self,
@@ -63,50 +51,48 @@ class OllamaClient:
         repeat_last_n: int = 256,
         num_ctx: int = 4096,
     ) -> str:
-        """Generate text from Ollama with anti-loop defaults.
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
 
-        Why these defaults:
-          * `repeat_penalty=1.18` discourages the bullet/section loop that gemma-class
-            models fall into without it.
-          * `repeat_last_n=256` extends the look-back window so it catches paragraph-
-            level repetition, not just token-level.
-          * `num_ctx=4096` is enough headroom for findings + retrieved context + output
-            without trashing throughput on a 26B-class model.
-          * A `stop` token list lets the caller hard-cut on a sentinel. The synthesis
-            prompt uses `END_OF_REPORT`.
-        """
-        options: dict = {
-            "temperature": self.temperature,
-            "repeat_penalty": repeat_penalty,
-            "repeat_last_n": repeat_last_n,
-            "num_ctx": num_ctx,
-        }
-        if max_tokens:
-            options["num_predict"] = max_tokens
+        content = prompt
+        if format_json:
+            content += "\n\nIMPORTANT: Reply with valid JSON only. No markdown, no prose outside the JSON."
         if stop:
-            options["stop"] = stop
+            content += f"\n\nStop generating when you reach: {', '.join(stop)}"
+        messages.append({"role": "user", "content": content})
 
         payload: dict = {
             "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            # Disable reasoning models' hidden thinking phase. This pipeline never
-            # needs the model to "decide" — it only re-states deterministic findings.
-            # Without this, thinking models burn the num_predict budget on hidden
-            # reasoning tokens and emit an empty `response` field.
-            "think": False,
-            "options": options,
+            "messages": messages,
+            "temperature": self.temperature,
+            "max_tokens": max_tokens or 4096,
         }
-        if system:
-            payload["system"] = system
-        if format_json:
-            payload["format"] = "json"
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://uplyfe.app",
+            "X-Title": "Uplyfe AI",
+        }
 
         try:
-            data = self._post(payload)
-        except (httpx.ConnectError, httpx.ReadTimeout, httpx.HTTPStatusError) as e:
-            raise LLMUnavailableError(
-                f"Ollama unreachable at {self.base_url} for model {self.model!r}: {e}"
-            ) from e
+            with httpx.Client(timeout=self.timeout) as c:
+                r = c.post(_OPENROUTER_URL, json=payload, headers=headers)
+                r.raise_for_status()
+                body = r.json()
+        except (httpx.HTTPError, ValueError) as e:
+            raise LLMUnavailableError(f"OpenRouter request failed: {e}") from e
 
-        return (data.get("response") or "").strip()
+        raw = (body.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
+        if not raw:
+            raise LLMUnavailableError("OpenRouter returned empty content.")
+
+        # If a stop token was requested, truncate at it.
+        if stop:
+            for tok in stop:
+                idx = raw.find(tok)
+                if idx != -1:
+                    raw = raw[:idx]
+
+        return raw.strip()

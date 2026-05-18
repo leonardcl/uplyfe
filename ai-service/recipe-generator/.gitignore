@@ -10,6 +10,7 @@ __pycache__/
 # --- Generated data ---
 data/chroma/            # rebuild with `make ingest`
 data/output/            # if anything writes meal plans to disk
+data.zip                # downloaded/exported dataset archive — regenerate locally
 
 # --- User-supplied recipe datasets ---
 # JSON files in recipes/ are intentionally NOT committed by default —

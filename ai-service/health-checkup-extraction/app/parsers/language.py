@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-Language = Literal["id", "en", "mixed"]
+Language = Literal["id", "en", "ko", "mixed"]
 
 
 # Distinctive ID terms (must NOT appear in English lab reports).
@@ -44,6 +44,9 @@ _ID_RE = re.compile("|".join(_ID_TERMS), re.IGNORECASE)
 _EN_RE = re.compile("|".join(_EN_TERMS), re.IGNORECASE)
 
 
+_KO_RE = re.compile(r'[가-힣ᄀ-ᇿ]{2,}')
+
+
 def detect_language(text: str) -> Language:
     """Detect the dominant language of a lab report text.
 
@@ -55,6 +58,9 @@ def detect_language(text: str) -> Language:
     """
     if not text:
         return "mixed"
+    # Korean: if there are 3+ Hangul word-matches it's a Korean document.
+    if len(_KO_RE.findall(text)) >= 3:
+        return "ko"
     id_count = len(_ID_RE.findall(text))
     en_count = len(_EN_RE.findall(text))
 

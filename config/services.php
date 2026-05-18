@@ -37,4 +37,9 @@ return [
         'timeout' => (int) env('AI_SERVICE_TIMEOUT', 120),
     ],
 
+    'openrouter' => [
+        'key' => env('OPENROUTER_KEY'),
+        'image_model' => env('OPENROUTER_IMAGE_MODEL', 'google/gemini-2.5-flash-preview:thinking'),
+    ],
+
 ];

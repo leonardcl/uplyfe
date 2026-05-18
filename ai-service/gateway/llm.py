@@ -1,7 +1,7 @@
-"""Thin Ollama client shared by gateway-internal modules (exercise, recipe).
+"""LLM client for the Uplyfe AI gateway.
 
-Health-checkup-extraction has its own dedicated Ollama client; we don't reuse
-it here so the gateway stays decoupled from that module's internals.
+`generate_json` — used by the chat module — calls OpenRouter (cloud).
+`is_available`  — checks Ollama, still used by exercise / recipe / health-checkup.
 """
 from __future__ import annotations
 
@@ -18,56 +18,64 @@ class OllamaError(RuntimeError):
     pass
 
 
+# Alias so callers that catch OllamaError still work.
+LLMError = OllamaError
+
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
 def generate_json(
     prompt: str,
     *,
     system: str | None = None,
     temperature: float = 0.4,
     model: str | None = None,
-    num_predict: int = 2048,
+    num_predict: int = 4096,
 ) -> dict[str, Any]:
-    """Call Ollama and return the parsed JSON object the model produced.
-
-    Uses Ollama's `format=json` mode so the model is forced to emit JSON.
-    Pass `model` to override the configured default (e.g. a smaller, faster
-    model for chat).
-    """
+    """Call OpenRouter and return the parsed JSON object the model produced."""
     settings = get_settings()
-    payload: dict[str, Any] = {
-        "model": model or settings.ollama_model,
-        "prompt": prompt,
-        "stream": False,
-        "format": "json",
-        # gemma4:26b advertises the "thinking" capability — without disabling
-        # it, the model burns its num_predict budget on hidden reasoning
-        # tokens, leaving an empty or truncated `response` field.
-        "think": False,
-        "options": {
-            "temperature": temperature,
-            # num_predict caps generation length; gemma-family models can
-            # wander into long loops that hit our HTTP timeout.
-            "num_predict": num_predict,
-            # Defensive against token-level degeneration on longer outputs.
-            "repeat_penalty": 1.15,
-            "top_p": 0.9,
-            "top_k": 40,
-        },
-    }
-    if system:
-        payload["system"] = system
+    model_id = model or settings.openrouter_model
 
-    url = f"{settings.ollama_host.rstrip('/')}/api/generate"
+    messages: list[dict] = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    # Append a hard JSON reminder to the last user message so models that
+    # don't support response_format still stay on-track.
+    if messages and messages[-1]["role"] == "user":
+        messages[-1]["content"] += "\n\nIMPORTANT: Reply with valid JSON only. No markdown, no prose outside the JSON."
+
+    payload: dict[str, Any] = {
+        "model": model_id,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": num_predict,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {settings.openrouter_api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://uplyfe.app",
+        "X-Title": "Uplyfe AI",
+    }
+
     try:
-        with httpx.Client(timeout=settings.ollama_timeout_seconds) as client:
-            resp = client.post(url, json=payload)
+        with httpx.Client(timeout=120) as client:
+            resp = client.post(_OPENROUTER_URL, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
     except httpx.HTTPError as e:
-        raise OllamaError(f"Ollama request failed: {e}") from e
+        raise LLMError(f"OpenRouter request failed: {e}") from e
 
-    raw = data.get("response", "").strip()
+    raw = (
+        data.get("choices", [{}])[0]
+        .get("message", {})
+        .get("content", "")
+        .strip()
+    )
     if not raw:
-        raise OllamaError("Ollama returned an empty response.")
+        raise LLMError("OpenRouter returned empty content.")
 
     # --- Attempt 1: parse as-is ---
     try:
@@ -75,19 +83,19 @@ def generate_json(
     except json.JSONDecodeError:
         pass
 
-    # --- Attempt 2: extract the first {...} block the model may have buried
-    # inside markdown fences, preamble text, or trailing junk. ---
-    json_match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if json_match:
+    # --- Attempt 2: extract first {...} block (model may wrap in markdown) ---
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if match:
         try:
-            return json.loads(json_match.group())
+            return json.loads(match.group())
         except json.JSONDecodeError:
             pass
 
-    raise OllamaError(f"Ollama did not return valid JSON: {raw[:300]}")
+    raise LLMError(f"OpenRouter did not return valid JSON: {raw[:300]}")
 
 
 def is_available() -> bool:
+    """Check if the local Ollama instance is reachable (used by exercise/recipe/health-checkup)."""
     settings = get_settings()
     url = f"{settings.ollama_host.rstrip('/')}/api/tags"
     try:

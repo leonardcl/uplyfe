@@ -33,6 +33,12 @@ class User extends Authenticatable
         'notification_preferences',
         'food_exclusions',
         'calorie_goal',
+        'exercise_preference',
+        'equipment_available',
+        'available_days',
+        'time_available',
+        'fitness_goals',
+        'body_focus',
         'password_changed_at',
     ];
 
@@ -56,5 +62,7 @@ class User extends Authenticatable
         'dietary_preferences' => 'array',
         'notification_preferences' => 'array',
         'food_exclusions' => 'array',
+        'equipment_available' => 'array',
+        'body_focus' => 'array',
     ];
 }

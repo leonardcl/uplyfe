@@ -12,6 +12,11 @@ class Settings(BaseSettings):
 
     ai_service_key: str = "change-me-please"
 
+    # OpenRouter — used by the chat module
+    openrouter_api_key: str = ""
+    openrouter_model: str = "google/gemma-2-27b-it"
+
+    # Ollama — still used by exercise / recipe / health-checkup modules
     ollama_host: str = "http://localhost:11434"
     ollama_model: str = "gemma2:9b"
     ollama_timeout_seconds: int = 120

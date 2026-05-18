@@ -59,9 +59,26 @@
         --radius: 1rem;
         --secondary: #e2e8f0; }
     </style>
+  <style>
+    #toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.75rem;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:280px;max-width:380px;pointer-events:all;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;backdrop-filter:blur(12px)}
+    .toast.success{background:rgba(255,255,255,.95);border:1px solid #bbf7d0}.toast.error{background:rgba(255,255,255,.95);border:1px solid #fecaca}
+    .toast-icon{flex-shrink:0;width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .toast.success .toast-icon{background:#dcfce7;color:#16a34a}.toast.error .toast-icon{background:#fee2e2;color:#dc2626}
+    .toast-body{flex:1}.toast-title{font-weight:600;font-size:.875rem;color:#0f172a;margin-bottom:.125rem}.toast-msg{font-size:.8rem;color:#64748b;line-height:1.4}
+    .toast-close{flex-shrink:0;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:0;line-height:1}.toast-close:hover{color:#0f172a}
+    .toast.hiding{animation:toastOut .25s ease-in forwards}
+    @keyframes toastIn{from{opacity:0;transform:translateX(2rem) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes toastOut{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(2rem) scale(.95)}}
+  </style>
 </head>
 
 <body>
+  <div id="toast-container"></div>
+  <script>
+    function showToast(type,title,message){const c=document.getElementById("toast-container");const t=document.createElement("div");t.className="toast "+type;t.innerHTML="<div class="toast-icon">"+(type==="success"?"✓":"✕")+"</div><div class="toast-body"><div class="toast-title">"+title+"</div><div class="toast-msg">"+message+"</div></div><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>";c.appendChild(t);setTimeout(()=>dismissToast(t),5000);}
+    function dismissToast(t){if(!t||t.classList.contains("hiding"))return;t.classList.add("hiding");setTimeout(()=>t.remove(),250);}
+  </script>
     @php
         $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
             ->filter()
@@ -1036,7 +1053,7 @@
 
         function submitNewReport() {
             // Here you would submit the form data
-            alert('New report creation functionality would be implemented here.');
+            showToast('info', 'Coming soon', 'New report creation will be available soon.');
             closeNewReportModal();
         }
 
@@ -1069,9 +1086,9 @@
                 });
                 if (!r1.ok) throw new Error('HTTP ' + r1.status);
                 closeNewPlanModal();
-                alert("Got it — I'm regenerating your meal plan and workout in the background. Open /recipe and /exercise in a few minutes; they auto-refresh once ready.");
+                showToast("success", "Regenerating plan", "Meal plan and workout are being regenerated. Pages auto-refresh when ready.");
             } catch (e) {
-                alert('Could not start regeneration: ' + (e?.message || e));
+                showToast('error', 'Regeneration failed', e?.message || String(e));
             } finally {
                 if (btn) {
                     btn.disabled = false;

@@ -59,9 +59,26 @@
         --radius: 1rem;
         --secondary: #e2e8f0; }
     </style>
+  <style>
+    #toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.75rem;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:280px;max-width:380px;pointer-events:all;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;backdrop-filter:blur(12px)}
+    .toast.success{background:rgba(255,255,255,.95);border:1px solid #bbf7d0}.toast.error{background:rgba(255,255,255,.95);border:1px solid #fecaca}
+    .toast-icon{flex-shrink:0;width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .toast.success .toast-icon{background:#dcfce7;color:#16a34a}.toast.error .toast-icon{background:#fee2e2;color:#dc2626}
+    .toast-body{flex:1}.toast-title{font-weight:600;font-size:.875rem;color:#0f172a;margin-bottom:.125rem}.toast-msg{font-size:.8rem;color:#64748b;line-height:1.4}
+    .toast-close{flex-shrink:0;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:0;line-height:1}.toast-close:hover{color:#0f172a}
+    .toast.hiding{animation:toastOut .25s ease-in forwards}
+    @keyframes toastIn{from{opacity:0;transform:translateX(2rem) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes toastOut{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(2rem) scale(.95)}}
+  </style>
 </head>
 
 <body>
+  <div id="toast-container"></div>
+  <script>
+    function showToast(type,title,message){const c=document.getElementById("toast-container");const t=document.createElement("div");t.className="toast "+type;t.innerHTML="<div class=\"toast-icon\">"+(type==="success"?"✓":"✕")+"</div><div class=\"toast-body\"><div class=\"toast-title\">"+title+"</div><div class=\"toast-msg\">"+message+"</div></div><button class=\"toast-close\" onclick=\"dismissToast(this.parentElement)\">✕</button>";c.appendChild(t);setTimeout(()=>dismissToast(t),5000);}
+    function dismissToast(t){if(!t||t.classList.contains("hiding"))return;t.classList.add("hiding");setTimeout(()=>t.remove(),250);}
+  </script>
     @php
         $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
             ->filter()
@@ -390,16 +407,12 @@
                             <div onclick="openRecipeModal('breakfast')"
                                 class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-breakfast">
                                 <div class="h-48 relative overflow-hidden bg-muted">
-                                    <!-- Placeholder for image -->
-                                    <div
-                                        class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                    <img id="breakfast-img" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden transition-opacity duration-500">
+                                    <div id="breakfast-img-skeleton" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                         <iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>
                                     </div>
-                                    <div
-                                        class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm" id="breakfast-badge">
-                                        Breakfast</div>
-                                    <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="breakfast-heart">
+                                    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm" id="breakfast-badge">Breakfast</div>
+                                    <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="breakfast-heart">
                                         <iconify-icon icon="lucide:heart"></iconify-icon>
                                     </button>
                                 </div>
@@ -431,15 +444,12 @@
                             <div onclick="openRecipeModal('lunch')"
                                 class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-lunch">
                                 <div class="h-48 relative overflow-hidden bg-muted">
-                                    <div
-                                        class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                    <img id="lunch-img" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden transition-opacity duration-500">
+                                    <div id="lunch-img-skeleton" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                         <iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>
                                     </div>
-                                    <div
-                                        class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
-                                        Lunch</div>
-                                    <button
-                                        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="lunch-heart">
+                                    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">Lunch</div>
+                                    <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="lunch-heart">
                                         <iconify-icon icon="lucide:heart"></iconify-icon>
                                     </button>
                                 </div>
@@ -473,13 +483,11 @@
                             <div onclick="openRecipeModal('dinner')"
                                 class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col cursor-pointer" id="recipe-dinner">
                                 <div class="h-48 relative overflow-hidden bg-muted">
-                                    <div
-                                        class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                    <img id="dinner-img" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden transition-opacity duration-500">
+                                    <div id="dinner-img-skeleton" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                         <iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>
                                     </div>
-                                    <div
-                                        class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">
-                                        Dinner</div>
+                                    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm text-xs font-bold shadow-sm">Dinner</div>
                                     <button
                                         class="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm" id="dinner-heart">
                                         <iconify-icon icon="lucide:heart"></iconify-icon>
@@ -561,7 +569,7 @@
                                     class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">Badge</span>
                             </div>
                             <div class="absolute top-4 right-4 flex gap-2">
-                                <button
+                                <button id="modal-heart"
                                     class="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shadow-sm">
                                     <iconify-icon icon="lucide:heart"></iconify-icon>
                                 </button>
@@ -1053,6 +1061,67 @@
             };
         }
 
+        // In-memory cache: prompt → resolved image URL
+        const _imgCache = new Map();
+        // Track in-flight requests so two cards with the same prompt share one fetch
+        const _imgInflight = new Map();
+
+        const SPINNER_HTML = `<div class="flex flex-col items-center gap-2 text-muted-foreground"><svg class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg><span class="text-xs">Generating…</span></div>`;
+
+        function resetImageSlot(imgId, skeletonId) {
+            const img = document.getElementById(imgId);
+            const skeleton = document.getElementById(skeletonId);
+            if (img) { img.src = ''; img.classList.add('hidden'); }
+            if (skeleton) { skeleton.classList.remove('hidden'); skeleton.innerHTML = SPINNER_HTML; }
+        }
+
+        async function generateAndSetImage(imgId, skeletonId, prompt) {
+            const img = document.getElementById(imgId);
+            const skeleton = document.getElementById(skeletonId);
+            if (!img) return;
+
+            // If cached, show immediately — no spinner needed
+            if (_imgCache.has(prompt)) {
+                img.src = _imgCache.get(prompt);
+                img.classList.remove('hidden');
+                if (skeleton) skeleton.classList.add('hidden');
+                return;
+            }
+
+            // Show spinner (resetImageSlot already did this on date change,
+            // but call it here too for safety if called standalone)
+            if (skeleton) { skeleton.classList.remove('hidden'); skeleton.innerHTML = SPINNER_HTML; }
+            img.classList.add('hidden');
+
+            // Deduplicate concurrent fetches for the same prompt
+            if (!_imgInflight.has(prompt)) {
+                _imgInflight.set(prompt, fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ prompt }),
+                }).then(r => r.json()).finally(() => _imgInflight.delete(prompt)));
+            }
+
+            try {
+                const data = await _imgInflight.get(prompt);
+                if (data.url) {
+                    _imgCache.set(prompt, data.url);
+                    // Only apply if this slot still wants this prompt
+                    if (img.dataset.prompt === prompt) {
+                        img.src = data.url;
+                        img.classList.remove('hidden');
+                        if (skeleton) skeleton.classList.add('hidden');
+                    }
+                } else if (skeleton && img.dataset.prompt === prompt) {
+                    skeleton.innerHTML = `<iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>`;
+                }
+            } catch {
+                if (skeleton && img.dataset.prompt === prompt) {
+                    skeleton.innerHTML = `<iconify-icon icon="lucide:image" class="text-4xl opacity-20"></iconify-icon>`;
+                }
+            }
+        }
+
         function updateRecipeCard(mealType, recipe) {
             if (!recipe) return;
 
@@ -1060,6 +1129,15 @@
             document.getElementById(`${mealType}-description`).textContent = recipe.description || '-';
             document.getElementById(`${mealType}-calories`).textContent = recipe.calories || '-';
             document.getElementById(`${mealType}-protein`).textContent = recipe.protein || '-';
+
+
+            // Generate a food photo that matches this specific recipe
+            if (recipe.title && recipe.title !== '-') {
+                const prompt = `Professional food photography, appetizing close-up of ${recipe.title}, ${recipe.description || ''}, beautifully plated on a clean white plate, natural soft lighting, shallow depth of field, restaurant quality, 4K photo, vibrant colors`;
+                const img = document.getElementById(`${mealType}-img`);
+                if (img) img.dataset.prompt = prompt;
+                generateAndSetImage(`${mealType}-img`, `${mealType}-img-skeleton`, prompt);
+            }
 
             const tagsContainer = document.getElementById(`${mealType}-tags`);
             tagsContainer.innerHTML = '';
@@ -1110,7 +1188,7 @@
                 });
                 return;
             }
-            titleEl.textContent = `${labelDate}${plan.title ? ' · ' + titleCase(plan.title) : ''}`;
+            titleEl.textContent = labelDate;
             // Sum up real calories from the loaded day for the top-right badge.
             const dayKcal = ['breakfast','lunch','dinner','snack'].reduce((sum, m) => {
                 const v = parseFloat((plan[m]?.calories ?? '0').toString());
@@ -1122,6 +1200,8 @@
                     ? `${Math.round(dayKcal).toLocaleString()} kcal`
                     : '— kcal';
             }
+            // Reset image slots immediately so the spinner shows right away
+            ['breakfast', 'lunch', 'dinner'].forEach(t => resetImageSlot(`${t}-img`, `${t}-img-skeleton`));
             updateRecipeCard('breakfast', plan.breakfast);
             updateRecipeCard('lunch', plan.lunch);
             updateRecipeCard('dinner', plan.dinner);
@@ -1371,7 +1451,10 @@
             setRecipeFeedback(body.summary || 'AI meal plan ready.', 'success');
         }
 
+        let _modalMealType = null;
+
         function openRecipeModal(mealType) {
+            _modalMealType = mealType;
             const dayPlan = mealPlans[currentDay];
             if (!dayPlan || !dayPlan[mealType]) return;
             const recipe = dayPlan[mealType];
@@ -1433,11 +1516,115 @@
             });
 
             document.getElementById('modal-tips').textContent = recipe.tips || '-';
+
+            // Show the same image already fetched for the card
+            const modalImgContainer = document.getElementById('modal-recipe-image');
+            modalImgContainer.innerHTML = '<iconify-icon icon="lucide:image" class="text-6xl opacity-20"></iconify-icon>';
+            const cardImg = document.getElementById(`${mealType}-img`);
+            const prompt = cardImg?.dataset.prompt;
+            if (prompt && _imgCache.has(prompt)) {
+                const url = _imgCache.get(prompt);
+                modalImgContainer.innerHTML = `<img src="${url}" alt="${recipe.title || ''}" class="w-full h-full object-cover">`;
+            } else if (prompt) {
+                // Image still loading — fetch it and show when ready
+                generateAndSetImage(`${mealType}-img`, `${mealType}-img-skeleton`, prompt).then(() => {
+                    if (_imgCache.has(prompt)) {
+                        const url = _imgCache.get(prompt);
+                        modalImgContainer.innerHTML = `<img src="${url}" alt="${recipe.title || ''}" class="w-full h-full object-cover">`;
+                    }
+                });
+            }
+
+            // Sync modal heart button state
+            const modalHeart = document.getElementById('modal-heart');
+            if (modalHeart) {
+                const key = likeKey(activePlanId, currentDay, mealType);
+                const liked = likedByKey.get(key);
+                const icon = modalHeart.querySelector('iconify-icon');
+                if (liked) {
+                    modalHeart.dataset.likeId = liked.id;
+                    modalHeart.classList.add('text-red-500');
+                    modalHeart.classList.remove('text-muted-foreground');
+                    if (icon) icon.setAttribute('style', 'fill: currentColor;');
+                } else {
+                    modalHeart.dataset.likeId = '';
+                    modalHeart.classList.remove('text-red-500');
+                    modalHeart.classList.add('text-muted-foreground');
+                    if (icon) icon.removeAttribute('style');
+                }
+            }
+
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        }
+
+        function openSnapshotModal(el) {
+            let snap;
+            try { snap = JSON.parse(el.dataset.snap || '{}'); } catch { snap = {}; }
+            _modalMealType = null; // snapshot is not from active plan, disable liking from modal
+
+            document.getElementById('modal-recipe-title').textContent = titleCase(snap.title || '-');
+            document.getElementById('modal-recipe-subtitle').textContent = snap.subtitle || '-';
+            document.getElementById('modal-recipe-badge').textContent = snap.badge || '-';
+            document.getElementById('modal-calories').textContent = snap.calories || '-';
+            document.getElementById('modal-protein').textContent = snap.protein || '-';
+            document.getElementById('modal-carbs').textContent = snap.carbs || '-';
+            document.getElementById('modal-description').textContent = snap.description || '-';
+            document.getElementById('modal-tips').textContent = snap.tips || '-';
+
+            const benefitsContainer = document.getElementById('modal-benefits');
+            benefitsContainer.innerHTML = '';
+            (Array.isArray(snap.benefits) ? snap.benefits : []).forEach(benefit => {
+                const badge = document.createElement('span');
+                badge.className = 'px-2 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold';
+                badge.textContent = benefit;
+                benefitsContainer.appendChild(badge);
+            });
+
+            const ingredientsContainer = document.getElementById('modal-ingredients');
+            ingredientsContainer.innerHTML = '';
+            (Array.isArray(snap.ingredients) ? snap.ingredients : []).forEach(ingredient => {
+                let label = typeof ingredient === 'object'
+                    ? `${ingredient.quantity ? ingredient.quantity + ' ' : ''}${ingredient.name || ''}`.trim()
+                    : String(ingredient ?? '');
+                const li = document.createElement('li');
+                li.className = 'flex items-center gap-2';
+                li.innerHTML = `<iconify-icon icon="lucide:circle" class="text-primary text-xs"></iconify-icon><span class="text-sm"></span>`;
+                li.querySelector('span').textContent = label;
+                ingredientsContainer.appendChild(li);
+            });
+
+            const instructionsContainer = document.getElementById('modal-instructions');
+            instructionsContainer.innerHTML = '';
+            (Array.isArray(snap.instructions) ? snap.instructions : []).forEach((instruction, index) => {
+                const step = document.createElement('div');
+                step.className = 'flex gap-4';
+                step.innerHTML = `
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">${index + 1}</div>
+                    <p class="text-sm text-muted-foreground leading-relaxed pt-1">${instruction}</p>`;
+                instructionsContainer.appendChild(step);
+            });
+
+            // Show image from cache if available
+            const modalImgContainer = document.getElementById('modal-recipe-image');
+            modalImgContainer.innerHTML = '<iconify-icon icon="lucide:image" class="text-6xl opacity-20"></iconify-icon>';
+            if (snap.title) {
+                const prompt = `Professional food photography, appetizing close-up of ${snap.title}, ${snap.description || ''}, beautifully plated on a clean white plate, natural soft lighting, shallow depth of field, restaurant quality, 4K photo, vibrant colors`;
+                if (_imgCache.has(prompt)) {
+                    modalImgContainer.innerHTML = `<img src="${_imgCache.get(prompt)}" alt="${snap.title}" class="w-full h-full object-cover">`;
+                }
+            }
+
+            // Hide like button — this is a past liked meal, already liked
+            const modalHeart = document.getElementById('modal-heart');
+            if (modalHeart) modalHeart.classList.add('hidden');
+
             document.getElementById('recipe-modal').classList.remove('hidden');
         }
 
         function closeRecipeModal() {
             document.getElementById('recipe-modal').classList.add('hidden');
+            // Restore modal heart visibility
+            document.getElementById('modal-heart')?.classList.remove('hidden');
         }
 
         // Exclusion functions
@@ -1456,7 +1643,7 @@
             const item = document.getElementById('exclusion-item').value.trim();
 
             if (!type || !item) {
-                alert('Please fill in all fields.');
+                showToast('error', 'Missing fields', 'Please fill in all required fields before saving.');
                 return;
             }
 
@@ -1489,7 +1676,7 @@
             const item = document.getElementById('diet-item').value;
 
             if (!item) {
-                alert('Please fill in all fields.');
+                showToast('error', 'Missing fields', 'Please fill in all required fields before saving.');
                 return;
             }
 
@@ -1521,7 +1708,7 @@
             const item = document.getElementById('meal-preference-item').value;
 
             if (!item) {
-                alert('Please fill in all fields.');
+                showToast('error', 'Missing fields', 'Please fill in all required fields before saving.');
                 return;
             }
 
@@ -1553,7 +1740,7 @@
             const item = document.getElementById('cuisine-preference-item').value;
 
             if (!item) {
-                alert('Please fill in all fields.');
+                showToast('error', 'Missing fields', 'Please fill in all required fields before saving.');
                 return;
             }
 
@@ -1584,7 +1771,7 @@
         function removeChip(button, chipName) {
             button.parentElement.remove();
             console.log('Removing:', chipName);
-            alert(`Removed ${chipName}.`);
+            showToast("success", "Removed", `${chipName} has been removed.`);
         }
 
         document.addEventListener('click', function(event) {
@@ -1653,6 +1840,11 @@
                     e.stopPropagation();
                     toggleMealLike(t);
                 });
+            });
+
+            // Wire modal heart button.
+            document.getElementById('modal-heart')?.addEventListener('click', () => {
+                if (_modalMealType) toggleMealLike(_modalMealType);
             });
 
             // Default state: 7-day strip starting today, no plan loaded yet.
@@ -1797,34 +1989,40 @@
         }
 
         function syncHeartButton(mealType, meal) {
-            const btn = document.getElementById(`${mealType}-heart`);
-            if (!btn) return;
-            if (!meal) {
-                btn.classList.add('opacity-40', 'pointer-events-none');
-                btn.dataset.likeId = '';
-                return;
-            }
-            btn.classList.remove('opacity-40', 'pointer-events-none');
-            const key = likeKey(activePlanId, currentDay, mealType);
-            const liked = likedByKey.get(key);
-            const icon = btn.querySelector('iconify-icon');
-            if (liked) {
-                btn.dataset.likeId = liked.id;
-                btn.classList.add('text-red-500');
-                btn.classList.remove('text-muted-foreground');
-                if (icon) icon.setAttribute('style', 'fill: currentColor;');
-            } else {
-                btn.dataset.likeId = '';
-                btn.classList.remove('text-red-500');
-                btn.classList.add('text-muted-foreground');
-                if (icon) icon.removeAttribute('style');
-            }
+            const btns = [document.getElementById(`${mealType}-heart`)];
+            if (_modalMealType === mealType) btns.push(document.getElementById('modal-heart'));
+            btns.forEach(btn => {
+                if (!btn) return;
+                if (!meal) {
+                    btn.classList.add('opacity-40');
+                    btn.dataset.likeId = '';
+                    btn.dataset.disabled = '1';
+                    return;
+                }
+                btn.classList.remove('opacity-40');
+                btn.dataset.disabled = '';
+                const key = likeKey(activePlanId, currentDay, mealType);
+                const liked = likedByKey.get(key);
+                const icon = btn.querySelector('iconify-icon');
+                if (liked) {
+                    btn.dataset.likeId = liked.id;
+                    btn.classList.add('text-red-500');
+                    btn.classList.remove('text-muted-foreground');
+                    if (icon) icon.setAttribute('style', 'fill: currentColor;');
+                } else {
+                    btn.dataset.likeId = '';
+                    btn.classList.remove('text-red-500');
+                    btn.classList.add('text-muted-foreground');
+                    if (icon) icon.removeAttribute('style');
+                }
+            });
         }
 
         async function toggleMealLike(mealType) {
+            const btn = document.getElementById(`${mealType}-heart`);
+            if (btn?.dataset.disabled === '1') return;
             const meal = currentMealSnapshot(mealType);
             if (!meal) return;
-            const btn = document.getElementById(`${mealType}-heart`);
             const likeId = btn?.dataset.likeId;
             if (likeId) {
                 // Unlike.
@@ -1906,8 +2104,12 @@
                 const prot = snap.protein || '—';
                 const desc = (snap.description || '').slice(0, 120);
                 const slot = (l.meal_type || '').replace(/\b\w/g, c => c.toUpperCase());
+                const snapJson = _escMeal(JSON.stringify(snap));
                 return `
-                    <div class="bg-card rounded-2xl border border-border p-4 shadow-sm flex flex-col gap-2">
+                    <div class="bg-card rounded-2xl border border-border p-4 shadow-sm flex flex-col gap-2 cursor-pointer hover:shadow-lg transition-shadow"
+                        data-snap="${snapJson}" data-meal-type="${_escMeal(l.meal_type || '')}"
+                        onclick="openSnapshotModal(this)"
+                    >
                         <div class="flex items-start justify-between gap-2">
                             <div>
                                 <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">${_escMeal(slot)}</span>

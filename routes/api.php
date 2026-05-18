@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Ai\AiController;
+use App\Http\Controllers\ImageGenerationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/generate-image', [ImageGenerationController::class, 'generate']);
 
 Route::prefix('ai')->group(function () {
     Route::get('/health', [AiController::class, 'health']);

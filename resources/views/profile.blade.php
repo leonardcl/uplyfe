@@ -61,9 +61,26 @@
             --secondary: #e2e8f0;
         }
     </style>
+  <style>
+    #toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.75rem;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:280px;max-width:380px;pointer-events:all;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;backdrop-filter:blur(12px)}
+    .toast.success{background:rgba(255,255,255,.95);border:1px solid #bbf7d0}.toast.error{background:rgba(255,255,255,.95);border:1px solid #fecaca}
+    .toast-icon{flex-shrink:0;width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .toast.success .toast-icon{background:#dcfce7;color:#16a34a}.toast.error .toast-icon{background:#fee2e2;color:#dc2626}
+    .toast-body{flex:1}.toast-title{font-weight:600;font-size:.875rem;color:#0f172a;margin-bottom:.125rem}.toast-msg{font-size:.8rem;color:#64748b;line-height:1.4}
+    .toast-close{flex-shrink:0;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:0;line-height:1}.toast-close:hover{color:#0f172a}
+    .toast.hiding{animation:toastOut .25s ease-in forwards}
+    @keyframes toastIn{from{opacity:0;transform:translateX(2rem) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes toastOut{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(2rem) scale(.95)}}
+  </style>
 </head>
 
 <body class="min-h-screen bg-background font-sans text-foreground">
+  <div id="toast-container"></div>
+  <script>
+    function showToast(type,title,message){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<div class="toast-icon">${type==='success'?'✓':'✕'}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`;c.appendChild(t);setTimeout(()=>dismissToast(t),5000);}
+    function dismissToast(t){if(!t||t.classList.contains('hiding'))return;t.classList.add('hiding');setTimeout(()=>t.remove(),250);}
+  </script>
     @php
         $avatarInitials = collect([$user->first_name ?? '', $user->last_name ?? ''])
             ->filter()
@@ -906,7 +923,7 @@
             });
 
             if (!response.ok) {
-                alert('Failed to update profile.');
+                showToast('error', 'Update failed', 'Could not save your profile. Please try again.');
                 return;
             }
 
@@ -993,7 +1010,7 @@
                 sidebarName.textContent = fullName;
             }
 
-            alert('Profile updated successfully!');
+            showToast('success', 'Profile saved', 'Your profile has been updated successfully.');
             closeEditProfileModal();
             hydrateProfileDashboard().catch(() => {});
         }
@@ -1008,13 +1025,13 @@
             if (file) {
                 // Validate file type
                 if (!file.type.startsWith('image/')) {
-                    alert('Please select a valid image file.');
+                    showToast('error', 'Invalid file', 'Please select a JPG or PNG image.');
                     return;
                 }
 
                 // Validate file size (max 5MB)
                 if (file.size > 5 * 1024 * 1024) {
-                    alert('Please select an image smaller than 5MB.');
+                    showToast('error', 'File too large', 'Please choose an image under 5MB.');
                     return;
                 }
 

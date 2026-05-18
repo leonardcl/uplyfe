@@ -1041,6 +1041,12 @@ class AiController extends Controller
             'dietary_preferences' => $u->dietary_preferences ?? [],
             'food_exclusions' => $u->food_exclusions ?? [],
             'calorie_goal' => (int) ($u->calorie_goal ?? 2000),
+            'exercise_preference' => $u->exercise_preference,
+            'equipment_available' => $u->equipment_available ?? [],
+            'available_days' => $u->available_days,
+            'time_available' => $u->time_available,
+            'fitness_goals' => $u->fitness_goals,
+            'body_focus' => $u->body_focus ?? [],
             'created_at' => optional($u->created_at)->toISOString(),
         ]);
     }

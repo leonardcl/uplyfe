@@ -331,12 +331,10 @@
                         <div class="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
                             <div class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 border-b border-border">
                                 <div
-                                    class="w-[180px] h-[180px] bg-muted rounded-2xl relative overflow-hidden flex items-center justify-center group cursor-pointer">
-                                    <div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors">
-                                    </div>
-                                    <div
-                                        class="w-14 h-14 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-primary shadow-lg group-hover:scale-110 transition-transform">
-                                        <iconify-icon icon="lucide:play" class="text-2xl ml-1"></iconify-icon>
+                                    class="w-[180px] h-[180px] bg-muted rounded-2xl relative overflow-hidden flex items-center justify-center flex-shrink-0">
+                                    <img id="workout-day-img" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden transition-opacity duration-700">
+                                    <div id="workout-day-img-skeleton" class="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                        <iconify-icon icon="lucide:dumbbell" class="text-4xl opacity-20"></iconify-icon>
                                     </div>
                                 </div>
 
@@ -669,7 +667,69 @@
         </div>
     </div>
 
+    <style>
+      #toast-container { position:fixed; top:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:.75rem; pointer-events:none; }
+      .toast { display:flex; align-items:flex-start; gap:.75rem; padding:1rem 1.25rem; border-radius:1rem; box-shadow:0 8px 30px rgba(0,0,0,.12); min-width:280px; max-width:380px; pointer-events:all; animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards; backdrop-filter:blur(12px); }
+      .toast.success { background:rgba(255,255,255,.95); border:1px solid #bbf7d0; }
+      .toast.error   { background:rgba(255,255,255,.95); border:1px solid #fecaca; }
+      .toast-icon { flex-shrink:0; width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+      .toast.success .toast-icon { background:#dcfce7; color:#16a34a; }
+      .toast.error   .toast-icon { background:#fee2e2; color:#dc2626; }
+      .toast-body { flex:1; }
+      .toast-title { font-weight:600; font-size:.875rem; color:#0f172a; margin-bottom:.125rem; }
+      .toast-msg   { font-size:.8rem; color:#64748b; line-height:1.4; }
+      .toast-close { flex-shrink:0; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1rem; padding:0; line-height:1; }
+      .toast-close:hover { color:#0f172a; }
+      .toast.hiding { animation:toastOut .25s ease-in forwards; }
+      @keyframes toastIn  { from{opacity:0;transform:translateX(2rem) scale(.95)} to{opacity:1;transform:translateX(0) scale(1)} }
+      @keyframes toastOut { from{opacity:1;transform:translateX(0) scale(1)} to{opacity:0;transform:translateX(2rem) scale(.95)} }
+    </style>
+    <div id="toast-container"></div>
+
     <script>
+        async function generateWorkoutImage(prompt) {
+            const img = document.getElementById('workout-day-img');
+            const skeleton = document.getElementById('workout-day-img-skeleton');
+            if (!img) return;
+            img.classList.add('hidden');
+            if (skeleton) {
+                skeleton.classList.remove('hidden');
+                skeleton.innerHTML = `<div class="flex flex-col items-center gap-2 text-muted-foreground"><svg class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg></div>`;
+            }
+            try {
+                const res = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ prompt }),
+                });
+                const data = await res.json();
+                if (data.url) {
+                    img.src = data.url;
+                    img.classList.remove('hidden');
+                    if (skeleton) skeleton.classList.add('hidden');
+                } else {
+                    if (skeleton) skeleton.innerHTML = `<iconify-icon icon="lucide:dumbbell" class="text-4xl opacity-20"></iconify-icon>`;
+                }
+            } catch {
+                if (skeleton) skeleton.innerHTML = `<iconify-icon icon="lucide:dumbbell" class="text-4xl opacity-20"></iconify-icon>`;
+            }
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const icon = type === 'success' ? '✓' : '✕';
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`;
+            container.appendChild(toast);
+            setTimeout(() => dismissToast(toast), 5000);
+        }
+        function dismissToast(toast) {
+            if (!toast || toast.classList.contains('hiding')) return;
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 250);
+        }
+
         function toggleWeeklyView() {
             const weeklyPanel = document.getElementById('weekly-view-panel');
             const dailyContent = document.getElementById('daily-view-content');
@@ -915,6 +975,13 @@
             title.textContent = plan.title;
             description.textContent = plan.description;
             durationBadge.textContent = plan.duration;
+
+            // Generate a workout illustration for this day
+            if (plan.heading && plan.heading !== 'No plan yet') {
+                const exercises = Array.isArray(plan.exercises) ? plan.exercises.slice(0, 3).map(e => e.name).join(', ') : '';
+                const prompt = `Uplyfe fitness app workout illustration, ${plan.heading} training day, featuring ${exercises || plan.title}, vibrant lime green (#90ee90) accent color on dark navy background, modern flat design with subtle gradients, energetic athletic person in action, clean minimalist health app aesthetic, professional digital art, no text`;
+                generateWorkoutImage(prompt);
+            }
 	            const exercises = Array.isArray(plan.exercises) ? plan.exercises : [];
 	            exercisesTitle.textContent = `Exercises (${exercises.length})`;
 
@@ -1090,6 +1157,7 @@
             // ORDER MATTERS: load the saved plan first, then honor any
             // ?day= deep-link against the freshly-loaded weeklyWorkoutPlans.
             checkWorkoutRegenBanner();
+            fetchAndApplyUserProfile(); // populate profile tiles from saved preferences
             await loadActiveExercisePlan();
             applyExerciseDeepLink();
             if (exercisePlanPollHandle) clearInterval(exercisePlanPollHandle);
@@ -1179,37 +1247,32 @@
             return numeric || '';
         }
 
+        function setRadio(name, value) {
+            if (!value) return;
+            const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+            if (el) el.checked = true;
+        }
+
+        function setCheckboxes(name, values) {
+            const arr = Array.isArray(values) ? values.map(v => String(v).toLowerCase()) : [];
+            document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                cb.checked = arr.includes(cb.value.toLowerCase());
+            });
+        }
+
         function loadProfileData() {
-            // Load data from profile display elements into modal inputs.
-            // Robust to placeholder text ("Not set") and surrounding whitespace —
-            // the previous version dumped the raw textContent into a number
-            // input, which the browser then warned was unparseable.
             document.getElementById('profile-weight-input').value = readNumericDisplay('profile-weight', ' kg');
             document.getElementById('profile-height-input').value = readNumericDisplay('profile-height', ' cm');
             document.getElementById('profile-age-input').value = readNumericDisplay('profile-age', null);
 
-            // Set radio buttons based on current values
-            const exercisePref = document.getElementById('profile-exercise-pref').textContent.toLowerCase().replace(' & ', '-');
-            const exerciseRadio = document.querySelector(`input[name="exercise-preference"][value="${exercisePref}"]`);
-            if (exerciseRadio) exerciseRadio.checked = true;
-
-            const timeAvailable = document.getElementById('profile-time').textContent.toLowerCase().replace(' mins', '').replace('-', '-');
-            const timeRadio = document.querySelector(`input[name="time-available"][value="${timeAvailable}"]`);
-            if (timeRadio) timeRadio.checked = true;
-
-            const availableDays = document.getElementById('profile-days').textContent.split(' ')[0];
-            const daysRadio = document.querySelector(`input[name="available-days"][value="${availableDays}"]`);
-            if (daysRadio) daysRadio.checked = true;
-
-            const fitnessGoals = document.getElementById('profile-goals').textContent.toLowerCase().replace(' ', '-');
-            const goalsRadio = document.querySelector(`input[name="fitness-goals"][value="${fitnessGoals}"]`);
-            if (goalsRadio) goalsRadio.checked = true;
-
-            // Set equipment checkboxes
-            const equipment = document.getElementById('profile-equipment').textContent.toLowerCase().split(', ');
-            document.querySelectorAll('input[name="equipment"]').forEach(cb => {
-                cb.checked = equipment.includes(cb.value);
-            });
+            // Use cached raw profile values directly — avoids fragile DOM-text reverse-parsing
+            const p = cachedUserProfile || {};
+            setRadio('exercise-preference', p.exercise_preference);
+            setRadio('time-available', p.time_available);
+            setRadio('available-days', p.available_days);
+            setRadio('fitness-goals', p.fitness_goals);
+            setCheckboxes('equipment', p.equipment_available);
+            setCheckboxes('body-focus', p.body_focus);
 
             // Apply initial styling after setting checked states
             setTimeout(() => {
@@ -1240,13 +1303,39 @@
 
         const userId = {{ session('user')->id }};
 
+        // Cached profile so loadProfileData() can use raw saved values directly
+        let cachedUserProfile = null;
+
+        async function fetchAndApplyUserProfile() {
+            try {
+                const res = await fetch('/api/profile/me', { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const profile = await res.json();
+                cachedUserProfile = profile;
+                applyExerciseRequestProfile(profile);
+                // Also update weight/height/age display tiles if present
+                if (profile.weight) {
+                    const el = document.getElementById('profile-weight');
+                    if (el && el.textContent.includes('Not set')) el.textContent = `${profile.weight} kg`;
+                }
+                if (profile.height) {
+                    const el = document.getElementById('profile-height');
+                    if (el && el.textContent.includes('Not set')) el.textContent = `${profile.height} cm`;
+                }
+                if (profile.age) {
+                    const el = document.getElementById('profile-age');
+                    if (el && el.textContent.includes('Not set')) el.textContent = String(profile.age);
+                }
+            } catch (e) { /* silent — UI falls back to "Not set" */ }
+        }
+
         async function saveActivityProfile() {
             const weight = document.getElementById('profile-weight-input').value.trim();
             const height = document.getElementById('profile-height-input').value.trim();
             const age = document.getElementById('profile-age-input').value.trim();
 
             if (!weight || !height || !age) {
-                alert('Please complete all required profile fields.');
+                showToast('error', 'Missing fields', 'Please fill in weight, height, and age before saving.');
                 return;
             }
 
@@ -1261,10 +1350,20 @@
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ weight, height, age }),
+                    body: JSON.stringify({
+                        weight,
+                        height,
+                        age,
+                        exercise_preference: collectRadio('exercise-preference'),
+                        equipment_available: collectChecked('equipment'),
+                        available_days:      collectRadio('available-days'),
+                        time_available:      collectRadio('time-available'),
+                        fitness_goals:       collectRadio('fitness-goals'),
+                        body_focus:          collectChecked('body-focus'),
+                    }),
                 });
             } catch (e) {
-                alert('Network error: ' + (e?.message || e));
+                showToast('error', 'Network error', e?.message || String(e));
                 return;
             }
 
@@ -1275,22 +1374,22 @@
 
             if (!response.ok) {
                 let msg = body.message || body.error || ('HTTP ' + response.status);
-                if (body.errors) {
-                    msg += '\n' + Object.values(body.errors).flat().join('\n');
-                }
-                alert('Failed to save profile:\n' + msg);
+                if (body.errors) msg += ' — ' + Object.values(body.errors).flat().join(', ');
+                showToast('error', 'Failed to save', msg);
                 return;
             }
 
             const saved = body.data || {};
-            // Each display element gets its updated value, falling back to the
-            // pre-existing text when the server omits a field (defensive — the
-            // backend now returns all profile fields including `age`).
             if (saved.weight != null) document.getElementById('profile-weight').textContent = `${saved.weight} kg`;
             if (saved.height != null) document.getElementById('profile-height').textContent = `${saved.height} cm`;
             if (saved.age != null)    document.getElementById('profile-age').textContent = String(saved.age);
 
-            alert('Activity profile updated successfully!');
+            // Update cached profile so the modal re-opens with fresh values
+            if (cachedUserProfile) Object.assign(cachedUserProfile, saved);
+            else cachedUserProfile = saved;
+            applyExerciseRequestProfile(cachedUserProfile);
+
+            showToast('success', 'Profile saved', 'Your activity preferences have been updated.');
             closeEditActivityModal();
         }
 
@@ -1312,7 +1411,7 @@
             const age = document.getElementById('profile-age').textContent.trim();
 
             if (!weight || !height || !age || weight === 'Not set' || height === 'Not set' || age === 'Not set') {
-                alert('Please complete your profile first (weight, height, age).');
+                showToast('error', 'Profile incomplete', 'Please set your weight, height, and age in the activity profile first.');
                 return;
             }
 
@@ -1341,12 +1440,12 @@
                 let data;
                 try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
                 if (!res.ok) {
-                    alert('Could not generate routine: ' + (data.error || data.message || ('HTTP ' + res.status)));
+                    showToast('error', 'Could not generate routine', data.error || data.message || ('HTTP ' + res.status));
                     return;
                 }
                 applyAiPlanToExistingUi(data);
             } catch (e) {
-                alert('Network error: ' + (e?.message || e));
+                showToast('error', 'Network error', e?.message || String(e));
             } finally {
                 setGenerateButtonBusy(false);
             }
@@ -1471,7 +1570,7 @@
                 if (headingEl) {
                     headingEl.textContent = 'AI returned no workout days — try Generate again';
                 }
-                alert('The AI returned no workout days. This is usually a transient model failure — try Generate again. If it keeps happening, simplify your equipment or goals.');
+                showToast('error', 'No workout days returned', 'This is usually temporary — try Generate again. If it persists, simplify your equipment or goals.');
                 return;
             }
 

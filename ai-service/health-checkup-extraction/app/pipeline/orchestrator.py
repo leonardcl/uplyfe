@@ -57,6 +57,68 @@ from app.safety import (
 )
 
 
+# Post-conversion plausibility bounds (all values are now in canonical units).
+# These are the same keys as Biomarker.value strings.
+_POST_CONV_MAX: dict[str, float] = {
+    "glucose_fasting":   1200,   # mg/dL
+    "glucose_random":    1200,
+    "total_cholesterol": 1500,   # mg/dL
+    "triglycerides":      5000,   # mg/dL — severe hypertriglyceridemia true max
+    "hdl_cholesterol":    200,   # mg/dL
+    "ldl":                800,   # mg/dL
+    "hemoglobin":          25,   # g/dL
+    "hematocrit":          75,   # %
+    "wbc":                500,   # 10³/µL
+    "platelets":         3000,   # 10³/µL
+    "creatinine":          50,   # mg/dL
+    "bun":                300,   # mg/dL
+    "uric_acid":           30,   # mg/dL
+    "sodium":             200,   # mEq/L
+    "potassium":           10,   # mEq/L
+    "alt":              10000,   # IU/L
+    "ast":              10000,   # IU/L
+    "ggt":              10000,   # IU/L
+    "bmi":                100,
+}
+_POST_CONV_MIN: dict[str, float] = {
+    "potassium":         1.5,
+    "sodium":          100.0,
+    "hemoglobin":        2.0,
+    "hematocrit":        5.0,
+    "glucose_fasting":  20.0,
+    "glucose_random":   20.0,
+    "bmi":              10.0,
+    "triglycerides":     5.0,   # mg/dL — below 5 is essentially impossible after conversion
+}
+
+
+def _post_conversion_plausibility_filter(panel: "LabPanel") -> "LabPanel":
+    """Drop any biomarker value that is physiologically impossible AFTER unit
+    conversion to canonical units.
+
+    This is the second plausibility gate — the first runs inside llm_extractor
+    before conversion. Unit conversion can turn a plausible-looking raw value
+    (e.g. triglycerides 15 mmol/L, just below the 10 000 mg/dL pre-conv cap)
+    into an absurd canonical value (15 × 88.57 = 1328 mg/dL for a routine
+    Korean checkup where 비대상 / reference ranges were misread).
+    """
+    from app.models.lab import LabValue  # local import to avoid circular
+
+    filtered: list[LabValue] = []
+    for v in panel.values:
+        key = v.biomarker.value if hasattr(v.biomarker, "value") else str(v.biomarker)
+        val = v.value
+        if key in _POST_CONV_MAX and val > _POST_CONV_MAX[key]:
+            continue  # drop implausible high
+        if key in _POST_CONV_MIN and val < _POST_CONV_MIN[key]:
+            continue  # drop implausible low
+        filtered.append(v)
+
+    if len(filtered) != len(panel.values):
+        panel = panel.model_copy(update={"values": filtered})
+    return panel
+
+
 @dataclass
 class PipelineOptions:
     use_llm: bool = True
@@ -80,6 +142,7 @@ def run_pipeline(
     panel = _coerce_panel(panel=panel, pdf_path=pdf_path, image_path=image_path, raw_text=raw_text)
 
     canonical, conv_warnings = to_canonical(panel)
+    canonical = _post_conversion_plausibility_filter(canonical)
     issues: list[ValidationIssue] = validate_panel(canonical, conv_warnings)
 
     clusters, pattern_findings = evaluate_panel(canonical)
@@ -153,11 +216,17 @@ def _coerce_panel(
     merged: dict[Biomarker, LabValue] = {}
     bp_sys: Optional[float] = None
     bp_dia: Optional[float] = None
+
+    # Korean documents: the regex extractor is designed for English/Indonesian
+    # only — running it on Korean text produces false positives (reference
+    # range numbers like "1-40" get misread as biomarker values). Skip regex
+    # entirely for Korean and let the LLM extractor handle it below.
+    skip_regex = (language == "ko")
+
     for chunk in chunks:
-        for v in regex_extract_panel(chunk, language=language):
-            # Last write wins; rare in practice because each biomarker usually
-            # appears on one page only.
-            merged[v.biomarker] = v
+        if not skip_regex:
+            for v in regex_extract_panel(chunk, language=language):
+                merged[v.biomarker] = v
         if bp_sys is None:
             sys_v, dia_v = extract_blood_pressure(chunk)
             if sys_v is not None and dia_v is not None:
@@ -171,16 +240,15 @@ def _coerce_panel(
             biomarker=Biomarker.BP_DIASTOLIC, value=bp_dia, unit="mmHg"
         )
 
-    if merged:
+    if merged and not skip_regex:
         return LabPanel(
             age=age_detected if age_detected is not None else 0,
             sex=sex_detected if sex_detected is not None else "unknown",
             values=list(merged.values()),
         )
 
-    # Fallback: regex found nothing across all chunks. Try the LLM extractor on
-    # the longest single chunk (usually the page with the most content) so we
-    # stay within the per-call cap.
+    # For Korean (skip_regex=True) or when regex found nothing: use the LLM
+    # extractor on the longest chunk so we stay within the per-call cap.
     longest_chunk = max(chunks, key=len) if chunks else text
     allowed_keys = [b.value for b in Biomarker]
     llm_panel = extract_lab_panel(longest_chunk, allowed_keys=allowed_keys, language=language)

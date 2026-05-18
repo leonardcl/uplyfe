@@ -58,14 +58,44 @@
         --radius: 1rem;
         --secondary: #e2e8f0; }
     </style>
+  <style>
+    #toast-container { position:fixed; top:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:.75rem; pointer-events:none; }
+    .toast { display:flex; align-items:flex-start; gap:.75rem; padding:1rem 1.25rem; border-radius:1rem; box-shadow:0 8px 30px rgba(0,0,0,.12); min-width:280px; max-width:380px; pointer-events:all; animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards; backdrop-filter:blur(12px); }
+    .toast.success { background:rgba(255,255,255,.95); border:1px solid #bbf7d0; }
+    .toast.error   { background:rgba(255,255,255,.95); border:1px solid #fecaca; }
+    .toast-icon { flex-shrink:0; width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+    .toast.success .toast-icon { background:#dcfce7; color:#16a34a; }
+    .toast.error   .toast-icon { background:#fee2e2; color:#dc2626; }
+    .toast-body { flex:1; }
+    .toast-title { font-weight:600; font-size:.875rem; color:#0f172a; margin-bottom:.125rem; }
+    .toast-msg   { font-size:.8rem; color:#64748b; line-height:1.4; }
+    .toast-close { flex-shrink:0; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1rem; padding:0; line-height:1; }
+    .toast-close:hover { color:#0f172a; }
+    .toast.hiding { animation:toastOut .25s ease-in forwards; }
+    @keyframes toastIn  { from{opacity:0;transform:translateX(2rem) scale(.95)} to{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes toastOut { from{opacity:1;transform:translateX(0) scale(1)} to{opacity:0;transform:translateX(2rem) scale(.95)} }
+  </style>
 </head>
 
 <body>
+  <div id="toast-container"></div>
+  <script>
+    function showToast(type, title, message) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.innerHTML = `<div class="toast-icon">${type==='success'?'✓':'✕'}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`;
+      c.appendChild(t);
+      setTimeout(() => dismissToast(t), 5000);
+    }
+    function dismissToast(t) {
+      if (!t || t.classList.contains('hiding')) return;
+      t.classList.add('hiding'); setTimeout(() => t.remove(), 250);
+    }
     @if (session('success'))
-    <script>
-        alert("{{ session('success') }}");
-    </script>
+      document.addEventListener('DOMContentLoaded', () => showToast('success', 'Welcome back!', @json(session('success'))));
     @endif
+  </script>
     <div class="min-h-screen w-full bg-background flex flex-col relative overflow-x-hidden text-foreground font-sans">
         <!-- Navigation -->
         <header
@@ -103,11 +133,19 @@
                         class="hidden sm:block text-sm font-medium text-foreground hover:text-primary transition-colors">Log
                         In</a>
                     @endif
+                    @if(session('user'))
                     <a href="/health-check"
+                        class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                        Dashboard
+                        <iconify-icon icon="lucide:layout-dashboard" class="text-sm"></iconify-icon>
+                    </a>
+                    @else
+                    <a href="/login"
                         class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
                         Get Started
                         <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
                     </a>
+                    @endif
                 </div>
             </div>
         </header>
@@ -213,20 +251,29 @@
                                 and daily health habits. Uplyfe is your intelligent companion for a better life.
                             </p>
                             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4">
-                                <button
+                                @if(session('user'))
+                                <a href="/health-check"
                                     class="bg-primary text-primary-foreground px-8 py-4 rounded-full text-base font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
-                                    <a href="/health-check" class="flex items-center gap-2">
-                                        Start Your Journey
-                                        <iconify-icon icon="lucide:sparkles" class="text-lg"></iconify-icon>
-                                    </a>
-                                </button>
-                                <button
+                                    Go to Dashboard
+                                    <iconify-icon icon="lucide:layout-dashboard" class="text-lg"></iconify-icon>
+                                </a>
+                                <a href="/logout"
                                     class="bg-card text-foreground border border-border px-8 py-4 rounded-full text-base font-semibold shadow-sm hover:bg-muted transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
-                                    <a href="https://youtube.com" target="_blank" class="flex items-center gap-2">
-                                        <iconify-icon icon="lucide:play-circle" class="text-lg"></iconify-icon>
-                                        See How It Works
-                                    </a>
-                                </button>
+                                    <iconify-icon icon="lucide:log-out" class="text-lg"></iconify-icon>
+                                    Log Out
+                                </a>
+                                @else
+                                <a href="/login"
+                                    class="bg-primary text-primary-foreground px-8 py-4 rounded-full text-base font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
+                                    Start Your Journey
+                                    <iconify-icon icon="lucide:sparkles" class="text-lg"></iconify-icon>
+                                </a>
+                                <a href="/signup"
+                                    class="bg-card text-foreground border border-border px-8 py-4 rounded-full text-base font-semibold shadow-sm hover:bg-muted transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
+                                    <iconify-icon icon="lucide:user-plus" class="text-lg"></iconify-icon>
+                                    Create Account
+                                </a>
+                                @endif
                             </div>
 
                             <div class="flex items-center gap-4 mt-8 pt-6 border-t border-border w-full">

@@ -1,66 +1,75 @@
-"""Thin Ollama client — generate text + JSON.
-
-Replaces the hardcoded `requests.post` to a remote IP in FixMakan with an
-httpx call that respects `OLLAMA_BASE_URL` (defaults to localhost).
-"""
+"""LLM client for the recipe generator — uses OpenRouter for text generation."""
 from __future__ import annotations
 
 import json
+import re
 from typing import Optional
 
 import httpx
 
 from recipe_generator.config import get_settings
 
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 
 class LLMUnavailableError(RuntimeError):
-    """Ollama unreachable or returned an unrecoverable error."""
+    """LLM unreachable or returned an unrecoverable error."""
 
 
 def generate(prompt: str, *, model: Optional[str] = None, format_json: bool = False) -> str:
     settings = get_settings()
-    payload: dict = {
-        "model": model or settings.llm_model,
-        "prompt": prompt,
-        "stream": False,
-        # Disable "thinking" so the model spends its budget on the actual
-        # response, not hidden reasoning we'd discard.
-        "think": False,
-    }
+    model_id = model or settings.openrouter_model
+
+    content = prompt
     if format_json:
-        payload["format"] = "json"
+        content += "\n\nIMPORTANT: Reply with valid JSON only. No markdown, no prose outside the JSON."
+
+    payload = {
+        "model": model_id,
+        "messages": [{"role": "user", "content": content}],
+        "temperature": 0.6,
+        "max_tokens": 4096,
+    }
+    headers = {
+        "Authorization": f"Bearer {settings.openrouter_api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://uplyfe.app",
+        "X-Title": "Uplyfe AI",
+    }
     try:
-        with httpx.Client(timeout=settings.llm_timeout_seconds) as c:
-            r = c.post(
-                f"{settings.ollama_base_url.rstrip('/')}/api/generate",
-                json=payload,
-            )
+        with httpx.Client(timeout=120) as c:
+            r = c.post(_OPENROUTER_URL, json=payload, headers=headers)
             r.raise_for_status()
             body = r.json()
     except (httpx.HTTPError, ValueError) as e:
-        raise LLMUnavailableError(f"Ollama generate failed: {e}") from e
-    return (body.get("response") or "").strip()
+        raise LLMUnavailableError(f"OpenRouter generate failed: {e}") from e
+    return (body.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
 
 
 def generate_json(prompt: str, *, model: Optional[str] = None) -> dict:
-    """Generate with `format=json` and parse. Robust to the model wrapping
-    its JSON in markdown fences or trailing prose — falls back to scraping
-    the first `{...}` block."""
     raw = generate(prompt, model=model, format_json=True)
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        start, end = raw.find("{"), raw.rfind("}")
-        if start == -1 or end == -1:
-            raise
-        return json.loads(raw[start : end + 1])
+        pass
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    raise LLMUnavailableError(f"OpenRouter did not return valid JSON: {raw[:300]}")
 
 
 def is_available() -> bool:
+    """Check OpenRouter reachability."""
     settings = get_settings()
     try:
-        with httpx.Client(timeout=3.0) as c:
-            r = c.get(f"{settings.ollama_base_url.rstrip('/')}/api/tags")
+        with httpx.Client(timeout=5.0) as c:
+            r = c.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
+            )
             return r.status_code == 200
     except Exception:
         return False

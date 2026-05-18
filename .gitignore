@@ -28,9 +28,13 @@ ai-service/**/dist/
 ai-service/**/.env
 ai-service/**/data/chroma/
 ai-service/**/data/uploads/
+ai-service/**/data/*.zip
+ai-service/**/data.zip
 ai-service/**/.ruff_cache/
 ai-service/**/.mypy_cache/
 ai-service/**/.coverage
+ai-service/**/logs/
+/nohup.out
 
 # Lab-report PDFs are private by default. The synthetic ones in
 # samples/synthetic/ are regenerable from tools/generate_synthetic.py

@@ -1,22 +1,19 @@
-"""Thin Ollama client.
-
-Replaces the raw `requests.post` calls in `exercise7.py` with an httpx
-client that respects the configured base URL and timeout. The original
-code pointed at a remote IP (`192.168.111.132`) — here everything goes
-through `OLLAMA_BASE_URL`, defaulting to localhost.
-"""
+"""LLM client for the exercise generator — OpenRouter for text, Ollama for embeddings."""
 from __future__ import annotations
 
 import json
+import re
 from typing import Optional
 
 import httpx
 
 from exercise_routine_generator.config import get_settings
 
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 
 class LLMUnavailableError(RuntimeError):
-    """Ollama is unreachable or returned an unrecoverable error."""
+    """LLM unreachable or returned an unrecoverable error."""
 
 
 def _client() -> httpx.Client:
@@ -25,6 +22,7 @@ def _client() -> httpx.Client:
 
 
 def embed(text: str) -> list[float]:
+    """Embeddings still run locally via Ollama (ChromaDB vector search)."""
     settings = get_settings()
     try:
         with _client() as c:
@@ -35,9 +33,7 @@ def embed(text: str) -> list[float]:
             r.raise_for_status()
             body = r.json()
     except (httpx.HTTPError, ValueError) as e:
-        raise LLMUnavailableError(
-            f"Ollama embed failed (model={settings.embed_model}): {e}"
-        ) from e
+        raise LLMUnavailableError(f"Ollama embed failed: {e}") from e
     if "embedding" not in body:
         raise LLMUnavailableError(f"Embed response missing 'embedding': {body}")
     return body["embedding"]
@@ -45,58 +41,61 @@ def embed(text: str) -> list[float]:
 
 def generate(prompt: str, *, model: Optional[str] = None, format_json: bool = False) -> str:
     settings = get_settings()
-    chosen = model or settings.llm_model
-    payload: dict = {
-        "model": chosen,
-        "prompt": prompt,
-        "stream": False,
-        # Disable Ollama "thinking" so the model spends its budget on the
-        # actual response, not hidden reasoning that we'd discard.
-        "think": False,
-    }
+    model_id = model or settings.openrouter_model
+
+    content = prompt
     if format_json:
-        payload["format"] = "json"
+        content += "\n\nIMPORTANT: Reply with valid JSON only. No markdown, no prose outside the JSON."
+
+    payload = {
+        "model": model_id,
+        "messages": [{"role": "user", "content": content}],
+        "temperature": 0.5,
+        "max_tokens": 4096,
+    }
+    headers = {
+        "Authorization": f"Bearer {settings.openrouter_api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://uplyfe.app",
+        "X-Title": "Uplyfe AI",
+    }
     try:
-        with _client() as c:
-            r = c.post(
-                f"{settings.ollama_base_url.rstrip('/')}/api/generate",
-                json=payload,
-            )
+        with httpx.Client(timeout=120) as c:
+            r = c.post(_OPENROUTER_URL, json=payload, headers=headers)
             r.raise_for_status()
             body = r.json()
     except (httpx.HTTPError, ValueError) as e:
-        raise LLMUnavailableError(
-            f"Ollama generate failed (model={chosen}): {e}"
-        ) from e
-    return (body.get("response") or "").strip()
+        raise LLMUnavailableError(f"OpenRouter generate failed: {e}") from e
+    return (body.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
 
 
 def generate_small(prompt: str) -> str:
-    """Use the small model when one is configured (faster + cheaper); falls
-    back to the default model when the small slot points at the same name."""
-    settings = get_settings()
-    return generate(prompt, model=settings.llm_model_small)
+    return generate(prompt)
 
 
 def generate_json(prompt: str, *, model: Optional[str] = None) -> dict:
-    """Call `generate` with `format=json` and parse the result. Robust to
-    the model occasionally wrapping the JSON in markdown fences."""
     raw = generate(prompt, model=model, format_json=True)
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        # Scrape the first {...} block as a fallback.
-        start, end = raw.find("{"), raw.rfind("}")
-        if start == -1 or end == -1:
-            raise
-        return json.loads(raw[start : end + 1])
+        pass
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    raise LLMUnavailableError(f"OpenRouter did not return valid JSON: {raw[:300]}")
 
 
 def is_available() -> bool:
     settings = get_settings()
     try:
-        with httpx.Client(timeout=3.0) as c:
-            r = c.get(f"{settings.ollama_base_url.rstrip('/')}/api/tags")
+        with httpx.Client(timeout=5.0) as c:
+            r = c.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
+            )
             return r.status_code == 200
     except Exception:
         return False

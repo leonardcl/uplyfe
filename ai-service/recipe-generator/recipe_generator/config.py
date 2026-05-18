@@ -24,7 +24,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # LLM (Ollama)
+    # OpenRouter
+    openrouter_api_key: str = Field(default="")
+    openrouter_model: str = Field(default="google/gemma-4-26b-a4b-it")
+
+    # Ollama (kept for embeddings only)
     ollama_base_url: str = Field(default="http://localhost:11434")
     llm_model: str = Field(default="gemma4:26b")
     llm_timeout_seconds: float = Field(default=180.0)

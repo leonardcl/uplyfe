@@ -113,6 +113,14 @@ class UserController extends Controller
             'food_exclusions' => ['nullable', 'array'],
             'food_exclusions.*' => ['string', 'max:64'],
             'calorie_goal' => ['nullable', 'integer', 'min:800', 'max:5000'],
+            'exercise_preference' => ['nullable', 'string', 'max:64'],
+            'equipment_available' => ['nullable', 'array'],
+            'equipment_available.*' => ['string', 'max:64'],
+            'available_days' => ['nullable', 'string', 'max:16'],
+            'time_available' => ['nullable', 'string', 'max:16'],
+            'fitness_goals' => ['nullable', 'string', 'max:64'],
+            'body_focus' => ['nullable', 'array'],
+            'body_focus.*' => ['string', 'max:64'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
@@ -134,6 +142,12 @@ class UserController extends Controller
         $user->dietary_preferences = $validated['dietary_preferences'] ?? $user->dietary_preferences;
         $user->notification_preferences = $validated['notification_preferences'] ?? $user->notification_preferences;
         $user->calorie_goal = $validated['calorie_goal'] ?? $user->calorie_goal;
+        $user->exercise_preference = $validated['exercise_preference'] ?? $user->exercise_preference;
+        $user->equipment_available = $validated['equipment_available'] ?? $user->equipment_available;
+        $user->available_days = $validated['available_days'] ?? $user->available_days;
+        $user->time_available = $validated['time_available'] ?? $user->time_available;
+        $user->fitness_goals = $validated['fitness_goals'] ?? $user->fitness_goals;
+        $user->body_focus = $validated['body_focus'] ?? $user->body_focus;
         // food_exclusions: empty array means "clear" — preserve the explicit
         // [] over the null-fallback so users can wipe the list.
         if (array_key_exists('food_exclusions', $validated)) {
@@ -175,6 +189,12 @@ class UserController extends Controller
                 'notification_preferences' => $user->notification_preferences,
                 'food_exclusions' => $user->food_exclusions,
                 'calorie_goal' => $user->calorie_goal,
+                'exercise_preference' => $user->exercise_preference,
+                'equipment_available' => $user->equipment_available,
+                'available_days' => $user->available_days,
+                'time_available' => $user->time_available,
+                'fitness_goals' => $user->fitness_goals,
+                'body_focus' => $user->body_focus,
                 'profile_photo' => $user->profile_photo,
             ],
         ]);
