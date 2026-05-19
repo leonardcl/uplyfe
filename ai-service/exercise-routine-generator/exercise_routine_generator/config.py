@@ -23,11 +23,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # LLM provider — "ollama" (local) or "openrouter" (cloud)
+    llm_provider: str = Field(default="ollama")
+
     # OpenRouter
     openrouter_api_key: str = Field(default="")
     openrouter_model: str = Field(default="google/gemma-4-26b-a4b-it")
 
-    # Ollama (kept for embeddings only)
+    # Ollama
     ollama_base_url: str = Field(default="http://localhost:11434")
     llm_model: str = Field(default="gemma4:26b")
     llm_model_small: str = Field(default="gemma4:26b")

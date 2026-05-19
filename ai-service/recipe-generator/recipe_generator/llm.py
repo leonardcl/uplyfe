@@ -1,4 +1,9 @@
-"""LLM client for the recipe generator — uses OpenRouter for text generation."""
+"""LLM client for the recipe generator.
+
+Routes to Ollama (local) or OpenRouter (cloud) based on LLM_PROVIDER in .env.
+  LLM_PROVIDER=ollama      → local Ollama
+  LLM_PROVIDER=openrouter  → OpenRouter cloud
+"""
 from __future__ import annotations
 
 import json
@@ -18,8 +23,72 @@ class LLMUnavailableError(RuntimeError):
 
 def generate(prompt: str, *, model: Optional[str] = None, format_json: bool = False) -> str:
     settings = get_settings()
-    model_id = model or settings.openrouter_model
+    if settings.llm_provider == "openrouter":
+        return _generate_openrouter(prompt, model=model, format_json=format_json, settings=settings)
+    return _generate_ollama(prompt, model=model, format_json=format_json, settings=settings)
 
+
+def generate_json(prompt: str, *, model: Optional[str] = None) -> dict:
+    raw = generate(prompt, model=model, format_json=True)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        pass
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    raise LLMUnavailableError(f"LLM did not return valid JSON: {raw[:300]}")
+
+
+def is_available() -> bool:
+    settings = get_settings()
+    if settings.llm_provider == "openrouter":
+        try:
+            with httpx.Client(timeout=5.0) as c:
+                r = c.get("https://openrouter.ai/api/v1/models",
+                          headers={"Authorization": f"Bearer {settings.openrouter_api_key}"})
+                return r.status_code == 200
+        except Exception:
+            return False
+    # Ollama
+    try:
+        with httpx.Client(timeout=3.0) as c:
+            r = c.get(f"{settings.ollama_base_url.rstrip('/')}/api/tags")
+            return r.status_code == 200
+    except Exception:
+        return False
+
+
+# ---------- Ollama ----------
+
+def _generate_ollama(prompt: str, *, model, format_json: bool, settings) -> str:
+    model_id = model or settings.llm_model
+    url = f"{settings.ollama_base_url.rstrip('/')}/api/generate"
+    payload = {
+        "model": model_id,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.6, "num_predict": 4096},
+    }
+    if format_json:
+        payload["format"] = "json"
+
+    try:
+        with httpx.Client(timeout=settings.llm_timeout_seconds) as c:
+            r = c.post(url, json=payload)
+            r.raise_for_status()
+            return (r.json().get("response") or "").strip()
+    except (httpx.HTTPError, ValueError) as e:
+        raise LLMUnavailableError(f"Ollama generate failed: {e}") from e
+
+
+# ---------- OpenRouter ----------
+
+def _generate_openrouter(prompt: str, *, model, format_json: bool, settings) -> str:
+    model_id = model or settings.openrouter_model
     content = prompt
     if format_json:
         content += "\n\nIMPORTANT: Reply with valid JSON only. No markdown, no prose outside the JSON."
@@ -40,36 +109,6 @@ def generate(prompt: str, *, model: Optional[str] = None, format_json: bool = Fa
         with httpx.Client(timeout=120) as c:
             r = c.post(_OPENROUTER_URL, json=payload, headers=headers)
             r.raise_for_status()
-            body = r.json()
+            return (r.json().get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
     except (httpx.HTTPError, ValueError) as e:
         raise LLMUnavailableError(f"OpenRouter generate failed: {e}") from e
-    return (body.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
-
-
-def generate_json(prompt: str, *, model: Optional[str] = None) -> dict:
-    raw = generate(prompt, model=model, format_json=True)
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        pass
-    match = re.search(r"\{.*\}", raw, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group())
-        except json.JSONDecodeError:
-            pass
-    raise LLMUnavailableError(f"OpenRouter did not return valid JSON: {raw[:300]}")
-
-
-def is_available() -> bool:
-    """Check OpenRouter reachability."""
-    settings = get_settings()
-    try:
-        with httpx.Client(timeout=5.0) as c:
-            r = c.get(
-                "https://openrouter.ai/api/v1/models",
-                headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
-            )
-            return r.status_code == 200
-    except Exception:
-        return False
